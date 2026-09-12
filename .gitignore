@@ -13,3 +13,4 @@ outputs/
 logs/
 *.token_cache
 *.msal_cache
+Agent.md
