@@ -1,0 +1,44 @@
+MẪU MÔ TẢ NGHIỆP VỤ — COPY SANG inputs/private/ RỒI ĐIỀN
+Không cần viết code; chưa biết mục nào thì ghi CHƯA CHỐT.
+
+1. Nhóm và ưu tiên
+- Tên nhóm/tên sản phẩm mong muốn:
+- Thành viên, vai trò, thời gian làm được mỗi ngày:
+- Hạn demo/nộp bài thực tế theo thông báo BTC:
+- Ưu tiên nếu thiếu thời gian: email / Excel / ghép cả hai:
+
+2. Workbook
+- Tên file nguồn:
+- Tên sheet và Excel Table hoặc vùng dữ liệu:
+- Dòng tiêu đề, các cột bắt buộc, ý nghĩa từng cột:
+- Cột ngày; định dạng; kỳ báo cáo tính theo lịch nào:
+- Cột số tiền; đơn vị; quy tắc dấu thập phân và làm tròn:
+- Cột nhóm (vùng/phòng ban/sản phẩm...):
+- Trạng thái được tính/loại; dữ liệu trống/trùng/lỗi xử lý thế nào:
+- Công thức ví dụ và tổng mong đợi với một kỳ cụ thể:
+- File đầu ra, sheet/cột/thứ tự/định dạng cần có:
+- Tạo file mới hay cập nhật; phạm vi được phép thay đổi nếu cập nhật:
+- Workbook có macro/password/external link/pivot không:
+
+3. Email
+- Loại tài khoản: Microsoft cá nhân / trường-công ty / loại khác:
+- Gửi từ tài khoản demo nào (địa chỉ, KHÔNG mật khẩu):
+- Tên mẫu thư; subject/body mong muốn; có được viết lại nội dung không:
+- Người nhận demo do nhóm kiểm soát; dùng alias nào:
+- Attachment từ report nào; khi thiếu file phải làm gì:
+- Trạng thái Graph app registration: chưa có / có / bị tenant chặn:
+- Classic Outlook đã đăng nhập và gửi tay được chưa:
+
+4. Giọng nói và trải nghiệm
+- Ngôn ngữ, giọng vùng miền, môi trường ồn/yên:
+- Có mic/headset nào; có thể nói rõ/lâu không:
+- Có cần đọc kết quả thành tiếng ngay ở MVP không:
+- Người thử có thể tham gia khi nào; đã đồng ý thử/thu âm chưa:
+- Có yêu cầu UI chữ/cỡ chữ/màu hoặc hạn chế nào khác:
+
+5. Dữ liệu và AI
+- Xác nhận bộ mẫu dùng dữ liệu giả lập/đã loại thông tin riêng tư:
+- Loại nội dung cho phép gửi OpenRouter: audio/transcript/schema/sample nào:
+- Muốn lưu audio không (mặc định KHÔNG):
+- Giới hạn AI: OpenRouter :free, không tự chuyển trả phí/local model.
+- Yêu cầu khác/chỗ chưa chốt:

@@ -1,0 +1,16 @@
+Tên mẫu: Báo cáo tháng
+Subject: Báo cáo {{report_period}} - {{report_name}}
+
+Chào {{recipient_display_name}},
+
+Tôi gửi báo cáo {{report_name}} cho kỳ {{report_period}} trong tệp đính kèm.
+{{summary}}
+
+Trân trọng,
+{{sender_display_name}}
+
+GHI CHÚ CHUẨN BỊ:
+- Copy mẫu này sang inputs/private/email_template.txt rồi chỉnh nội dung.
+- Các placeholder là đề xuất, sẽ được khóa bằng schema khi triển khai.
+- Người nhận và đường dẫn attachment do contract/allowlist xác định riêng.
+- Không đưa mật khẩu/API key vào mẫu thư. Bỏ phần ghi chú này khỏi mẫu sử dụng.

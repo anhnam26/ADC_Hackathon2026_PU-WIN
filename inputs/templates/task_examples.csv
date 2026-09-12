@@ -1,0 +1,7 @@
+id,command,expected_workflow,expected_result
+T01,"Trợ lý, tạo báo cáo doanh thu tháng 8 năm 2026",excel_report,"Hỏi nguồn hoặc dùng nguồn đã chọn; tạo file mới; kiểm chứng; chưa gửi mail"
+T02,"Trợ lý, gửi báo cáo vừa tạo cho Lan demo",report_email,"Chọn alias trong danh bạ; kiểm attachment; preview; đợi xác nhận gửi"
+T03,"Đổi tháng thành tháng 7 năm 2026",clarification,"Cập nhật kỳ; làm hết hiệu lực preview và approval cũ"
+T04,"Đừng gửi, chỉ lưu nháp",control,"Không submit email; kết thúc ở bản nháp"
+T05,"Dừng lại",control,"Chặn side effect mới; báo trạng thái việc đã xảy ra"
+T06,"Gửi cho Lan",clarification,"Hỏi lại nếu có nhiều alias hoặc không có người nhận phù hợp"

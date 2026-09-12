@@ -1,1 +1,15 @@
 Tailieubandau
+
+# Local credentials and private user fixtures
+.env
+.env.*
+!.env.example
+inputs/private/**
+!inputs/private/.gitkeep
+.venv/
+__pycache__/
+runtime/
+outputs/
+logs/
+*.token_cache
+*.msal_cache
