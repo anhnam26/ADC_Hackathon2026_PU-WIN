@@ -1,0 +1,85 @@
+MODULE GOAL - LÕI AI AGENT: THỰC THI TÁC VỤ VĂN PHÒNG NHIỀU BƯỚC
+==================================================================
+
+Dự án : Ứng dụng AI hỗ trợ người khuyết tật vận động tay sử dụng
+        máy tính cho các tác vụ văn phòng
+Module: AI Agent Executor (Lõi #2)
+Ngày  : 12/09/2026
+
+------------------------------------------------------------------
+1. MỤC TIÊU (GOAL)
+------------------------------------------------------------------
+Giúp người dùng khuyết tật vận động tay hoàn thành các tác vụ văn
+phòng nhiều bước (soạn thảo, gửi email, tạo báo cáo...) mà không cần
+thao tác click chuột/gõ phím thủ công liên tục. AI Agent tự thực thi
+chuỗi hành động thay cho người dùng, chỉ dựa trên một lệnh ngắn gọn
+bằng ngôn ngữ tự nhiên (giọng nói hoặc văn bản).
+
+Đây là module tạo ra khác biệt cốt lõi so với các công cụ đọc-chính-tả
+hiện có (vốn vẫn bắt người dùng tự thao tác chuột sau khi gõ xong).
+
+------------------------------------------------------------------
+2. YÊU CẦU CHỨC NĂNG (FUNCTIONAL REQUIREMENTS)
+------------------------------------------------------------------
+- Nhận lệnh từ người dùng dưới dạng ngôn ngữ tự nhiên (giọng nói hoặc
+  gõ) mô tả một tác vụ nhiều bước.
+- Phân rã lệnh thành chuỗi hành động cụ thể mà hệ thống có thể thực
+  thi (mở ứng dụng, điền dữ liệu, định dạng, gửi, lưu...).
+- Tự động thực thi các hành động đó trên ứng dụng văn phòng (Word,
+  Excel, Outlook...) thông qua API tương tác hệ thống (UI Automation/
+  Accessibility API hoặc plugin riêng cho từng ứng dụng).
+- Xác nhận với người dùng ở các bước quan trọng/rủi ro cao (trước khi
+  gửi email, trước khi lưu đè file...) bằng thao tác tối thiểu (nói
+  "đồng ý"/"huỷ", hoặc 1 nút bấm lớn).
+- Xử lý lỗi rõ ràng: nếu một bước thất bại, agent phải thông báo bằng
+  ngôn ngữ tự nhiên và đề xuất cách khắc phục, không dừng đột ngột.
+- Ghi log các hành động đã thực hiện để người dùng xem lại/hoàn tác
+  (undo) khi cần.
+
+------------------------------------------------------------------
+3. PHẠM VI MVP (BAN ĐẦU)
+------------------------------------------------------------------
+- Chỉ hỗ trợ 1-2 tác vụ "phải có" trước:
+    a) Soạn & gửi email theo mẫu có sẵn
+    b) Tạo/cập nhật báo cáo Excel định kỳ (nhập số liệu, tính tổng,
+       xuất file)
+- Giới hạn trong 1 bộ ứng dụng văn phòng cụ thể trước (ví dụ Microsoft
+  Office trên Windows), chưa cần đa nền tảng.
+- Chưa tự học thói quen người dùng ở giai đoạn này — dùng luồng xử lý
+  cố định (fixed workflow) trước, cá nhân hoá để sau.
+
+------------------------------------------------------------------
+4. ĐẦU VÀO / ĐẦU RA
+------------------------------------------------------------------
+Đầu vào : Lệnh ngôn ngữ tự nhiên (giọng nói qua speech-to-text, hoặc
+          gõ trực tiếp).
+Đầu ra  : Tác vụ hoàn thành thật trên ứng dụng văn phòng (file được
+          tạo/sửa, email được gửi) + phản hồi xác nhận bằng giọng
+          nói/văn bản cho người dùng.
+
+------------------------------------------------------------------
+5. RÀNG BUỘC & RỦI RO CẦN LƯU Ý
+------------------------------------------------------------------
+- Độ chính xác hiểu ý định người dùng: cần hỏi lại khi lệnh mơ hồ,
+  thay vì đoán sai và thực thi nhầm.
+- Hành động không thể hoàn tác (gửi nhầm email, xoá nhầm dữ liệu):
+  bắt buộc phải có bước xác nhận riêng.
+- Độ trễ (latency) giữa lệnh và thực thi cần đủ nhanh để giữ trải
+  nghiệm "mượt mà".
+- Quyền truy cập hệ thống ở mức điều khiển ứng dụng văn phòng: cần
+  cân nhắc bảo mật và quyền riêng tư dữ liệu.
+
+------------------------------------------------------------------
+6. TIÊU CHÍ THÀNH CÔNG CHO MVP
+------------------------------------------------------------------
+- Người dùng hoàn thành tác vụ mẫu (vd: gửi 1 email theo mẫu) chỉ
+  bằng 1 câu lệnh + 1 lần xác nhận, thay vì hàng chục thao tác chuột/
+  phím.
+- Thời gian hoàn thành bằng AI Agent nhanh hơn hoặc tương đương người
+  dùng không khuyết tật thao tác thủ công.
+- Tỷ lệ agent hiểu đúng & thực thi đúng lệnh đạt ngưỡng tin cậy chấp
+  nhận được khi thử nghiệm với nhóm người dùng mục tiêu.
+
+------------------------------------------------------------------
+(Ghi chú: file này sẽ được bổ sung thêm khi các module khác của dự
+án được xác định và làm rõ, ví dụ Lõi #1 - Điều khiển giọng nói.)
