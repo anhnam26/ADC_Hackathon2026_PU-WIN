@@ -21,13 +21,13 @@ Không cần viết code; chưa biết mục nào thì ghi CHƯA CHỐT.
 - Workbook có macro/password/external link/pivot không:
 
 3. Email
-- Loại tài khoản: Gmail; dùng Outlook classic qua COM:
+- Loại tài khoản: Gmail cá nhân; dùng SMTP trực tiếp:
 - Gửi từ tài khoản demo nào (địa chỉ, KHÔNG mật khẩu):
 - Tên mẫu thư; subject/body mong muốn; có được viết lại nội dung không:
 - Người nhận demo do nhóm kiểm soát; dùng alias nào:
 - Attachment từ report nào; khi thiếu file phải làm gì:
-- Gmail đã thêm vào Outlook classic, đồng bộ và gửi tay được chưa:
-- Classic Outlook đã đăng nhập và gửi tay được chưa:
+- Đã bật Xác minh 2 bước và có mục Mật khẩu ứng dụng chưa:
+- Đã điền GMAIL_APP_PASSWORD trong .env chưa (KHÔNG ghi mật khẩu ở đây):
 
 4. Giọng nói và trải nghiệm
 - Ngôn ngữ, giọng vùng miền, môi trường ồn/yên:
