@@ -61,6 +61,17 @@ class OpenRouter:
             raise AppError("OpenRouter mất kết nối hoặc quá thời gian. Không tự thử lại; tác vụ được giữ an toàn.") from None
         self.journal.event(None, "api_response", model=model, code=response.status_code, seconds=round(time.monotonic() - start, 2))
         if response.status_code != 200:
+            if response.status_code == 402 and modality == "audio":
+                try:
+                    message = response.json().get("error", {}).get("message", "")
+                except (ValueError, AttributeError, TypeError):
+                    message = ""
+                # Translate only this verified service message; never display raw
+                # provider diagnostics, which can contain request data.
+                if message == "This request requires at least $0.50 in balance for audio":
+                    raise AppError("OpenRouter chặn audio: tài khoản cần số dư tối thiểu 0,50 USD. "
+                                   "Chưa nhận dạng được giọng nói; hãy nhập lệnh bằng văn bản. "
+                                   "Ứng dụng không tự nạp tiền hoặc đổi sang model trả phí.")
             meanings = {401: "Key không hợp lệ", 402: "Tài khoản/giới hạn chi tiêu bị chặn", 404: "Model hoặc chính sách dữ liệu không phù hợp", 429: "Hết quota hoặc provider quá tải"}
             raise AppError(f"OpenRouter {response.status_code}: {meanings.get(response.status_code, 'Không hoàn thành request')}. Không chuyển trả phí.")
         try:

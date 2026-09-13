@@ -67,6 +67,26 @@ def test_cloud_error_never_retries_or_exposes_raw_body(settings, journal, monkey
     assert len(calls) == 1
 
 
+@pytest.mark.parametrize("body,specific", [
+    ({"error": {"message": "This request requires at least $0.50 in balance for audio"}}, True),
+    ({"error": {"message": "sensitive debug body"}}, False),
+    ({"error": None}, False),
+])
+def test_audio_balance_error_is_actionable_without_raw_diagnostics(settings, journal, monkeypatch, body, specific):
+    p = configured_provider(settings, journal)
+    p.catalog[settings.text_model]["architecture"]["input_modalities"].append("audio")
+    calls = []
+    def post(*args, **kwargs):
+        calls.append(kwargs["json"]["model"])
+        return httpx.Response(402, json=body)
+    monkeypatch.setattr(httpx, "post", post)
+    with pytest.raises(AppError) as caught:
+        p.complete(settings.text_model, [], modality="audio")
+    assert ("0,50 USD" in str(caught.value)) == specific
+    assert "sensitive" not in str(caught.value)
+    assert calls == [settings.text_model]
+
+
 def test_voice_segmentation_silence_spike_speech_and_wav():
     quiet = array.array("h", [0] * 800).tobytes()
     loud = array.array("h", [6000] * 800).tobytes()
