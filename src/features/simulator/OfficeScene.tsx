@@ -2,14 +2,15 @@ import {
   Component,
   useEffect,
   useRef,
+  useMemo,
   type ComponentRef,
   type MutableRefObject,
   type ReactNode,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, OrbitControls } from "@react-three/drei";
-import { Group, Vector3, Mesh, Raycaster } from "three";
-import { objects, walls } from "../../data/space";
+import { Html, OrbitControls, Line } from "@react-three/drei";
+import { Group, Vector3, Mesh, Raycaster, CanvasTexture } from "three";
+import { walls } from "../../data/space";
 import { objectParts } from "../../lib/objectGeometry";
 import type {
   MobilityProfile,
@@ -45,13 +46,33 @@ export function ObjectModel({
   object: WorldObject;
   open?: boolean;
 }) {
+  const group = useRef<Group>(null);
+  useFrame(({ clock }) => {
+    if (!object.colleague || !group.current) return;
+    [1, 2, 5, 6].forEach((index, i) => {
+      const limb = group.current!.children[index];
+      if (limb) limb.rotation.x = object.walking ? Math.sin(clock.elapsedTime * 7) * .22 * (i % 2 ? -1 : 1) : 0;
+    });
+  });
   return (
-    <group>
+    <group ref={group}>
       {objectParts(object, open).map((p, i) => (
         <PartMesh part={p} key={i} />
       ))}
     </group>
   );
+}
+function DoorSign({ label, width }: { label: string; width: number }) {
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas'); canvas.width = 768; canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#24443b'; ctx.fillRect(0, 0, 768, 128);
+    ctx.strokeStyle = '#d9dfb5'; ctx.lineWidth = 6; ctx.strokeRect(7, 7, 754, 114);
+    ctx.fillStyle = '#fff5d7'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, 384, 66, 720);
+    return new CanvasTexture(canvas);
+  }, [label]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return <group>{[1, -1].map(side => <mesh key={side} position={[0, 2.4, side * .13]} rotation={[0, side === 1 ? 0 : Math.PI, 0]}><planeGeometry args={[Math.max(1.45, width), .26]} /><meshBasicMaterial map={texture} /></mesh>)}</group>;
 }
 function Wheelchair({
   profile,
@@ -250,8 +271,8 @@ function CameraRig({
     camera.zoom = Math.max(
       12,
       Math.min(
-        size.width / (follow ? 11 : 27),
-        size.height / (follow ? 9 : 22),
+        size.width / (follow ? 11 : 34),
+        size.height / (follow ? 9 : 27),
       ),
     );
     camera.updateProjectionMatrix();
@@ -356,6 +377,8 @@ class SceneBoundary extends Component<
   }
 }
 export interface SceneProps {
+  sceneObjects: WorldObject[];
+  route: Pose[];
   profile: MobilityProfile;
   pose: MutableRefObject<Pose>;
   cameraYaw: MutableRefObject<number>;
@@ -400,30 +423,30 @@ export default function OfficeScene(p: SceneProps) {
         />
         <PartMesh
           part={{
-            position: [0, -0.18, 1.25],
-            size: [18.25, 0.35, 16.7],
+            position: [0, -0.18, .25],
+            size: [24.25, 0.35, 20.7],
             color: "#d4ddcc",
           }}
         />
         <PartMesh
           part={{
-            position: [0, -0.005, 0],
-            size: [18, 0.02, 14],
+            position: [0, -0.005, -1.5],
+            size: [24, 0.02, 17],
             color: "#f1ede0",
           }}
         />
         <PartMesh
           part={{
-            position: [0, 0.008, 8.25],
-            size: [18, 0.025, 2.5],
+            position: [0, 0.008, 8.75],
+            size: [24, 0.025, 3.5],
             color: "#dce5d3",
           }}
         />
         {[
-          { x: -6, z: -3.5, w: 5.85, d: 6.85, c: "#dfe6d5" },
-          { x: 6.25, z: -3.5, w: 5.35, d: 6.85, c: "#e4d6bf" },
-          { x: -6, z: 3.5, w: 5.85, d: 6.85, c: "#ebe0cd" },
-          { x: 6.25, z: 5.2, w: 5.35, d: 3.45, c: "#dce8e1" },
+          { x: -7.5, z: -5, w: 8.85, d: 9.85, c: "#dfe6d5" },
+          { x: 7.75, z: -5, w: 8.35, d: 9.85, c: "#e4d6bf" },
+          { x: -7.5, z: 3.5, w: 8.85, d: 6.85, c: "#ebe0cd" },
+          { x: 7.75, z: 5.2, w: 8.35, d: 3.45, c: "#dce8e1" },
         ].map((r) => (
           <PartMesh
             key={r.x + ":" + r.z}
@@ -435,8 +458,8 @@ export default function OfficeScene(p: SceneProps) {
           />
         ))}
         <gridHelper
-          args={[18, 18, "#b6c3ad", "#d2dbca"]}
-          position={[0, 0.025, 1.25]}
+          args={[24, 24, "#b6c3ad", "#d2dbca"]}
+          position={[0, 0.025, .25]}
           material-transparent
           material-opacity={0.2}
         />
@@ -460,7 +483,9 @@ export default function OfficeScene(p: SceneProps) {
             </mesh>
           </group>
         ))}
-        {objects.map((o) => (
+        {p.route.length > 1 && <Line points={p.route.map(point => [point.x, .065, point.z])} color="#e4b840" lineWidth={5} />}
+        {p.route.filter((_, i) => i % 4 === 0).map((point, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[point.x, .07, point.z]}><ringGeometry args={[.06, .1, 12]} /><meshBasicMaterial color="#fff7b1" /></mesh>)}
+        {p.sceneObjects.map((o) => (
           <group
             key={o.id}
             position={o.position}
@@ -471,6 +496,7 @@ export default function OfficeScene(p: SceneProps) {
             }}
           >
             <ObjectModel object={o} open={p.openDoors.includes(o.id)} />
+            {o.roomLabel && <DoorSign label={o.roomLabel} width={o.size[0]} />}
             {o.colleague && Math.hypot(p.pose.current.x - o.position[0], p.pose.current.z - o.position[2]) < 4.5 && <Html position={[0, o.size[1] + .2, 0]} center occlude zIndexRange={[10, 0]}><span className="colleague-tag">{o.name}<small>{o.colleague.role}</small></span></Html>}
             {(p.nearest === o.id || p.destinationIds.includes(o.id)) && (
               <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>

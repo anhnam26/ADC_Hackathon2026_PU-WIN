@@ -35,6 +35,8 @@ import ObjectInspector, { measurementSummary } from "./ObjectInspector";
 import ColleagueInspector from './ColleagueInspector';
 import Dialog from '../../components/Dialog';
 import { useGameDisplay } from './useGameDisplay';
+import { useVoiceGuide } from './useVoiceGuide';
+import { routeLength } from '../../lib/navigation';
 import type { IssueContext } from "../issues/IssueForm";
 
 const OfficeScene = lazy(() => import("./OfficeScene"));
@@ -82,6 +84,9 @@ export default function Simulator({
   const firstPerson = cameraMode === 'first-person';
   const [reset, setReset] = useState(0);
   const [journal, setJournal] = useState(false);
+  const [navigationOpen, setNavigationOpen] = useState(false);
+  const [destination, setDestination] = useState('reception-counter');
+  const voice = useVoiceGuide();
   const immersive = mode === '3d' && cameraMode !== 'overview';
   const display = useGameDisplay(stage, immersive, notify);
   const [catalog, setCatalog] = useState(false);
@@ -92,6 +97,10 @@ export default function Simulator({
     },
     [inspectObject],
   );
+  const autoOpenDoor = useCallback((id: string) => {
+    const store = useDemoStore.getState();
+    if (!store.session.openDoors.includes(id)) store.setOpenDoors([...store.session.openDoors, id]);
+  }, []);
   const sim = useSimulation(
     session.mobility,
     session.openDoors,
@@ -99,12 +108,14 @@ export default function Simulator({
     handleInteract,
     session.playerPose,
     immersive,
+    false,
+    autoOpenDoor,
   );
   const nearestId = sim.view.nearby.includes(chosen ?? "")
     ? chosen
     : (sim.view.nearby[0] ?? null);
-  const nearest = nearestId ? objectById(nearestId) : null;
-  const activeObject = inspected ? objectById(inspected) : undefined;
+  const nearest = sim.view.objects.find(o => o.id === nearestId);
+  const activeObject = sim.view.objects.find(o => o.id === inspected);
   const objective = objectives[session.currentStep];
   const objectiveIds = target
     ? objects.filter((o) => o.locationId === target).map((o) => o.id)
@@ -112,6 +123,13 @@ export default function Simulator({
   const seen = objective.ids.filter((id) =>
     session.inspectedIds.includes(id),
   ).length;
+  useEffect(() => { voice.speak(`${objective.label}. ${objective.hint} Nhấn N để chọn điểm đến và dẫn đường.`); }, [objective, voice.speak]);
+  useEffect(() => { if (sim.view.navigationStatus !== 'Chọn một điểm đến để bắt đầu dẫn đường.') voice.speak(sim.view.navigationStatus); }, [sim.view.navigationStatus, voice.speak]);
+  const navigateToSelected = (automatic: boolean) => {
+    sim.navigate(destination, automatic);
+    setNavigationOpen(false);
+    requestAnimationFrame(() => stage.current?.focus({ preventScroll: true }));
+  };
   useEffect(() => {
     if (nearestId) sim.chooseNearby(nearestId);
   }, [nearestId, sim]);
@@ -144,10 +162,13 @@ export default function Simulator({
         setCameraMode(current => current === 'first-person' ? 'third-person' : 'first-person');
       }
       if (e.code === 'KeyJ') { e.preventDefault(); setJournal(true); }
+      if (e.code === 'KeyN') { e.preventDefault(); setNavigationOpen(true); }
+      if (e.code === 'KeyP') { e.preventDefault(); if (sim.view.auto) sim.stopNavigation(); else sim.navigate(destination, true); }
+      if (e.code === 'KeyH') { e.preventDefault(); voice.toggle(); }
     };
     window.addEventListener('keydown', hotkey);
     return () => window.removeEventListener('keydown', hotkey);
-  }, [mode]);
+  }, [mode, destination, sim, voice]);
   const unavailable = useCallback(() => {
     setFailed(true);
     setMode("2d");
@@ -217,7 +238,7 @@ export default function Simulator({
     return null;
   };
   const controls: { key: Control; label: string; icon: React.ReactNode }[] = [
-    { key: "forward", label: mode === '3d' && firstPerson ? "Tiến về phía trước" : "Tiến lên màn hình", icon: <ArrowUp size={19} /> },
+    { key: "forward", label: immersive ? "Tiến về phía trước" : "Tiến lên màn hình", icon: <ArrowUp size={19} /> },
     {
       key: "left",
       label: "Di chuyển sang trái",
@@ -225,7 +246,7 @@ export default function Simulator({
     },
     {
       key: "backward",
-      label: mode === '3d' && firstPerson ? "Lùi lại" : "Lùi xuống màn hình",
+      label: immersive ? "Lùi lại" : "Lùi xuống màn hình",
       icon: <ArrowDown size={19} />,
     },
     {
@@ -276,6 +297,7 @@ export default function Simulator({
               <span>Khám phá tự do</span>
             </div>
             <div className="world-tools">
+              <button className="game-tool" onClick={() => setNavigationOpen(true)} aria-label="Chọn điểm đến"><kbd>N</kbd><span>Điểm đến</span></button>
               <button className="game-tool" onClick={() => setJournal(true)}><BookOpen size={16} /><span>Nhật ký</span><kbd>J</kbd></button>
               <button className="game-tool" disabled={mode !== '3d'} onClick={() => { setCameraMode(current => current === 'first-person' ? 'third-person' : 'first-person'); focusGame(); }} aria-label="Đổi góc nhìn V"><kbd>V</kbd><span>{firstPerson ? 'Góc nhìn 1' : cameraMode === 'third-person' ? 'Góc nhìn 3' : 'Toàn cảnh'}</span></button>
               <div className="segmented">
@@ -333,6 +355,7 @@ export default function Simulator({
             data-yaw={sim.view.pose.yaw.toFixed(3)}
             data-camera={mode === '2d' ? 'map' : cameraMode}
             data-pointer-locked={display.locked}
+            data-autowalk={sim.view.auto}
             onPointerDown={(e) => {
               if (!(e.target as HTMLElement).closest("button,select"))
                 focusGame();
@@ -348,6 +371,8 @@ export default function Simulator({
                 }
               >
                 <OfficeScene
+                  sceneObjects={sim.view.objects}
+                  route={sim.view.route}
                   profile={session.mobility}
                   pose={sim.pose}
                   cameraYaw={sim.cameraYaw}
@@ -366,6 +391,8 @@ export default function Simulator({
               </Suspense>
             ) : (
               <Map2D
+                sceneObjects={sim.view.objects}
+                route={sim.view.route}
                 pose={sim.view.pose}
                 profile={session.mobility}
                 openDoors={session.openDoors}
@@ -385,9 +412,9 @@ export default function Simulator({
               {session.inspectedIds.length}/{objects.length}
               <span> điểm đã khám phá</span>
             </div>
-            {immersive && <div className="first-person-hint">{firstPerson ? 'Góc nhìn thứ nhất' : 'Góc nhìn thứ ba'} · {display.locked ? 'Di chuột để nhìn · Esc hiện chuột' : 'Kéo chuột / vuốt để nhìn'} · V đổi góc nhìn</div>}
+            {immersive && <div className="first-person-hint">{firstPerson ? 'Góc nhìn thứ nhất' : 'Góc nhìn thứ ba'} · {display.locked ? 'Di chuột để nhìn · Esc hiện chuột' : 'Enter ẩn chuột · Vuốt để nhìn'} · V đổi góc nhìn</div>}
             {immersive && <div className="game-crosshair" aria-hidden="true">+</div>}
-            {display.fullscreen && immersive && !display.locked && display.canLock && <button className="resume-pointer" onClick={display.lock}>Tiếp tục chơi · Ẩn chuột</button>}
+            {immersive && !display.locked && display.canLock && <button className="resume-pointer" onClick={display.lock}>Enter · Tiếp tục chơi</button>}
             <div className="movement-hud">
               <div className="movement-pad">
                 {controls.map((c) => (
@@ -513,6 +540,12 @@ export default function Simulator({
               Về lối vào
             </button>
           </footer>
+          <section className="navigation-hud" aria-label="Hướng dẫn khám phá">
+            <div className="navigation-actions"><button onClick={() => setNavigationOpen(true)}>N · Chọn điểm đến</button><button onClick={() => sim.view.auto ? sim.stopNavigation() : navigateToSelected(true)}>{sim.view.auto ? 'P · Dừng tự đi' : 'P · Tự đi'}</button><button onClick={voice.toggle} aria-pressed={voice.enabled}>{voice.enabled ? 'H · Tắt giọng' : 'H · Bật giọng'}</button><button onClick={voice.replay}>Nghe lại</button></div>
+            <p className="guide-caption" aria-live="polite">{voice.caption}</p>
+            {sim.view.route.length > 0 && <small>Vạch vàng trên sàn · Còn khoảng {routeLength(sim.view.route).toFixed(1)} m</small>}
+            {voice.voiceNote && <details><summary>Giọng đọc</summary><small>{voice.voiceNote}</small></details>}
+          </section>
         </section>
         <aside className="explore-sidebar">
           <section className="current-mission">
@@ -618,6 +651,11 @@ export default function Simulator({
           </Dialog>}
         </aside>
       </div>
+      {navigationOpen && <Dialog title="Bạn muốn đến đâu?" subtitle="Đi theo vạch vàng hoặc để nhân vật tự đi. WASD/P dừng tự đi bất cứ lúc nào." onClose={() => setNavigationOpen(false)}>
+        <label className="destination-field">Điểm đến<select aria-label="Điểm đến" value={destination} onChange={e => setDestination(e.target.value)}>{objects.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
+        <div className="dialog-actions"><button className="button secondary" onClick={() => navigateToSelected(false)}>Hiện đường đi</button><button className="button primary" onClick={() => navigateToSelected(true)}>Tự đi đến đây</button></div>
+        <p className="profile-disclaimer">Đường tính theo kích thước xe, giữ xe thẳng khi qua cửa. Tự đi mở cửa khi đủ khoảng trống và chờ nếu gặp vật cản. Không phải chứng nhận lối đi thực tế.</p>
+      </Dialog>}
       {activeObject?.kind === 'colleague' ? <ColleagueInspector person={activeObject} onClose={closeInspector} /> : activeObject && (
         <ObjectInspector
           key={activeObject.id}

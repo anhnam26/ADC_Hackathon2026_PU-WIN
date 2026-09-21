@@ -7,6 +7,7 @@ test('game and object information are accessible by keyboard; storage failures d
   await page.goto('/'); await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).focus(); await page.keyboard.press('Enter');
   await expect(page.locator('.storage-notice')).toContainText('không cho phép lưu');
   await expect(page.locator('html')).toHaveAttribute('data-reduced-motion', 'true');
+  await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true); await page.evaluate(() => document.exitPointerLock());
   await page.getByRole('button', { name: '2D', exact: true }).click();
   const report = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(report.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => ({ target: n.target, summary: n.failureSummary })) }))).toEqual([]);

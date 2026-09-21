@@ -18,6 +18,7 @@ test('setup precedes map; V toggles first and third person without teleporting o
   await page.screenshot({ path: 'test-results/game-third-person.png' });
   await page.keyboard.press('v');
   await expect(stage).toHaveAttribute('data-camera', 'first-person');
+  await page.evaluate(() => document.exitPointerLock());
   await page.getByRole('button', { name: /Xe của bạn/ }).click();
   await page.getByRole('spinbutton', { name: 'Chiều rộng xe', exact: true }).focus();
   await page.keyboard.press('v');
@@ -38,6 +39,8 @@ test('native fullscreen fills viewport, locks pointer, releases it for interacti
   await page.goto('/'); await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
   const stage = page.getByTestId('game-stage');
   await expect(page.locator('canvas')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
+  await page.evaluate(() => document.exitPointerLock());
   await page.getByRole('button', { name: 'Toàn màn hình', exact: true }).click();
   await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
@@ -54,7 +57,6 @@ test('native fullscreen fills viewport, locks pointer, releases it for interacti
   await page.keyboard.press('f'); await expect(page.getByRole('dialog')).toBeVisible();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(false);
   await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
-  await page.getByRole('button', { name: /Tiếp tục chơi/ }).click();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
   await page.screenshot({ path: 'test-results/game-fullscreen.png' });
   await page.keyboard.press('Escape');
@@ -77,6 +79,7 @@ test('nearby colleague shows portrait, role and support information via F; far c
   await expect(page.getByRole('dialog')).toContainText('Nhận thẻ ra vào');
   await page.screenshot({ path: 'test-results/game-colleague.png' });
   await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
+  await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true); await page.evaluate(() => document.exitPointerLock());
   await page.getByRole('button', { name: /Nhật ký/ }).click();
   await page.getByRole('button', { name: /Đồ vật & đồng nghiệp/ }).click();
   await page.getByRole('button', { name: /Trần Đức Minh/ }).click();

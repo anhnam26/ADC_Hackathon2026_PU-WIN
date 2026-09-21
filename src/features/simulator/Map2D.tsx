@@ -1,8 +1,8 @@
 import { useEffect, type MutableRefObject } from "react";
-import { objects, walls } from "../../data/space";
+import { walls } from "../../data/space";
 import { objectObstacles } from "../../lib/objectGeometry";
 import { footprint } from "../../lib/physics";
-import type { MobilityProfile, Pose } from "../../types/simulator";
+import type { MobilityProfile, Pose, WorldObject } from "../../types/simulator";
 
 export default function Map2D({
   pose,
@@ -11,6 +11,8 @@ export default function Map2D({
   nearest,
   onSelect,
   cameraYaw,
+  sceneObjects,
+  route,
 }: {
   pose: Pose;
   profile: MobilityProfile;
@@ -18,6 +20,8 @@ export default function Map2D({
   nearest: string | null;
   onSelect: (id: string) => void;
   cameraYaw: MutableRefObject<number>;
+  sceneObjects: WorldObject[];
+  route: Pose[];
 }) {
   useEffect(() => {
     cameraYaw.current = 0;
@@ -26,15 +30,15 @@ export default function Map2D({
   return (
     <svg
       className="simulation-map2d"
-      viewBox="-9.8 -7.8 19.6 18"
+      viewBox="-12.8 -10.8 25.6 22"
       role="img"
       aria-label="Văn phòng nhìn từ trên, dùng WASD hoặc các nút điều khiển để di chuyển"
     >
-      <rect x="-9" y="-7" width="18" height="16.5" fill="#e7edde" />
-      <rect x="-9" y="-7" width="18" height="14" fill="#f1eee1" />
-      <rect x="-9" y="-7" width="6" height="7" fill="#d7e4cd" />
-      <rect x="3.5" y="-7" width="5.5" height="7" fill="#eadcc4" />
-      <rect x="3.5" y="3.4" width="5.5" height="3.6" fill="#d4e4d9" />
+      <rect x="-12" y="-10" width="24" height="20.5" fill="#e7edde" />
+      <rect x="-12" y="-10" width="24" height="17" fill="#f1eee1" />
+      <rect x="-12" y="-10" width="9" height="10" fill="#d7e4cd" />
+      <rect x="3.5" y="-10" width="8.5" height="10" fill="#eadcc4" />
+      <rect x="3.5" y="3.4" width="8.5" height="3.6" fill="#d4e4d9" />
       {walls.map((w) => (
         <rect
           key={w.id}
@@ -45,7 +49,8 @@ export default function Map2D({
           fill="#8da189"
         />
       ))}
-      {objects.map((o) => (
+      {route.length > 1 && <polyline data-testid="floor-route" points={route.map(p => `${p.x},${p.z}`).join(' ')} fill="none" stroke="#c99a16" strokeWidth=".12" />}
+      {sceneObjects.map((o) => (
         <g key={o.id} onClick={() => onSelect(o.id)} cursor="pointer">
           {objectObstacles(o, openDoors.includes(o.id)).map((b, i) => (
             <rect
@@ -61,6 +66,7 @@ export default function Map2D({
             />
           ))}
           <title>{o.name}</title>
+          {o.roomLabel && <text x={o.position[0]} y={o.position[2] - .25} textAnchor="middle" fontSize=".23" fill="#234b32">{o.roomLabel}</text>}
         </g>
       ))}
       {[

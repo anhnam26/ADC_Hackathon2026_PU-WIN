@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { flushSync } from 'react-dom';
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -270,7 +271,14 @@ export default function App() {
           <span>Dữ liệu mô phỏng · Lưu trên trình duyệt này</span>
         </footer>
       </div>
-      {welcome && <Welcome entering={!entered} onConfirm={() => { setEntered(true); setWelcome(false); }} onClose={() => setWelcome(false)} />}
+      {welcome && <Welcome entering={!entered} onConfirm={() => {
+        flushSync(() => { setEntered(true); setWelcome(false); });
+        const stage = document.querySelector<HTMLElement>('[data-testid="game-stage"]');
+        stage?.focus({ preventScroll: true });
+        if (stage?.dataset.camera !== 'map' && matchMedia('(pointer: fine)').matches) {
+          try { stage?.requestPointerLock?.()?.catch(() => notify('Nhấn Enter trong map để bật điều khiển chuột.')); } catch { notify('Trình duyệt chưa hỗ trợ khóa chuột.'); }
+        }
+      }} onClose={() => setWelcome(false)} />}
       {gameMenu && <Dialog title="Tạm dừng" subtitle="DAY ZERO · Không gian của bạn, nhịp đi của bạn." onClose={() => setGameMenu(false)}>
         <div className="game-menu-actions">
           <button className="button primary" onClick={() => setGameMenu(false)}>Trở lại trò chơi</button>

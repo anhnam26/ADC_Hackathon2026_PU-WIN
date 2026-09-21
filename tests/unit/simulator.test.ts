@@ -16,13 +16,13 @@ describe('metre scale and physical access', () => {
       }
     }
   });
-  it('blocks closed doors, fits a 70 cm chair through the 76 cm opening, rejects an 85 cm chair', () => {
+  it('blocks closed doors, fits a 70 cm chair through the 96 cm opening, rejects a 105 cm chair', () => {
     const start = { x: 5.65, z: 2, yaw: 0 };
     const closed = moveWithCollisions(start, 0, 2.4, 0, defaultMobility, worldObstacles([]));
     expect(closed.blocked).toBeDefined(); expect(closed.pose.z).toBeLessThan(3.1);
     const narrow = moveWithCollisions(start, 0, 2.4, 0, defaultMobility, worldObstacles(['restroom-door']));
     expect(narrow.blocked).toBeUndefined(); expect(narrow.pose.z).toBeCloseTo(4.4);
-    const wide = moveWithCollisions(start, 0, 2.4, 0, { ...defaultMobility, widthCm: 85 }, worldObstacles(['restroom-door']));
+    const wide = moveWithCollisions(start, 0, 2.4, 0, { ...defaultMobility, widthCm: 105 }, worldObstacles(['restroom-door']));
     expect(wide.blocked).toBeDefined(); expect(wide.pose.z).toBeLessThan(3.1);
   });
   it('uses length and orientation, cannot tunnel through a wall in a large timestep', () => {

@@ -9,7 +9,7 @@ export function useGameDisplay(stage: RefObject<HTMLDivElement | null>, immersiv
     stage.current.focus({ preventScroll: true });
     try {
       const result = stage.current.requestPointerLock?.();
-      result?.catch(() => notify('Chuột chưa được khóa. Bấm Tiếp tục chơi để thử lại; bạn vẫn có thể kéo chuột để nhìn.'));
+      result?.catch(() => notify('Trình duyệt chưa cho khóa chuột. Nhấn Enter để tiếp tục chơi và ẩn chuột.'));
     } catch { notify('Trình duyệt chưa hỗ trợ khóa chuột. Bạn có thể kéo để nhìn quanh.'); }
   }, [immersive, stage, notify]);
   const toggleFullscreen = useCallback(async () => {
@@ -31,7 +31,7 @@ export function useGameDisplay(stage: RefObject<HTMLDivElement | null>, immersiv
       setFullscreen(!!document.fullscreenElement);
       if (!document.fullscreenElement) document.exitPointerLock?.();
     };
-    const pointer = () => setLocked(document.pointerLockElement === stage.current);
+    const pointer = () => setLocked(!!document.pointerLockElement);
     document.addEventListener('fullscreenchange', full);
     document.addEventListener('pointerlockchange', pointer);
     return () => {
@@ -41,5 +41,20 @@ export function useGameDisplay(stage: RefObject<HTMLDivElement | null>, immersiv
     };
   }, [stage]);
   useEffect(() => { if (!immersive) document.exitPointerLock?.(); }, [immersive]);
+  useEffect(() => {
+    if (immersive && document.pointerLockElement) { setLocked(true); stage.current?.focus({ preventScroll: true }); }
+    const resume = (e: KeyboardEvent) => {
+      if (e.code === 'Enter' && !document.querySelector('dialog[open]') && stage.current?.contains(document.activeElement) && e.target === stage.current && !document.pointerLockElement) { e.preventDefault(); lock(); }
+    };
+    window.addEventListener('keydown', resume);
+    let timer = 0;
+    const dialogAction = (e: MouseEvent) => {
+      if (!(e.target instanceof Element) || !e.target.closest('dialog') || !immersive) return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => { if (!document.querySelector('dialog[open]')) lock(); }, 0);
+    };
+    document.addEventListener('click', dialogAction);
+    return () => { window.removeEventListener('keydown', resume); document.removeEventListener('click', dialogAction); window.clearTimeout(timer); };
+  }, [immersive, lock, stage]);
   return { fullscreen, locked, lock, toggleFullscreen, canLock };
 }

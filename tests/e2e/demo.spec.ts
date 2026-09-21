@@ -4,6 +4,8 @@ import { seedSession } from '../../src/lib/persistence';
 async function start(page: Page, use2d = true) {
   await page.goto('/');
   await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
+  await page.evaluate(() => document.exitPointerLock());
   if (use2d) await page.getByRole('button', { name: '2D', exact: true }).click();
   await page.getByTestId('game-stage').focus();
   await expect(page.locator('.interact-button')).toBeVisible();
@@ -22,7 +24,7 @@ test('WASD drives the wheelchair, F opens nearby objects, a closed door blocks e
   await page.keyboard.press('f');
   await expect(page.getByRole('dialog')).toContainText('Cửa vào & tay nắm');
   await expect(page.getByRole('img', { name: /Minh họa Cửa vào/ })).toBeVisible();
-  await expect(page.getByRole('dialog')).toContainText('126 cm');
+  await expect(page.getByRole('dialog')).toContainText('146 cm');
   const before = await z(page);
   await page.keyboard.down('w'); await page.waitForTimeout(300); await page.keyboard.up('w');
   expect(await z(page)).toBeCloseTo(before, 2);
@@ -39,12 +41,12 @@ test('WASD drives the wheelchair, F opens nearby objects, a closed door blocks e
 });
 
 test('entered dimensions persist; a wide chair cannot pass the same doorway as a smaller chair', async ({ page }) => {
-  const session = seedSession(); session.started = true; session.playerPose = { x: 5.65, z: 2.15, yaw: 0 }; session.mobility.widthCm = 85;
+  const session = seedSession(); session.started = true; session.playerPose = { x: 5.65, z: 2.15, yaw: 0 }; session.mobility.widthCm = 105;
   await page.addInitScript(data => localStorage.setItem('dayzero.session.v1', JSON.stringify(data)), session);
-  await page.goto('/'); await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click(); await page.getByRole('button', { name: '2D', exact: true }).click();
+  await page.goto('/'); await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click(); await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true); await page.evaluate(() => document.exitPointerLock()); await page.getByRole('button', { name: '2D', exact: true }).click();
   await page.getByTestId('game-stage').focus(); await expect(page.locator('.interact-button')).toContainText('Cửa nhà vệ sinh'); await page.keyboard.press('f');
   await expect(page.getByRole('dialog')).toContainText('Xe không lọt ô cửa');
-  await expect(page.getByRole('dialog')).toContainText('− xe 85 cm = -9 cm');
+  await expect(page.getByRole('dialog')).toContainText('− xe 105 cm = -9 cm');
   await page.getByRole('button', { name: 'Mở cửa', exact: true }).click(); await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
   await page.getByTestId('game-stage').focus(); await page.keyboard.down('s'); await expect(page.locator('.collision-hint')).toBeVisible(); await page.keyboard.up('s');
   expect(await z(page)).toBeLessThan(3.1);
@@ -68,7 +70,7 @@ test('object-specific report keeps its measurements through the HR workflow and 
   await expect(page.getByRole('button', { name: 'Tạo 0 nhiệm vụ chuẩn bị' })).toBeDisabled();
   await page.getByRole('combobox', { name: 'Vai trải nghiệm' }).selectOption('hr');
   await page.getByRole('button', { name: 'Cần hỗ trợ mở cửa khi đến làm việc.', exact: true }).click();
-  await expect(page.getByRole('dialog')).toContainText('126 cm');
+  await expect(page.getByRole('dialog')).toContainText('146 cm');
   await page.getByRole('button', { name: 'Bắt đầu chuẩn bị' }).click();
   await page.getByLabel('Phương án chuẩn bị', { exact: true }).fill('Lễ tân sẽ mở cửa và đón bạn lúc 08:30.');
   await page.getByRole('button', { name: 'Gửi phương án xác nhận' }).click();
@@ -77,7 +79,7 @@ test('object-specific report keeps its measurements through the HR workflow and 
   await page.getByRole('button', { name: 'Cần hỗ trợ mở cửa khi đến làm việc.', exact: true }).click();
   await page.getByRole('button', { name: 'Xác nhận phương án', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Đã hoàn tất');
-  await page.reload(); await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click(); await page.getByRole('button', { name: 'Menu', exact: true }).click(); await page.getByRole('button', { name: /Nhiệm vụ chuẩn bị/ }).click();
+  await page.reload(); await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click(); await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true); await page.evaluate(() => document.exitPointerLock()); await page.getByRole('button', { name: 'Menu', exact: true }).click(); await page.getByRole('button', { name: /Nhiệm vụ chuẩn bị/ }).click();
   await expect(page.locator('tbody')).toContainText('Đã hoàn tất');
 });
 
@@ -99,6 +101,7 @@ test('first-person movement, drag look, overview and F interaction work without 
   await page.getByRole('button', { name: 'Mở cửa', exact: true }).click();
   await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
   await holdUntil(page, 'w', async () => await z(page) < 6.15);
+  await page.evaluate(() => document.exitPointerLock());
   const canvas = page.locator('canvas');
   const box = (await canvas.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
