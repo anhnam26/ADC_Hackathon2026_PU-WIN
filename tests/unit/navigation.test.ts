@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { objects, objectById, SPAWN, WORLD } from '../../src/data/space';
-import { planRoute } from '../../src/lib/navigation';
+import { planRoute, traverseSegment, angleDifference } from '../../src/lib/navigation';
 import { worldObstacles } from '../../src/lib/objectGeometry';
 import { moveWithCollisions, canInteract, blockingAt } from '../../src/lib/physics';
 import { defaultMobility } from '../../src/types/simulator';
@@ -16,10 +16,17 @@ describe('navigation and living office', () => {
       expect(path, id).not.toBeNull();
       for (let i = 1; i < path.length; i++) {
         const previous = path[i - 1], next = path[i];
-        expect(moveWithCollisions(previous, next.x - previous.x, next.z - previous.z, next.yaw - previous.yaw, defaultMobility, obstacles).blocked, `${id} segment ${i}`).toBeUndefined();
+        expect(traverseSegment(previous,next,defaultMobility,obstacles), `${id} segment ${i}`).not.toBeNull();
+        if(Math.hypot(next.x-previous.x,next.z-previous.z)>.001) expect(Math.abs(angleDifference(next.yaw,Math.atan2(previous.x-next.x,previous.z-next.z)))).toBeLessThan(.001);
       }
       expect(canInteract(path.at(-1)!, target, obstacles, doors)).toBe(true);
     }
+  });
+  it('takes a direct diagonal across clear space rather than zigzagging',()=>{
+    const target={...objectById('plant')!,position:[2,0,1.5] as [number,number,number]};
+    const route=planRoute({x:-1,z:-4,yaw:0},target,defaultMobility,[target])!;
+    expect(route).not.toBeNull();expect(route.length).toBeLessThan(4);
+    expect(route.slice(1).some((p,i)=>Math.abs(p.x-route[i].x)>.5&&Math.abs(p.z-route[i].z)>.5)).toBe(true);
   });
   it('does not invent a route through doors that are narrower than the chair', () => {
     expect(planRoute(SPAWN, objectById('sink')!, { ...defaultMobility, widthCm: 110 })).toBeNull();

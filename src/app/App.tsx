@@ -1,3 +1,4 @@
+import { useLocale } from '../lib/i18n';
 import { useCallback, useEffect, useState } from "react";
 import { flushSync } from 'react-dom';
 import {
@@ -30,6 +31,7 @@ import Dialog from "../components/Dialog";
 
 type Page = "journey" | "summary" | "tasks";
 export default function App() {
+  const { t, language } = useLocale();
   const { session, notice, reset, setReducedMotion, selectStep } =
     useDemoStore();
   const [page, setPage] = useState<Page>("journey");
@@ -44,6 +46,9 @@ export default function App() {
   const [target, setTarget] = useState<string | null>(null);
   const [toast, setToast] = useState("");
   const notify = useCallback((text: string) => setToast(text), []);
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 4500);
@@ -61,7 +66,7 @@ export default function App() {
   const pending = session.tasks.filter((t) => t.status !== "done").length;
   const exportReport = () => {
     const data = {
-      office: "Day Zero Office — dữ liệu mô phỏng",
+      office: t("Day Zero Office — dữ liệu mô phỏng"),
       exportedAt: new Date().toISOString(),
       ...session,
     };
@@ -73,13 +78,11 @@ export default function App() {
     link.download = `day-zero-${session.startDate}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    notify("Đã xuất báo cáo JSON.");
+    notify(t("Đã xuất báo cáo JSON."));
   };
   return (
     <div className={`app-shell ${page === 'journey' ? 'game-shell' : ''}`}>
-      <a href="#main-content" className="skip-link">
-        Đến nội dung chính
-      </a>
+      <a href="#main-content" className="skip-link">{t("Đến nội dung chính")}</a>
       <aside className="sidebar">
         <a
           href="#"
@@ -88,7 +91,7 @@ export default function App() {
             e.preventDefault();
             goTo("journey");
           }}
-          aria-label="Day Zero — Trang hành trình"
+          aria-label={t("Day Zero — Trang hành trình")}
         >
           <span className="brand-mark">
             d<span />
@@ -104,18 +107,18 @@ export default function App() {
           </span>
           <div>
             <strong>Day Zero Office</strong>
-            <span>Không gian trải nghiệm</span>
+            <span>{t("Không gian trải nghiệm")}</span>
           </div>
           <ChevronDown size={14} />
         </div>
-        <span className="nav-label">KHÔNG GIAN CỦA BẠN</span>
-        <nav aria-label="Điều hướng chính">
+        <span className="nav-label">{t("KHÔNG GIAN CỦA BẠN")}</span>
+        <nav aria-label={t("Điều hướng chính")}>
           <button
             className={page === "journey" ? "active" : ""}
             onClick={() => goTo("journey")}
           >
             <Compass size={19} />
-            <span>Hành trình ngày đầu</span>
+            <span>{t("Hành trình ngày đầu")}</span>
             <span className="nav-active-dot" />
           </button>
           <button
@@ -123,7 +126,7 @@ export default function App() {
             onClick={() => goTo("summary")}
           >
             <ClipboardCheck size={19} />
-            <span>Tổng kết trải nghiệm</span>
+            <span>{t("Tổng kết trải nghiệm")}</span>
             {session.issues.length > 0 && (
               <span className="nav-count">{session.issues.length}</span>
             )}
@@ -133,7 +136,7 @@ export default function App() {
             onClick={() => goTo("tasks")}
           >
             <Users size={19} />
-            <span>Nhiệm vụ chuẩn bị</span>
+            <span>{t("Nhiệm vụ chuẩn bị")}</span>
             {pending > 0 && <span className="nav-count">{pending}</span>}
           </button>
         </nav>
@@ -143,40 +146,28 @@ export default function App() {
               <Leaf size={26} />
               <Sparkles size={15} />
             </span>
-            <h3>
-              Một ngày đầu
-              <br />
-              ít bỡ ngỡ hơn.
-            </h3>
-            <p>Một nơi làm việc tốt bắt đầu từ sự thấu hiểu.</p>
-            <button onClick={() => setHelp(true)}>
-              Tìm hiểu trải nghiệm <ArrowRight size={14} />
+            <h3>{t("Một ngày đầu")}<br />{t("ít bỡ ngỡ hơn.")}</h3>
+            <p>{t("Một nơi làm việc tốt bắt đầu từ sự thấu hiểu.")}</p>
+            <button onClick={() => setHelp(true)}>{t("Tìm hiểu trải nghiệm")}<ArrowRight size={14} />
             </button>
           </div>
           <button className="sidebar-utility" onClick={() => setHelp(true)}>
-            <HelpCircle size={18} />
-            Hướng dẫn trải nghiệm
-          </button>
+            <HelpCircle size={18} />{t("Hướng dẫn trải nghiệm")}</button>
           <button className="sidebar-utility" onClick={() => setSettings(true)}>
-            <Settings2 size={18} />
-            Tùy chọn & dữ liệu
-          </button>
+            <Settings2 size={18} />{t("Tùy chọn & dữ liệu")}</button>
           <div className="sidebar-foot">
-            <span className="live-dot" />
-            Được thiết kế để ai cũng tham gia
-          </div>
+            <span className="live-dot" />{t("Được thiết kế để ai cũng tham gia")}</div>
         </div>
       </aside>
       <div className="main-shell">
         <header className="topbar">
-          <div className="breadcrumb">
-            Không gian của bạn<span>/</span>
+          <div className="breadcrumb">{t("Không gian của bạn")}<span>/</span>
             <strong>
               {page === "journey"
-                ? "Hành trình ngày đầu"
+                ? t("Hành trình ngày đầu")
                 : page === "summary"
-                  ? "Tổng kết trải nghiệm"
-                  : "Nhiệm vụ chuẩn bị"}
+                  ? t("Tổng kết trải nghiệm")
+                  : t("Nhiệm vụ chuẩn bị")}
             </strong>
           </div>
           <div className="topbar-actions">
@@ -185,16 +176,16 @@ export default function App() {
               DEMO
             </span>
             <label className="role-switch">
-              <span className="sr-only">Vai trải nghiệm</span>
+              <span className="sr-only">{t("Vai trải nghiệm")}</span>
               <select
-                aria-label="Vai trải nghiệm"
+                aria-label={t("Vai trải nghiệm")}
                 value={role}
                 onChange={(e) => {
                   setRole(e.target.value as typeof role);
                   if (e.target.value === "hr") goTo("tasks");
                 }}
               >
-                <option value="employee">Nhân viên</option>
+                <option value="employee">{t("Nhân viên")}</option>
                 <option value="hr">HR & Facilities</option>
               </select>
             </label>
@@ -205,16 +196,14 @@ export default function App() {
         <main id="main-content">
           <div className="welcome-bar">
             <div>
-              <span className="sun-icon">✳</span>
-              <span>
-                Chào {role === "hr" ? "đội ngũ chuẩn bị" : "An"},{" "}
+              <span className="sun-icon">{t("✳")}</span>
+              <span>{t("Chào")} {role === "hr" ? t("đội ngũ chuẩn bị") : "An"},{" "}
                 {role === "hr"
-                  ? "cùng tạo một khởi đầu tốt đẹp."
-                  : "ngày đầu của bạn bắt đầu từ đây."}
+                  ? t("cùng tạo một khởi đầu tốt đẹp.")
+                  : t("ngày đầu của bạn bắt đầu từ đây.")}
               </span>
             </div>
-            <span>
-              Ngày bắt đầu <strong>{formatDate(session.startDate)}</strong>
+            <span>{t("Ngày bắt đầu")}<strong>{formatDate(session.startDate)}</strong>
             </span>
           </div>
           {notice && (
@@ -223,9 +212,9 @@ export default function App() {
             </div>
           )}
           {page === "journey" && !entered && <div className="game-launch">
-            <span className="eyebrow">YOUR FIRST DAY, REIMAGINED</span><h1>DAY ZERO<span>Hành trình của bạn bắt đầu ở đây.</span></h1>
-            <p>Thiết lập xe của bạn. Gặp đồng nghiệp mới. Làm quen văn phòng theo nhịp riêng.</p>
-            <button className="button primary" onClick={() => setWelcome(true)}>Thiết lập nhân vật</button>
+            <span className="eyebrow">YOUR FIRST DAY, REIMAGINED</span><h1>DAY ZERO<span>{t("Hành trình của bạn bắt đầu ở đây.")}</span></h1>
+            <p>{t("Thiết lập xe của bạn. Gặp đồng nghiệp mới. Làm quen văn phòng theo nhịp riêng.")}</p>
+            <button className="button primary" onClick={() => setWelcome(true)}>{t("Thiết lập nhân vật")}</button>
           </div>}
           {page === "journey" && session.started && entered && (
             <Simulator
@@ -266,9 +255,8 @@ export default function App() {
         </main>
         <footer className="app-footer">
           <span>
-            DAY ZERO <span>·</span> Một khởi đầu cho tất cả.
-          </span>
-          <span>Dữ liệu mô phỏng · Lưu trên trình duyệt này</span>
+            DAY ZERO <span>{t("·")}</span>{t("Một khởi đầu cho tất cả.")}</span>
+          <span>{t("Dữ liệu mô phỏng · Lưu trên trình duyệt này")}</span>
         </footer>
       </div>
       {welcome && <Welcome entering={!entered} onConfirm={() => {
@@ -276,17 +264,17 @@ export default function App() {
         const stage = document.querySelector<HTMLElement>('[data-testid="game-stage"]');
         stage?.focus({ preventScroll: true });
         if (stage?.dataset.camera !== 'map' && matchMedia('(pointer: fine)').matches) {
-          try { stage?.requestPointerLock?.()?.catch(() => notify('Nhấn Enter trong map để bật điều khiển chuột.')); } catch { notify('Trình duyệt chưa hỗ trợ khóa chuột.'); }
+          try { stage?.requestPointerLock?.()?.catch(() => notify(t("Nhấn Enter trong map để bật điều khiển chuột."))); } catch { notify(t("Trình duyệt chưa hỗ trợ khóa chuột.")); }
         }
       }} onClose={() => setWelcome(false)} />}
-      {gameMenu && <Dialog title="Tạm dừng" subtitle="DAY ZERO · Không gian của bạn, nhịp đi của bạn." onClose={() => setGameMenu(false)}>
+      {gameMenu && <Dialog title={t("Tạm dừng")} subtitle={t("DAY ZERO · Không gian của bạn, nhịp đi của bạn.")} onClose={() => setGameMenu(false)}>
         <div className="game-menu-actions">
-          <button className="button primary" onClick={() => setGameMenu(false)}>Trở lại trò chơi</button>
-          <button className="button secondary" onClick={() => { setGameMenu(false); goTo('summary'); }}>Tổng kết trải nghiệm</button>
-          <button className="button secondary" onClick={() => { setGameMenu(false); goTo('tasks'); }}>Nhiệm vụ chuẩn bị</button>
-          <button className="button secondary" onClick={() => { setGameMenu(false); setWelcome(true); }}>Nhân vật & kích thước xe</button>
-          <button className="button secondary" onClick={() => { setGameMenu(false); setSettings(true); }}>Tùy chọn & dữ liệu</button>
-          <button className="button secondary" onClick={() => { setGameMenu(false); setHelp(true); }}>Hướng dẫn trải nghiệm</button>
+          <button className="button primary" onClick={() => setGameMenu(false)}>{t("Trở lại trò chơi")}</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); goTo('summary'); }}>{t("Tổng kết trải nghiệm")}</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); goTo('tasks'); }}>{t("Nhiệm vụ chuẩn bị")}</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); setWelcome(true); }}>{t("Nhân vật & kích thước xe")}</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); setSettings(true); }}>{t("Tùy chọn & dữ liệu")}</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); setHelp(true); }}>{t("Hướng dẫn trải nghiệm")}</button>
         </div>
       </Dialog>}
       {issueContext && (
@@ -295,21 +283,21 @@ export default function App() {
           onClose={() => setIssueContext(null)}
           onSaved={() => {
             setIssueContext(null);
-            notify("Đã lưu ghi nhận. Xem và tạo nhiệm vụ ở Tổng kết.");
+            notify(t("Đã lưu ghi nhận. Xem và tạo nhiệm vụ ở Tổng kết."));
           }}
         />
       )}
       {settings && (
         <Dialog
-          title="Theo nhịp của bạn"
-          subtitle="Tùy chỉnh trải nghiệm và quản lý dữ liệu demo."
+          title={t("Theo nhịp của bạn")}
+          subtitle={t("Tùy chỉnh trải nghiệm và quản lý dữ liệu demo.")}
           onClose={() => setSettings(false)}
         >
           <div className="settings-content">
             <label className="setting-row">
               <div>
-                <strong>Giảm chuyển động</strong>
-                <span>Tắt hiệu ứng giao diện và làm mượt camera; nhân vật vẫn do bạn điều khiển.</span>
+                <strong>{t("Giảm chuyển động")}</strong>
+                <span>{t("Tắt hiệu ứng giao diện và làm mượt camera; nhân vật vẫn do bạn điều khiển.")}</span>
               </div>
               <input
                 type="checkbox"
@@ -319,8 +307,8 @@ export default function App() {
             </label>
             <button className="setting-row" onClick={exportReport}>
               <div>
-                <strong>Xuất báo cáo</strong>
-                <span>Tải tiến độ, ghi nhận và nhiệm vụ ở dạng JSON.</span>
+                <strong>{t("Xuất báo cáo")}</strong>
+                <span>{t("Tải tiến độ, ghi nhận và nhiệm vụ ở dạng JSON.")}</span>
               </div>
               <ArrowDownToLine size={20} />
             </button>
@@ -332,32 +320,26 @@ export default function App() {
               }}
             >
               <div>
-                <strong>Đặt lại demo</strong>
-                <span>Xóa phiên hiện tại và bắt đầu một hành trình mới.</span>
+                <strong>{t("Đặt lại demo")}</strong>
+                <span>{t("Xóa phiên hiện tại và bắt đầu một hành trình mới.")}</span>
               </div>
               <RotateCcw size={20} />
             </button>
-            <p className="muted small">
-              Đây là bản demo cục bộ. Đổi vai giúp mô phỏng quy trình trong cùng
-              trình duyệt; dữ liệu không được gửi đến HR thật hoặc đồng bộ sang
-              máy khác.
-            </p>
+            <p className="muted small">{t("Đây là bản demo cục bộ. Đổi vai giúp mô phỏng quy trình trong cùng trình duyệt; dữ liệu không được gửi đến HR thật hoặc đồng bộ sang máy khác.")}</p>
           </div>
         </Dialog>
       )}
       {resetConfirm && (
         <Dialog
-          title="Bắt đầu lại hành trình?"
-          subtitle="Tiến độ, ghi nhận và nhiệm vụ của phiên hiện tại sẽ bị xóa khỏi trình duyệt này."
+          title={t("Bắt đầu lại hành trình?")}
+          subtitle={t("Tiến độ, ghi nhận và nhiệm vụ của phiên hiện tại sẽ bị xóa khỏi trình duyệt này.")}
           onClose={() => setResetConfirm(false)}
         >
           <div className="dialog-actions">
             <button
               className="button secondary"
               onClick={() => setResetConfirm(false)}
-            >
-              Giữ phiên hiện tại
-            </button>
+            >{t("Giữ phiên hiện tại")}</button>
             <button
               className="button primary"
               onClick={() => {
@@ -367,54 +349,43 @@ export default function App() {
                 setRole("employee");
                 goTo("journey");
                 setWelcome(true);
-                notify("Đã đặt lại dữ liệu demo.");
+                notify(t("Đã đặt lại dữ liệu demo."));
               }}
-            >
-              Đặt lại demo
-            </button>
+            >{t("Đặt lại demo")}</button>
           </div>
         </Dialog>
       )}
       {help && (
         <Dialog
-          title="Khám phá hôm nay, sẵn sàng ngày mai."
-          subtitle="Bạn không cần hoàn thành mọi thứ trong một lần."
+          title={t("Khám phá hôm nay, sẵn sàng ngày mai.")}
+          subtitle={t("Bạn không cần hoàn thành mọi thứ trong một lần.")}
           onClose={() => setHelp(false)}
         >
           <div className="help-steps">
             <div>
               <Map size={23} />
               <section>
-                <h3>01 · Làm quen không gian</h3>
-                <p>
-                  Nhập kích thước xe rồi vào map. Di chuột để nhìn quanh, WASD di chuyển, V đổi góc nhìn, Esc hiện chuột và Enter chơi tiếp. Nhấn N để chọn điểm đến, theo vạch vàng hoặc bật tự đi. P/WASD dừng tự đi. H bật/tắt giọng hướng dẫn, có phụ đề và nút nghe lại.
-                </p>
+                <h3>{t("01 · Làm quen không gian")}</h3>
+                <p>{t("Nhập kích thước xe rồi vào map. Di chuột để nhìn quanh, WASD di chuyển, V đổi góc nhìn, Esc hiện chuột và Enter chơi tiếp. Nhấn N để chọn điểm đến, theo vạch vàng hoặc bật tự đi. P/WASD dừng tự đi. H bật/tắt giọng hướng dẫn, có phụ đề và nút nghe lại.")}</p>
               </section>
             </div>
             <div>
               <Compass size={23} />
               <section>
-                <h3>02 · Thử và ghi nhận</h3>
-                <p>
-                  Đến gần đồ vật rồi nhấn F để xem hình minh họa, kích thước, cách dùng và lưu ý. Cửa cần mở bằng nút trong bảng tương tác. Xe có va chạm với khung cửa, bàn ghế và tường.
-                </p>
+                <h3>{t("02 · Thử và ghi nhận")}</h3>
+                <p>{t("Đến gần đồ vật rồi nhấn F để xem hình minh họa, kích thước, cách dùng và lưu ý. Cửa cần mở bằng nút trong bảng tương tác. Xe có va chạm với khung cửa, bàn ghế và tường.")}</p>
               </section>
             </div>
             <div>
               <ShieldCheck size={23} />
               <section>
-                <h3>03 · Cùng chuẩn bị</h3>
-                <p>
-                  Tạo nhiệm vụ từ Tổng kết. Chuyển vai HR & Facilities để chuẩn
-                  bị phương án, rồi quay về Nhân viên để xác nhận.
-                </p>
+                <h3>{t("03 · Cùng chuẩn bị")}</h3>
+                <p>{t("Tạo nhiệm vụ từ Tổng kết. Chuyển vai HR & Facilities để chuẩn bị phương án, rồi quay về Nhân viên để xác nhận.")}</p>
               </section>
             </div>
           </div>
           <div className="dialog-actions">
-            <button className="button primary" onClick={() => setHelp(false)}>
-              Tôi đã hiểu
-              <Check size={16} />
+            <button className="button primary" onClick={() => setHelp(false)}>{t("Tôi đã hiểu")}<Check size={16} />
             </button>
           </div>
         </Dialog>
@@ -428,7 +399,7 @@ export default function App() {
           <>
             <Check size={17} />
             <span>{toast}</span>
-            <button onClick={() => setToast("")} aria-label="Đóng thông báo">
+            <button onClick={() => setToast("")} aria-label={t("Đóng thông báo")}>
               <X size={15} />
             </button>
           </>

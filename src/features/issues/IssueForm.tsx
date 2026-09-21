@@ -1,3 +1,4 @@
+import { useLocale } from '../../lib/i18n';
 import { useState, type FormEvent } from "react";
 import { MapPin, Plus } from "lucide-react";
 import Dialog from "../../components/Dialog";
@@ -32,6 +33,7 @@ export default function IssueForm({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const {t: tr, language} = useLocale();
   const saveIssue = useDemoStore((s) => s.saveIssue);
   const issue = context.issue;
   const [description, setDescription] = useState(
@@ -53,7 +55,7 @@ export default function IssueForm({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (description.trim().length < 3) {
-      setError("Hãy mô tả ít nhất 3 ký tự để người chuẩn bị hiểu vấn đề.");
+      setError(tr("Hãy mô tả ít nhất 3 ký tự để người chuẩn bị hiểu vấn đề."));
       return;
     }
     saveIssue(
@@ -76,58 +78,51 @@ export default function IssueForm({
   };
   return (
     <Dialog
-      title={issue ? "Chỉnh sửa ghi nhận" : "Cùng chuẩn bị tốt hơn"}
-      subtitle="Ghi lại điều chưa rõ hoặc rào cản có thể xảy ra."
+      title={issue ? tr("Chỉnh sửa ghi nhận") : tr("Cùng chuẩn bị tốt hơn")}
+      subtitle={tr("Ghi lại điều chưa rõ hoặc rào cản có thể xảy ra.")}
       onClose={onClose}
     >
       <div className="context-strip">
         <MapPin size={18} />
         <div>
-          <strong>{locationById(context.locationId).name}</strong>
+          <strong>{tr(locationById(context.locationId).name)}</strong>
           {(context.objectName ?? issue?.objectName) && <strong>{context.objectName ?? issue?.objectName}</strong>}
           <span>
-            {journey[context.stepId].time} · {journey[context.stepId].title}
+            {journey[context.stepId].time}{tr("·")}{tr(journey[context.stepId].title)}
           </span>
         </div>
       </div>
       {(context.measurementNote ?? issue?.measurementNote) && <p className="measurement-context">{context.measurementNote ?? issue?.measurementNote}</p>}
       <form onSubmit={submit} className="form-stack">
         <fieldset className="kind-options">
-          <legend>Loại ghi nhận</legend>
+          <legend>{tr("Loại ghi nhận")}</legend>
           <label>
             <input
               type="radio"
               name="kind"
               checked={kind === "verification"}
               onChange={() => setKind("verification")}
-            />{" "}
-            Cần xác minh
-          </label>
+            />{" "}{tr("Cần xác minh")}</label>
           <label>
             <input
               type="radio"
               name="kind"
               checked={kind === "barrier"}
               onChange={() => setKind("barrier")}
-            />{" "}
-            Rào cản có thể xảy ra
-          </label>
+            />{" "}{tr("Rào cản có thể xảy ra")}</label>
         </fieldset>
-        <label>
-          Điều kiện liên quan
-          <select
+        <label>{tr("Điều kiện liên quan")}<select
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
           >
             {categories.map((c) => (
               <option value={c} key={c}>
-                {categoryLabels[c]}
+                {tr(categoryLabels[c])}
               </option>
             ))}
           </select>
         </label>
-        <label>
-          Điều bạn muốn ghi nhận <span className="required">*</span>
+        <label>{tr("Điều bạn muốn ghi nhận")}<span className="required">*</span>
           <textarea
             required
             minLength={3}
@@ -135,29 +130,26 @@ export default function IssueForm({
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Ví dụ: Tôi chưa rõ lối bên hông có mở lúc 08:30 không."
+            placeholder={tr("Ví dụ: Tôi chưa rõ lối bên hông có mở lúc 08:30 không.")}
           />
         </label>
-        <label>
-          Hỗ trợ bạn mong muốn{" "}
-          <span className="optional">(không bắt buộc)</span>
+        <label>{tr("Hỗ trợ bạn mong muốn")}{" "}
+          <span className="optional">{tr("(không bắt buộc)")}</span>
           <textarea
             rows={2}
             maxLength={1000}
             value={support}
             onChange={(e) => setSupport(e.target.value)}
-            placeholder="Ví dụ: Gửi hướng dẫn đường đi trước ngày đầu."
+            placeholder={tr("Ví dụ: Gửi hướng dẫn đường đi trước ngày đầu.")}
           />
         </label>
-        <label>
-          Mức ảnh hưởng
-          <select
+        <label>{tr("Mức ảnh hưởng")}<select
             value={impact}
             onChange={(e) => setImpact(e.target.value as Issue["impact"])}
           >
-            <option value="normal">Cần biết thêm thông tin</option>
-            <option value="medium">Có thể làm gián đoạn hoạt động</option>
-            <option value="high">Có thể không thực hiện được hoạt động</option>
+            <option value="normal">{tr("Cần biết thêm thông tin")}</option>
+            <option value="medium">{tr("Có thể làm gián đoạn hoạt động")}</option>
+            <option value="high">{tr("Có thể không thực hiện được hoạt động")}</option>
           </select>
         </label>
         {error && (
@@ -166,13 +158,9 @@ export default function IssueForm({
           </p>
         )}
         <div className="dialog-actions">
-          <button type="button" className="button secondary" onClick={onClose}>
-            Hủy
-          </button>
+          <button type="button" className="button secondary" onClick={onClose}>{tr("Hủy")}</button>
           <button className="button primary" type="submit">
-            <Plus size={16} />
-            Lưu vào tổng kết
-          </button>
+            <Plus size={16} />{tr("Lưu vào tổng kết")}</button>
         </div>
       </form>
     </Dialog>

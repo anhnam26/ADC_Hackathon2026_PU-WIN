@@ -36,7 +36,7 @@ Trang trắng hoặc báo thiếu thư viện: dừng server của dự án bằ
 | J | Mở nhật ký, lịch trình và danh mục đối tượng |
 | N | Chọn điểm đến; hiện vạch đường hoặc tự đi |
 | P | Bắt đầu / dừng tự đi tới điểm đã chọn |
-| H | Bật / tắt giọng hướng dẫn tiếng Việt |
+| H | Bật / tắt giọng hướng dẫn theo ngôn ngữ đã chọn |
 | Enter | Khóa lại chuột sau Esc hoặc khi trình duyệt chặn khóa tự động |
 | Escape | Đóng bảng thông tin hoặc trả chuột cho trình duyệt; có thể thoát toàn màn hình tùy trình duyệt |
 | Di chuột / vuốt trên cảnh 3D | Quay hướng xe, nhìn lên/xuống; kéo chuột là phương án dự phòng khi không khóa được |
@@ -55,11 +55,17 @@ Toàn màn hình dùng Fullscreen API; map chiếm 100% chiều rộng/cao, khô
 
 Nhấn **N**, chọn đồ vật/đồng nghiệp rồi chọn **Hiện đường đi** hoặc **Tự đi đến đây**. Đường vàng xuất hiện trực tiếp trên sàn 3D và bản đồ 2D, có khoảng cách còn lại. **P** bật/dừng tự đi tới điểm đã chọn; WASD/mũi tên/Q/E hoặc F cũng dừng tự đi để trả quyền điều khiển. Mở dialog/rời tab tạm dừng di chuyển.
 
-Đường được tìm trên lưới 25 cm bằng A*, kiểm tra vùng chiếm chỗ xe cùng tường/đồ vật. Xe giữ hướng thẳng theo trục map và có thể đi ngang, lùi; đây là hỗ trợ khám phá, chưa mô phỏng động học xe lăn thật. Đường dự tính trạng thái cửa mở; tự đi chỉ mở cửa khi đến gần và cung quét không vướng xe/người. Đến trong tầm F thì dừng. Nếu gặp vật cản động, xe chờ; có thể tự điều khiển hoặc chọn đường lại. Xe quá rộng/không đủ chỗ căn hướng sẽ báo chưa tìm được đường, không đi xuyên khung. Đường đến đồng nghiệp đi lại lấy vị trí lúc chọn; nếu họ đã rời vị trí, chọn dẫn đường lại.
+Đường được tìm bằng A* trên lưới 25 cm, có trạng thái hướng xe và 8 hướng di chuyển. Các đoạn được nối thẳng khi đủ chỗ, kể cả đường chéo, thay cho zigzag theo trục. Xe xoay theo hướng đoạn đường rồi tiến; camera thứ nhất/thứ ba cùng bám hướng xe, chuyển động chuột ngang không bẻ hướng trong lúc tự đi. Mọi đoạn đi và xoay đều kiểm tra vùng chiếm chỗ xe; đây vẫn là hỗ trợ khám phá, chưa mô phỏng động học xe lăn thật. Đường dự tính trạng thái cửa mở; tự đi chỉ mở cửa khi đến gần và cung quét không vướng xe/người. Đến trong tầm F thì dừng. Nếu gặp vật cản động, xe chờ; có thể tự điều khiển hoặc chọn đường lại. Xe quá rộng/không đủ chỗ căn hướng sẽ báo chưa tìm được đường, không đi xuyên khung. Đường đến đồng nghiệp đi lại lấy vị trí lúc chọn; nếu họ đã rời vị trí, chọn dẫn đường lại.
 
-Giọng hướng dẫn dùng [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis), ưu tiên giọng `vi-VN` của thiết bị. Đọc mục tiêu, bắt đầu/chờ/dừng/đến nơi; có phụ đề, nút **Nghe lại**, **H** bật/tắt. Không dùng microphone. Chất lượng và khả năng phát tiếng Việt phụ thuộc giọng cài trên máy; thiếu giọng hoặc lỗi phát sẽ hiện thông báo, hướng dẫn chữ và đường vàng vẫn hoạt động. Hủy hàng đợi cũ khi đổi chỉ dẫn/tắt giọng/rời trang; không đọc chồng liên tục.
+Chọn **Tiếng Việt / English** ở màn thiết lập hoặc thanh công cụ trong map (nhấn Esc để hiện chuột). Lựa chọn được lưu khi tải lại trang. Giao diện, hướng dẫn, phụ đề, tên phòng và thông tin đối tượng đổi theo ngôn ngữ; tên riêng và nội dung người dùng nhập được giữ nguyên.
+
+Giọng hướng dẫn dùng Web Speech API, chọn giọng `vi-VN` hoặc `en-US` theo ngôn ngữ. Đọc mục tiêu, bắt đầu/chờ/dừng/đến nơi; **phụ đề luôn ở phía dưới màn hình**, kể cả khi tắt tiếng bằng H. Có nút **Nghe lại**. Không dùng microphone. Chất lượng giọng phụ thuộc giọng cài trên máy; thiếu giọng hoặc lỗi phát sẽ hiện thông báo, phụ đề và đường vàng vẫn hoạt động. Hủy hàng đợi cũ khi đổi ngôn ngữ/chỉ dẫn, tắt giọng hoặc rời trang.
 
 ## Gặp đồng nghiệp
+
+**J → Nhật ký** có ba mục riêng: **Lịch trình**, **Đồ vật** (22 đối tượng) và **Đồng nghiệp** (7 người). Chọn người ở xa không mở hồ sơ từ xa; cần đến trong tầm tương tác.
+
+Trong hồ sơ đồng nghiệp, chọn **Gửi thư**, nhập lời nhắn (1–1500 ký tự) rồi **Gửi lời nhắn**. Lịch sử riêng theo từng người và được lưu cùng phiên trên trình duyệt. **Chưa gửi email hoặc chuyển tin tới người thật**; muốn gửi thật cần bổ sung backend. Xuất báo cáo chứa cả lời nhắn; đặt lại demo xóa chúng.
 
 Có **7 nhân vật mẫu**: Mai Linh (HR), Đức Minh (buddy), Hoài An (Facilities) và 4 người đi lại là Quang Huy, Thanh Thảo, Hải Nam, Bảo Yến. Người đi bộ theo tuyến trong khu vực, có cử động tay/chân, dừng khi bạn đến gần và khi mở dialog. Mô hình, va chạm, vị trí F, hồ sơ và bản đồ 2D cùng lấy vị trí hiện tại; không dùng tọa độ cũ để tương tác. Đến gần rồi nhấn F xem chân dung minh họa, vai trò, đội nhóm, lời giới thiệu và nội dung hỗ trợ. Hình chân dung SVG được tạo cục bộ; đây là người giả lập, chưa có hội thoại AI.
 
@@ -125,9 +131,10 @@ Bản preview ở **http://127.0.0.1:4173/**. Có thể đưa `dist/` lên stati
 
 - `src/data/space.ts`: mặt bằng mét, đồ vật, số đo, hướng dẫn, vị trí xuất phát và mục tiêu. Các đoạn tường cạnh cửa sinh từ cùng số đo thông thủy.
 - `src/data/colleagues.ts`: 7 hồ sơ nhân vật mẫu, tuyến đi lại, màu mô hình và thông tin hỗ trợ.
-- `src/lib/navigation.ts`: tìm đường theo vùng chiếm chỗ xe trên lưới 25 cm.
+- `src/lib/navigation.ts`: tìm đường có hướng xe, đi chéo và rút gọn các đoạn an toàn.
 - `src/lib/npcMotion.ts`: cập nhật người đi bộ, nhường xe và kiểm tra vật cản.
-- `src/features/simulator/useVoiceGuide.ts`: giọng tiếng Việt, phụ đề, hủy hàng đợi và thông báo lỗi.
+- `src/features/simulator/useVoiceGuide.ts`: giọng Việt/Anh, phụ đề, hủy hàng đợi và thông báo lỗi.
+- `src/lib/i18n.ts`, `src/data/objectEnglish.ts`: bản dịch giao diện và hướng dẫn đồ vật; hình học dùng chung.
 - `src/features/simulator/ColleagueInspector.tsx`: hồ sơ đồng nghiệp và chân dung minh họa cục bộ.
 - `src/features/simulator/useGameDisplay.ts`: đồng bộ Fullscreen / Pointer Lock, xử lý lỗi trình duyệt.
 - `src/styles/game.css`: map phủ màn hình, HUD, nhật ký/menu và màn thiết lập trước khi chơi.

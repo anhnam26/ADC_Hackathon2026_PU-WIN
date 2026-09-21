@@ -636,3 +636,26 @@ Phần này thay thế các mô tả không có tự đi, không âm thanh và N
   người đi không xuyên vật; tự mở cửa/đến nơi; ngắt tự đi bằng phím; giọng/phụ đề;
   khóa chuột ngay khi vào; giữ kiểm tra HR, dữ liệu cũ và WebGL fallback.
 - Tài liệu SpeechSynthesis: https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis
+
+24. HƯỚNG DI CHUYỂN, HAI NGÔN NGỮ VÀ LỜI NHẮN ĐỒNG NGHIỆP
+
+Phần này thay thế mô tả giữ hướng theo trục map trong mục 23.
+- Tìm đường có cả vị trí và hướng xe; 8 hướng, nối thẳng các đoạn đi được.
+  Đường chéo dùng hướng thực của đoạn đường. Kiểm tra cả xoay tại chỗ và
+  quét dấu chiếm chỗ xe, không cắt xuyên góc tường hoặc vật cản để rút đường.
+- Khi tự đi, xe quay theo hướng đi rồi tiến, camera thứ nhất/thứ ba bám xe.
+  Chuột ngang không bẻ hướng đang tự đi; WASD/Q/E/P dừng để lấy lại điều khiển.
+  Vẫn có thể đổi V. Chưa mô phỏng lực đẩy và cơ học bánh xe thực tế.
+- Phụ đề ở dưới màn hình, luôn hiện cả khi tắt tiếng; giọng và phụ đề đồng bộ.
+- Chọn Tiếng Việt / English trên màn thiết lập hoặc HUD. Lưu lựa chọn trong
+  phiên; chuyển giao diện, hướng dẫn đồ vật, phòng và giọng vi-VN/en-US.
+  Tên riêng và nội dung ghi nhận/lời nhắn do người dùng nhập không tự dịch.
+- Nhật ký có ba mục độc lập: Lịch trình / Đồ vật / Đồng nghiệp.
+- Nhấn F gần đồng nghiệp: Hồ sơ hoặc Gửi thư. Lời nhắn 1–1500 ký tự,
+  danh sách riêng theo người nhận và thời gian; lưu trong localStorage.
+  Đây là hộp thư mô phỏng, chưa gửi email hay tin nhắn ra ngoài.
+- Phiên cũ tự nhận mặc định tiếng Việt và danh sách thư trống, giữ dữ liệu cũ.
+  Xuất JSON bao gồm ngôn ngữ/lời nhắn; đặt lại demo xóa toàn bộ phiên.
+- Kiểm tra bổ sung: hướng xe trùng hướng vận tốc, đường chéo, đổi V trong
+  tự đi, xoay/qua cửa có va chạm, phụ đề dưới màn hình, đổi ngôn ngữ/giọng,
+  danh mục tách biệt, lời nhắn được lưu nguyên văn và phục hồi sau tải lại.

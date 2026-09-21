@@ -7,6 +7,7 @@ import {
   type MutableRefObject,
   type ReactNode,
 } from "react";
+import { useLocale } from '../../lib/i18n';
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, OrbitControls, Line } from "@react-three/drei";
 import { Group, Vector3, Mesh, Raycaster, CanvasTexture } from "three";
@@ -81,6 +82,7 @@ function Wheelchair({
   profile: MobilityProfile;
   pose: MutableRefObject<Pose>;
 }) {
+  const { t } = useLocale();
   const group = useRef<Group>(null),
     wheels = useRef<(Mesh | null)[]>([]),
     last = useRef({ ...pose.current });
@@ -240,7 +242,7 @@ function Wheelchair({
         zIndexRange={[12, 0]}
       >
         <span className="player-tag">
-          BẠN<span>▼</span>
+          {t('BẠN')}<span>▼</span>
         </span>
       </Html>
     </group>
@@ -395,6 +397,7 @@ export interface SceneProps {
   onSelect: (id: string) => void;
 }
 export default function OfficeScene(p: SceneProps) {
+  const {t}=useLocale();
   return (
     <SceneBoundary onError={p.onUnavailable}>
       <Canvas
@@ -483,7 +486,7 @@ export default function OfficeScene(p: SceneProps) {
             </mesh>
           </group>
         ))}
-        {p.route.length > 1 && <Line points={p.route.map(point => [point.x, .065, point.z])} color="#e4b840" lineWidth={5} />}
+        {p.route.length > 0 && <Line points={[p.pose.current,...p.route].map(point => [point.x, .065, point.z])} color="#e4b840" lineWidth={5} />}
         {p.route.filter((_, i) => i % 4 === 0).map((point, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[point.x, .07, point.z]}><ringGeometry args={[.06, .1, 12]} /><meshBasicMaterial color="#fff7b1" /></mesh>)}
         {p.sceneObjects.map((o) => (
           <group
@@ -496,8 +499,8 @@ export default function OfficeScene(p: SceneProps) {
             }}
           >
             <ObjectModel object={o} open={p.openDoors.includes(o.id)} />
-            {o.roomLabel && <DoorSign label={o.roomLabel} width={o.size[0]} />}
-            {o.colleague && Math.hypot(p.pose.current.x - o.position[0], p.pose.current.z - o.position[2]) < 4.5 && <Html position={[0, o.size[1] + .2, 0]} center occlude zIndexRange={[10, 0]}><span className="colleague-tag">{o.name}<small>{o.colleague.role}</small></span></Html>}
+            {o.roomLabel && <DoorSign label={t(o.roomLabel)} width={o.size[0]} />}
+            {o.colleague && Math.hypot(p.pose.current.x - o.position[0], p.pose.current.z - o.position[2]) < 4.5 && <Html position={[0, o.size[1] + .2, 0]} center occlude zIndexRange={[10, 0]}><span className="colleague-tag">{o.name}<small>{t(o.colleague.role)}</small></span></Html>}
             {(p.nearest === o.id || p.destinationIds.includes(o.id)) && (
               <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <ringGeometry
@@ -530,7 +533,7 @@ export default function OfficeScene(p: SceneProps) {
             center
             zIndexRange={[5, 0]}
           >
-            <span className="room-label">{name}</span>
+              <span className="room-label">{t(String(name))}</span>
           </Html>
         ))}
         {!p.firstPerson && <Wheelchair profile={p.profile} pose={p.pose} />}

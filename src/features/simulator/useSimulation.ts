@@ -8,7 +8,7 @@ import {
 } from "react";
 import { objects, SPAWN } from "../../data/space";
 import { objectObstacles, worldObstacles } from "../../lib/objectGeometry";
-import { planRoute } from '../../lib/navigation';
+import { planRoute, routePassesDoor } from '../../lib/navigation';
 import { advanceColleagues } from '../../lib/npcMotion';
 import {
   blockingAt,
@@ -124,6 +124,7 @@ export function useSimulation(
       let blocked = "",
         moving = false;
       if (firstPerson) cameraYaw.current = pose.current.yaw;
+      if (navigation.current.auto && !controls.size) pendingTurn.current = 0;
       if (!paused && (controls.size || pendingTurn.current)) {
         if (controls.size && navigation.current.auto) { navigation.current.auto = false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; }
         let x = Number(controls.has("right")) - Number(controls.has("left"));
@@ -193,7 +194,7 @@ export function useSimulation(
           else {
             const remaining = nav.route.slice(nav.index);
             const door = sceneObjects.current.find(o => o.kind === 'door' && !openDoors.includes(o.id) &&
-              canInteract(pose.current, o, obstacles, openDoors) && remaining.some(p => Math.hypot(p.x - o.position[0], p.z - o.position[2]) < .65));
+              canInteract(pose.current, o, obstacles, openDoors) && routePassesDoor(pose.current, remaining, o));
             if (door && doorCanToggle(door, openDoors, pose.current, profile) && sceneObjects.current.filter(o => o.colleague).every(o => doorCanToggle(door, openDoors, {x:o.position[0],z:o.position[2],yaw:o.yaw}, {...profile,widthCm:58,lengthCm:58}))) doorCallback.current?.(door.id);
             const dx = next.x - pose.current.x, dz = next.z - pose.current.z, distance = Math.hypot(dx, dz);
             const difference = Math.atan2(Math.sin(next.yaw - pose.current.yaw), Math.cos(next.yaw - pose.current.yaw));
@@ -203,7 +204,7 @@ export function useSimulation(
             pose.current = result.pose;
             if (result.blocked) { nav.status = `Đang chờ: ${result.blocked.name}. Nhấn WASD để tự điều khiển.`; blocked = result.blocked.name; }
             else { nav.status = `Đang tự đi đến ${target.name}. WASD hoặc P để dừng.`; moving = step > 0; }
-            if (distance < .025 && Math.abs(difference) < .025) nav.index++;
+            if (Math.hypot(next.x - pose.current.x, next.z - pose.current.z) < .001 && Math.abs(difference) < .025) nav.index++;
           }
         }
       } else if (!paused && nav.route.length && !nav.auto) {

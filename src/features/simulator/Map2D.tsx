@@ -1,3 +1,4 @@
+import { useLocale } from '../../lib/i18n';
 import { useEffect, type MutableRefObject } from "react";
 import { walls } from "../../data/space";
 import { objectObstacles } from "../../lib/objectGeometry";
@@ -23,6 +24,7 @@ export default function Map2D({
   sceneObjects: WorldObject[];
   route: Pose[];
 }) {
+  const { t, language } = useLocale();
   useEffect(() => {
     cameraYaw.current = 0;
   }, [cameraYaw]);
@@ -32,7 +34,7 @@ export default function Map2D({
       className="simulation-map2d"
       viewBox="-12.8 -10.8 25.6 22"
       role="img"
-      aria-label="Văn phòng nhìn từ trên, dùng WASD hoặc các nút điều khiển để di chuyển"
+      aria-label={t("Văn phòng nhìn từ trên, dùng WASD hoặc các nút điều khiển để di chuyển")}
     >
       <rect x="-12" y="-10" width="24" height="20.5" fill="#e7edde" />
       <rect x="-12" y="-10" width="24" height="17" fill="#f1eee1" />
@@ -49,7 +51,7 @@ export default function Map2D({
           fill="#8da189"
         />
       ))}
-      {route.length > 1 && <polyline data-testid="floor-route" points={route.map(p => `${p.x},${p.z}`).join(' ')} fill="none" stroke="#c99a16" strokeWidth=".12" />}
+      {route.length > 0 && <polyline data-testid="floor-route" points={[pose,...route].map(p => `${p.x},${p.z}`).join(' ')} fill="none" stroke="#c99a16" strokeWidth=".12" />}
       {sceneObjects.map((o) => (
         <g key={o.id} data-object-id={o.id} data-x={o.position[0].toFixed(3)} data-z={o.position[2].toFixed(3)} onClick={() => onSelect(o.id)} cursor="pointer">
           {objectObstacles(o, openDoors.includes(o.id)).map((b, i) => (
@@ -65,16 +67,16 @@ export default function Map2D({
               strokeWidth={nearest === o.id ? 0.07 : 0.025}
             />
           ))}
-          <title>{o.name}</title>
-          {o.roomLabel && <text x={o.position[0]} y={o.position[2] - .25} textAnchor="middle" fontSize=".23" fill="#234b32">{o.roomLabel}</text>}
+          <title>{t(o.name)}</title>
+          {o.roomLabel && <text x={o.position[0]} y={o.position[2] - .25} textAnchor="middle" fontSize=".23" fill="#234b32">{t(o.roomLabel)}</text>}
         </g>
       ))}
       {[
-        [-6, -6.4, "BÀN LÀM VIỆC"],
-        [6.1, -6.4, "PHÒNG LOTUS"],
+        [-6, -6.4, t("BÀN LÀM VIỆC")],
+        [6.1, -6.4, t("PHÒNG LOTUS")],
         [-5.5, 1.8, "PANTRY"],
         [6.2, 6.8, "WC"],
-        [0, 5.5, "LỄ TÂN"],
+        [0, 5.5, t("LỄ TÂN")],
       ].map(([x, z, name]) => (
         <text
           key={name}
@@ -133,9 +135,7 @@ export default function Map2D({
         fontSize=".3"
         textAnchor="middle"
         fill="#234b32"
-      >
-        BẠN
-      </text>
+      >{t("BẠN")}</text>
     </svg>
   );
 }

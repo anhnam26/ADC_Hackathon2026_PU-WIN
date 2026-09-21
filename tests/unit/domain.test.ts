@@ -11,6 +11,18 @@ import { locations, routeFor } from "../../src/data/office";
 import { journey } from "../../src/data/journey";
 import type { Issue } from "../../src/types/domain";
 
+it('migrates old language and letters, preserves messages and rejects unknown recipients', () => {
+  const session=seedSession();
+  const {language, letters, ...legacy}=session;
+  const migrated=parseSession(JSON.stringify(legacy));
+  expect(migrated.language).toBe('vi');expect(migrated.letters).toEqual([]);
+  session.language='en';session.playerPose={x:10,z:-8,yaw:0};
+  session.letters=[{id:'letter-1',recipientId:'colleague-linh',body:'Xin chào!',createdAt:new Date().toISOString()}];
+  expect(parseSession(JSON.stringify(session))).toEqual(session);
+  session.letters[0].recipientId='unknown';
+  expect(()=>parseSession(JSON.stringify(session))).toThrow();
+});
+
 function sample(overrides: Partial<Issue> = {}): Issue {
   return {
     id: "issue-1",

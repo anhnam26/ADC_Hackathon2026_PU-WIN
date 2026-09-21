@@ -1,3 +1,5 @@
+import { useLocale } from '../../lib/i18n';
+import LanguageSwitch from '../../components/LanguageSwitch';
 import {
   lazy,
   Suspense,
@@ -65,6 +67,7 @@ export default function Simulator({
   target: string | null;
   onMenu: () => void;
 }) {
+  const { t, language } = useLocale();
   const {
     session,
     inspectObject,
@@ -89,7 +92,7 @@ export default function Simulator({
   const voice = useVoiceGuide();
   const immersive = mode === '3d' && cameraMode !== 'overview';
   const display = useGameDisplay(stage, immersive, notify);
-  const [catalog, setCatalog] = useState(false);
+  const [catalog, setCatalog] = useState<'schedule' | 'objects' | 'colleagues'>('schedule');
   const handleInteract = useCallback(
     (id: string) => {
       inspectObject(id);
@@ -123,7 +126,7 @@ export default function Simulator({
   const seen = objective.ids.filter((id) =>
     session.inspectedIds.includes(id),
   ).length;
-  useEffect(() => { voice.speak(`${objective.label}. ${objective.hint} Nhấn N để chọn điểm đến và dẫn đường.`); }, [objective, voice.speak]);
+  useEffect(() => { voice.speak(`${t(objective.label)}. ${t(objective.hint)} ${t('Nhấn N để chọn điểm đến và dẫn đường.')}`); }, [objective, voice.speak, language]);
   useEffect(() => { if (sim.view.navigationStatus !== 'Chọn một điểm đến để bắt đầu dẫn đường.') voice.speak(sim.view.navigationStatus); }, [sim.view.navigationStatus, voice.speak]);
   const navigateToSelected = (automatic: boolean) => {
     setChosen(destination);
@@ -207,7 +210,7 @@ export default function Simulator({
       sim.triggerInteraction(id);
     } else
       notify(
-        `Hãy tự di chuyển đến gần ${objectById(id)?.name ?? "đồ vật"} rồi nhấn F.`,
+        `Hãy tự di chuyển đến gần ${objectById(id)?.name ?? t("đồ vật")} rồi nhấn F.`,
       );
     focusGame();
   };
@@ -221,7 +224,7 @@ export default function Simulator({
         session.openDoors,
       )
     )
-      return "Bạn cần ở gần cửa để thao tác.";
+      return t("Bạn cần ở gần cửa để thao tác.");
     if (
       !doorCanToggle(
         activeObject,
@@ -230,7 +233,7 @@ export default function Simulator({
         session.mobility,
       )
     )
-      return "Xe đang nằm trong vùng quét của cánh cửa. Đóng bảng thông tin, lùi ra rồi thử lại.";
+      return t("Xe đang nằm trong vùng quét của cánh cửa. Đóng bảng thông tin, lùi ra rồi thử lại.");
     setOpenDoors(
       session.openDoors.includes(activeObject.id)
         ? session.openDoors.filter((id) => id !== activeObject.id)
@@ -239,30 +242,30 @@ export default function Simulator({
     return null;
   };
   const controls: { key: Control; label: string; icon: React.ReactNode }[] = [
-    { key: "forward", label: immersive ? "Tiến về phía trước" : "Tiến lên màn hình", icon: <ArrowUp size={19} /> },
+    { key: "forward", label: immersive ? t("Tiến về phía trước") : t("Tiến lên màn hình"), icon: <ArrowUp size={19} /> },
     {
       key: "left",
-      label: "Di chuyển sang trái",
+      label: t("Di chuyển sang trái"),
       icon: <ArrowLeft size={19} />,
     },
     {
       key: "backward",
-      label: immersive ? "Lùi lại" : "Lùi xuống màn hình",
+      label: immersive ? t("Lùi lại") : t("Lùi xuống màn hình"),
       icon: <ArrowDown size={19} />,
     },
     {
       key: "right",
-      label: "Di chuyển sang phải",
+      label: t("Di chuyển sang phải"),
       icon: <ArrowRight size={19} />,
     },
     {
       key: "turnLeft",
-      label: "Xoay trái tại chỗ",
+      label: t("Xoay trái tại chỗ"),
       icon: <RotateCcw size={16} />,
     },
     {
       key: "turnRight",
-      label: "Xoay phải tại chỗ",
+      label: t("Xoay phải tại chỗ"),
       icon: <RotateCw size={16} />,
     },
   ];
@@ -271,20 +274,16 @@ export default function Simulator({
       <div className="play-heading">
         <div>
           <span className="eyebrow">
-            <span className="live-dot" /> DAY ZERO · WORKPLACE SIMULATOR
-          </span>
-          <h1>
-            Không gian mới. <span>Nhịp đi của bạn.</span>
+            <span className="live-dot" />{t("DAY ZERO · WORKPLACE SIMULATOR")}</span>
+          <h1>{t("Không gian mới.")}<span>{t("Nhịp đi của bạn.")}</span>
           </h1>
-          <p>
-            Tự mình khám phá, chạm tới những điều quen thuộc trước ngày đầu.
-          </p>
+          <p>{t("Tự mình khám phá, chạm tới những điều quen thuộc trước ngày đầu.")}</p>
         </div>
         <button className="button secondary" onClick={onPreferences}>
           <Accessibility size={17} />
           {session.mobility.mode === "wheelchair"
-            ? `Xe của bạn · ${session.mobility.widthCm} × ${session.mobility.lengthCm} cm`
-            : "Nhân vật đi bộ"}
+            ? t(`Xe của bạn · ${session.mobility.widthCm} × ${session.mobility.lengthCm} cm`)
+            : t("Nhân vật đi bộ")}
           <Settings2 size={15} />
         </button>
       </div>
@@ -295,12 +294,13 @@ export default function Simulator({
               <span className="world-status" />
               <strong>DAY ZERO<span className="game-brand-sub">OFFICE SIMULATOR</span></strong>
               <span className="world-divider">/</span>
-              <span>Khám phá tự do</span>
+              <span>{t("Khám phá tự do")}</span>
             </div>
             <div className="world-tools">
-              <button className="game-tool" onClick={() => setNavigationOpen(true)} aria-label="Chọn điểm đến"><kbd>N</kbd><span>Điểm đến</span></button>
-              <button className="game-tool" onClick={() => setJournal(true)}><BookOpen size={16} /><span>Nhật ký</span><kbd>J</kbd></button>
-              <button className="game-tool" disabled={mode !== '3d'} onClick={() => { setCameraMode(current => current === 'first-person' ? 'third-person' : 'first-person'); focusGame(); }} aria-label="Đổi góc nhìn V"><kbd>V</kbd><span>{firstPerson ? 'Góc nhìn 1' : cameraMode === 'third-person' ? 'Góc nhìn 3' : 'Toàn cảnh'}</span></button>
+              <LanguageSwitch />
+              <button className="game-tool" onClick={() => setNavigationOpen(true)} aria-label={t("Chọn điểm đến")}><kbd>N</kbd><span>{t("Điểm đến")}</span></button>
+              <button className="game-tool" onClick={() => setJournal(true)}><BookOpen size={16} /><span>{t("Nhật ký")}</span><kbd>J</kbd></button>
+              <button className="game-tool" disabled={mode !== '3d'} onClick={() => { setCameraMode(current => current === 'first-person' ? 'third-person' : 'first-person'); focusGame(); }} aria-label={t("Đổi góc nhìn V")}><kbd>V</kbd><span>{firstPerson ? t("Góc nhìn 1") : cameraMode === 'third-person' ? t("Góc nhìn 3") : t("Toàn cảnh")}</span></button>
               <div className="segmented">
                 <button
                   disabled={failed}
@@ -318,8 +318,8 @@ export default function Simulator({
               </div>
               <button
                 className="icon-button"
-                aria-label={cameraMode !== 'overview' ? "Xem toàn văn phòng" : "Góc nhìn thứ nhất"}
-                title={cameraMode !== 'overview' ? "Xem toàn văn phòng" : "Góc nhìn thứ nhất"}
+                aria-label={cameraMode !== 'overview' ? t("Xem toàn văn phòng") : t("Góc nhìn thứ nhất")}
+                title={cameraMode !== 'overview' ? t("Xem toàn văn phòng") : t("Góc nhìn thứ nhất")}
                 disabled={mode !== '3d'}
                 onClick={() => setCameraMode(current => current === 'overview' ? 'first-person' : 'overview')}
                 aria-pressed={cameraMode === 'overview'}
@@ -328,15 +328,15 @@ export default function Simulator({
               </button>
               <button
                 className="icon-button"
-                aria-label="Đặt lại góc nhìn"
+                aria-label={t("Đặt lại góc nhìn")}
                 onClick={() => setReset((v) => v + 1)}
               >
                 <RotateCcw size={16} />
               </button>
               <button
                 className="icon-button"
-                aria-label={display.fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
-                title={display.fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                aria-label={display.fullscreen ? t("Thoát toàn màn hình") : t("Toàn màn hình")}
+                title={display.fullscreen ? t("Thoát toàn màn hình") : t("Toàn màn hình")}
                 onClick={display.toggleFullscreen}
               >
                 {display.fullscreen ? <X size={18} /> : <Maximize size={17} />}
@@ -349,7 +349,7 @@ export default function Simulator({
             ref={stage}
             tabIndex={0}
             role="region"
-            aria-label="Điều khiển nhân vật bằng WASD. F tương tác. Q E xoay tại chỗ."
+            aria-label={t("Điều khiển nhân vật bằng WASD. F tương tác. Q E xoay tại chỗ.")}
             data-testid="game-stage"
             data-x={sim.view.pose.x.toFixed(3)}
             data-z={sim.view.pose.z.toFixed(3)}
@@ -367,7 +367,7 @@ export default function Simulator({
                 fallback={
                   <div className="scene-loading">
                     <span className="loader" />
-                    <p>Đang mở văn phòng của bạn…</p>
+                    <p>{t("Đang mở văn phòng của bạn…")}</p>
                   </div>
                 }
               >
@@ -404,18 +404,17 @@ export default function Simulator({
             )}
             <div className="world-scale">
               <Ruler size={14} />
-              <span>
-                TỶ LỆ THỐNG NHẤT<strong>1 ô lưới = 1 m</strong>
+              <span>{t("TỶ LỆ THỐNG NHẤT")}<strong>{t("1 ô lưới = 1 m")}</strong>
               </span>
             </div>
             <div className="world-discovered">
               <BookOpen size={15} />
               {session.inspectedIds.length}/{objects.length}
-              <span> điểm đã khám phá</span>
+              <span>{t("điểm đã khám phá")}</span>
             </div>
-            {immersive && <div className="first-person-hint">{firstPerson ? 'Góc nhìn thứ nhất' : 'Góc nhìn thứ ba'} · {display.locked ? 'Di chuột để nhìn · Esc hiện chuột' : 'Enter ẩn chuột · Vuốt để nhìn'} · V đổi góc nhìn</div>}
+            {immersive && <div className="first-person-hint">{firstPerson ? t("Góc nhìn thứ nhất") : t("Góc nhìn thứ ba")} · {display.locked ? t("Di chuột để nhìn · Esc hiện chuột") : t("Enter ẩn chuột · Vuốt để nhìn")} {t("· V đổi góc nhìn")}</div>}
             {immersive && <div className="game-crosshair" aria-hidden="true">+</div>}
-            {immersive && !display.locked && display.canLock && <button className="resume-pointer" onClick={display.lock}>Enter · Tiếp tục chơi</button>}
+            {immersive && !display.locked && display.canLock && <button className="resume-pointer" onClick={display.lock}>{t("Enter · Tiếp tục chơi")}</button>}
             <div className="movement-hud">
               <div className="movement-pad">
                 {controls.map((c) => (
@@ -445,13 +444,12 @@ export default function Simulator({
                   </button>
                 ))}
               </div>
-              <span>WASD / Mũi tên</span>
+              <span>{t("WASD / Mũi tên")}</span>
             </div>
             <div className="interaction-hud" aria-live="polite">
               {nearest ? (
                 <>
-                  <span className="proximity-label">
-                    TRONG TẦM TƯƠNG TÁC ·{" "}
+                  <span className="proximity-label">{t("TRONG TẦM TƯƠNG TÁC ·")}{" "}
                     {objectDistance(
                       sim.view.pose,
                       nearest,
@@ -465,14 +463,14 @@ export default function Simulator({
                   >
                     <kbd>F</kbd>
                     <span>
-                      <strong>{nearest.name}</strong>
-                      <small>{nearest.kind === 'colleague' ? 'Làm quen · Xem hồ sơ đồng nghiệp' : 'Xem cách dùng, lưu ý & kích thước'}</small>
+                      <strong>{t(nearest.name)}</strong>
+                      <small>{nearest.kind === 'colleague' ? t("Làm quen · Xem hồ sơ đồng nghiệp") : t("Xem cách dùng, lưu ý & kích thước")}</small>
                     </span>
                     <ChevronRight size={20} />
                   </button>
                   {sim.view.nearby.length > 1 && (
                     <select
-                      aria-label="Chọn đồ vật ở gần"
+                      aria-label={t("Chọn đồ vật ở gần")}
                       value={nearestId ?? ""}
                       onChange={(e) => {
                         setChosen(e.target.value);
@@ -482,7 +480,7 @@ export default function Simulator({
                     >
                       {sim.view.nearby.map((id) => (
                         <option key={id} value={id}>
-                          {objectById(id)!.name}
+                          {t(objectById(id)!.name)}
                         </option>
                       ))}
                     </select>
@@ -491,70 +489,58 @@ export default function Simulator({
               ) : (
                 <div className="no-nearby">
                   <Gamepad2 size={19} />
-                  <span>
-                    Di chuyển đến gần đồ vật để tương tác
-                    <small>Bấm vào không gian, rồi dùng WASD.</small>
+                  <span>{t("Di chuyển đến gần đồ vật để tương tác")}<small>{t("Bấm vào không gian, rồi dùng WASD.")}</small>
                   </span>
                 </div>
               )}
             </div>
             {sim.view.blocked && (
               <div className="collision-hint" role="status">
-                <span>!</span>Đang chạm: {sim.view.blocked}. Lùi hoặc đổi hướng
-                để tiếp tục.
-              </div>
+                <span>!</span>{t("Đang chạm:")} {t(sim.view.blocked)}{t(". Lùi hoặc đổi hướng để tiếp tục.")}</div>
             )}
           </div>
           {failed && (
-            <p className="fallback-note">
-              Thiết bị chưa hiển thị được 3D. Chế độ 2D giữ nguyên kích thước,
-              va chạm và điều khiển WASD.
-            </p>
+            <p className="fallback-note">{t("Thiết bị chưa hiển thị được 3D. Chế độ 2D giữ nguyên kích thước, va chạm và điều khiển WASD.")}</p>
           )}
           <footer className="world-bottom">
             <span>
               <kbd>W</kbd>
               <kbd>A</kbd>
               <kbd>S</kbd>
-              <kbd>D</kbd> {immersive ? 'Di chuyển' : 'Theo màn hình'}
+              <kbd>D</kbd> {immersive ? t("Di chuyển") : t("Theo màn hình")}
             </span>
             <span>
-              <kbd>F</kbd> Tương tác
-            </span>
+              <kbd>F</kbd>{t("Tương tác")}</span>
             <span>
               <kbd>Q</kbd>
-              <kbd>E</kbd> Xoay xe
+              <kbd>E</kbd> {t('Xoay xe')}
             </span>
             <span>
-              <kbd>Shift</kbd> Đi chậm
-            </span>
-            <span><kbd>V</kbd> Góc nhìn</span>
-            <span><kbd>Esc</kbd> Hiện chuột</span>
+              <kbd>Shift</kbd>{t("Đi chậm")}</span>
+            <span><kbd>V</kbd>{t("Góc nhìn")}</span>
+            <span><kbd>Esc</kbd>{t("Hiện chuột")}</span>
             <button
               onClick={() => {
                 sim.returnToEntry();
                 focusGame();
-                notify("Đã trở về điểm bắt đầu.");
+                notify(t("Đã trở về điểm bắt đầu."));
               }}
             >
-              <RotateCcw size={13} />
-              Về lối vào
-            </button>
+              <RotateCcw size={13} />{t("Về lối vào")}</button>
           </footer>
-          <section className="navigation-hud" aria-label="Hướng dẫn khám phá">
-            <div className="navigation-actions"><button onClick={() => setNavigationOpen(true)}>N · Chọn điểm đến</button><button onClick={() => sim.view.auto ? sim.stopNavigation() : navigateToSelected(true)}>{sim.view.auto ? 'P · Dừng tự đi' : 'P · Tự đi'}</button><button onClick={voice.toggle} aria-pressed={voice.enabled}>{voice.enabled ? 'H · Tắt giọng' : 'H · Bật giọng'}</button><button onClick={voice.replay}>Nghe lại</button></div>
-            <p className="guide-caption" aria-live="polite">{voice.caption}</p>
-            {sim.view.route.length > 0 && <small>Vạch vàng trên sàn · Còn khoảng {routeLength(sim.view.route).toFixed(1)} m</small>}
-            {voice.voiceNote && <details><summary>Giọng đọc</summary><small>{voice.voiceNote}</small></details>}
+          <section className="navigation-hud" aria-label={t("Hướng dẫn khám phá")}>
+            <div className="navigation-actions"><button onClick={() => setNavigationOpen(true)}>{t("N · Chọn điểm đến")}</button><button onClick={() => sim.view.auto ? sim.stopNavigation() : navigateToSelected(true)}>{sim.view.auto ? t("P · Dừng tự đi") : t("P · Tự đi")}</button><button onClick={voice.toggle} aria-pressed={voice.enabled}>{voice.enabled ? t("H · Tắt giọng") : t("H · Bật giọng")}</button><button onClick={voice.replay}>{t("Nghe lại")}</button></div>
+            {sim.view.route.length > 0 && <small>{t("Vạch vàng trên sàn · Còn khoảng")} {routeLength([sim.view.pose, ...sim.view.route]).toFixed(1)} m</small>}
+            {voice.voiceNote && <details><summary>{t("Giọng đọc")}</summary><small>{voice.voiceNote}</small></details>}
           </section>
+          <div className="subtitle-bar" role="status" aria-live="polite"><span>{language === 'vi' ? 'HƯỚNG DẪN' : 'GUIDE'}</span><p className="guide-caption">{voice.caption}</p></div>
         </section>
         <aside className="explore-sidebar">
           <section className="current-mission">
-            <span className="eyebrow">
-              LÀM QUEN NGÀY ĐẦU · {journey[session.currentStep].time}
+            <span className="eyebrow">{t("LÀM QUEN NGÀY ĐẦU ·")} {journey[session.currentStep].time}
             </span>
-            <h2>{objective.label}</h2>
-            <p>{objective.hint}</p>
+            <h2>{t(objective.label)}</h2>
+            <p>{t(objective.hint)}</p>
             <div className="mission-progress">
               {objective.ids.map((id) => (
                 <span
@@ -566,7 +552,7 @@ export default function Simulator({
                   ) : (
                     <span className="mission-dot" />
                   )}
-                  {objectById(id)?.name}
+                  {t(objectById(id)?.name ?? '')}
                 </span>
               ))}
             </div>
@@ -582,18 +568,15 @@ export default function Simulator({
                   selectStep(session.currentStep + 1);
                 else onSummary();
               }}
-            >
-              Hoàn thành chặng
-              <ArrowRight size={15} />
+            >{t("Hoàn thành chặng")}<ArrowRight size={15} />
             </button>
-            <small>
-              Chọn chặng chỉ đổi mục tiêu. Bạn tự điều khiển đến đó.
-            </small>
+            <small>{t("Chọn chặng chỉ đổi mục tiêu. Bạn tự điều khiển đến đó.")}</small>
           </section>
-          {journal && <Dialog title="Nhật ký ngày đầu" subtitle="Lịch trình, đồ vật và những đồng nghiệp bạn sẽ gặp." onClose={() => { setJournal(false); focusGame(); }}>
-          <section className="play-journey">
+          {journal && <Dialog title={t("Nhật ký ngày đầu")} subtitle={t("Lịch trình, đồ vật và những đồng nghiệp bạn sẽ gặp.")} onClose={() => { setJournal(false); focusGame(); }}>
+          <nav className="journal-tabs" aria-label={t('Nhật ký')}>{(['schedule','objects','colleagues'] as const).map(section => <button key={section} aria-pressed={catalog === section} onClick={() => setCatalog(section)}>{t(section === 'schedule' ? 'Lịch trình' : section === 'objects' ? 'Đồ vật' : 'Đồng nghiệp')}<small>{section === 'schedule' ? 7 : objects.filter(o => section === 'colleagues' ? !!o.colleague : !o.colleague).length}</small></button>)}</nav>
+          {catalog === 'schedule' && <section className="play-journey">
             <div className="section-heading">
-              <h3>Lịch trình của bạn</h3>
+              <h3>{t("Lịch trình của bạn")}</h3>
               <span>
                 {session.stepStatuses.filter((v) => v === "completed").length}/7
               </span>
@@ -613,27 +596,20 @@ export default function Simulator({
                 </span>
                 <span>
                   <time>{step.time}</time>
-                  <strong>{step.title}</strong>
+                  <strong>{t(step.title)}</strong>
                 </span>
                 {session.currentStep === i && <ChevronRight size={14} />}
               </button>
             ))}
-          </section>
-          <button
-            className="catalog-toggle"
-            onClick={() => setCatalog((v) => !v)}
-          >
-            <BookOpen size={16} />
-            Đồ vật & đồng nghiệp<span>{objects.length}</span>
-          </button>
-          {catalog && (
-            <div className="object-catalog">
-              {objects.map((o) => (
+          </section>}
+          {catalog !== 'schedule' && (
+            <div className="object-catalog" data-category={catalog}>
+              {sim.view.objects.filter(o => catalog === 'colleagues' ? !!o.colleague : !o.colleague).map((o) => (
                 <button key={o.id} onClick={() => choose(o.id)}>
-                  <span>{o.name}</span>
+                  <span>{t(o.name)}{o.colleague && <small>{t(o.colleague.role)}</small>}</span>
                   <small>
                     {session.inspectedIds.includes(o.id)
-                      ? "Đã tìm hiểu"
+                      ? t("Đã tìm hiểu")
                       : `${objectDistance(sim.view.pose, o, session.openDoors).toFixed(1)} m`}
                   </small>
                 </button>
@@ -641,23 +617,19 @@ export default function Simulator({
             </div>
           )}
           <button className="button secondary" onClick={onSummary}>
-            <Flag size={15} />
-            Ghi nhận & nhiệm vụ ({session.issues.length})
+            <Flag size={15} />{t("Ghi nhận & nhiệm vụ (")}{session.issues.length})
           </button>
-          <p className="world-note">
-            Va chạm theo dấu chiếm chỗ của xe. Đến gần trong khoảng{" "}
-            {WORLD.interactionRange.toFixed(2)} m để nhấn F. Mô hình chưa mô
-            phỏng lực, tầm với hoặc chuyển người.
-          </p>
+          <p className="world-note">{t("Va chạm theo dấu chiếm chỗ của xe. Đến gần trong khoảng")}{" "}
+            {WORLD.interactionRange.toFixed(2)} {t("m để nhấn F. Mô hình chưa mô phỏng lực, tầm với hoặc chuyển người.")}</p>
           </Dialog>}
         </aside>
       </div>
-      {navigationOpen && <Dialog title="Bạn muốn đến đâu?" subtitle="Đi theo vạch vàng hoặc để nhân vật tự đi. WASD/P dừng tự đi bất cứ lúc nào." onClose={() => setNavigationOpen(false)}>
-        <label className="destination-field">Điểm đến<select aria-label="Điểm đến" value={destination} onChange={e => setDestination(e.target.value)}>{objects.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}</select></label>
-        <div className="dialog-actions"><button className="button secondary" onClick={() => navigateToSelected(false)}>Hiện đường đi</button><button className="button primary" onClick={() => navigateToSelected(true)}>Tự đi đến đây</button></div>
-        <p className="profile-disclaimer">Đường tính theo kích thước xe, giữ xe thẳng khi qua cửa. Tự đi mở cửa khi đủ khoảng trống và chờ nếu gặp vật cản. Không phải chứng nhận lối đi thực tế.</p>
+      {navigationOpen && <Dialog title={t("Bạn muốn đến đâu?")} subtitle={t("Đi theo vạch vàng hoặc để nhân vật tự đi. WASD/P dừng tự đi bất cứ lúc nào.")} onClose={() => setNavigationOpen(false)}>
+        <label className="destination-field">{t("Điểm đến")}<select aria-label={t("Điểm đến")} value={destination} onChange={e => setDestination(e.target.value)}>{objects.map(o => <option key={o.id} value={o.id}>{t(o.name)}</option>)}</select></label>
+        <div className="dialog-actions"><button className="button secondary" onClick={() => navigateToSelected(false)}>{t("Hiện đường đi")}</button><button className="button primary" onClick={() => navigateToSelected(true)}>{t("Tự đi đến đây")}</button></div>
+        <p className="profile-disclaimer">{t("Đường tính theo kích thước xe, giữ xe thẳng khi qua cửa. Tự đi mở cửa khi đủ khoảng trống và chờ nếu gặp vật cản. Không phải chứng nhận lối đi thực tế.")}</p>
       </Dialog>}
-      {activeObject?.kind === 'colleague' ? <ColleagueInspector person={activeObject} onClose={closeInspector} /> : activeObject && (
+      {activeObject?.kind === 'colleague' ? <ColleagueInspector key={activeObject.id} person={activeObject} onClose={closeInspector} /> : activeObject && (
         <ObjectInspector
           key={activeObject.id}
           object={activeObject}

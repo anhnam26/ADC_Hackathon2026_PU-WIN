@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { colleagues } from '../data/colleagues';
 import type {
   Category,
   Issue,
@@ -25,6 +26,8 @@ type IssueInput = Pick<
   | "measurementNote"
 >;
 interface DemoState {
+  setLanguage: (language: 'vi' | 'en') => void;
+  sendLetter: (recipientId: string, body: string) => boolean;
   session: Session;
   notice: string;
   persistenceBlocked: boolean;
@@ -51,6 +54,13 @@ interface DemoState {
 }
 const initial = loadSession();
 export const useDemoStore = create<DemoState>((set) => ({
+  setLanguage: language => set(s => ({ session: { ...s.session, language } })),
+  sendLetter: (recipientId, body) => {
+    const text = body.trim();
+    if (!text || text.length > 1500 || !colleagues.some(person => person.id === recipientId)) return false;
+    set(s => ({ session: { ...s.session, letters: [...s.session.letters, { id: crypto.randomUUID(), recipientId, body: text, createdAt: new Date().toISOString() }] } }));
+    return true;
+  },
   session: initial.session,
   notice: initial.notice,
   persistenceBlocked: initial.blocked,

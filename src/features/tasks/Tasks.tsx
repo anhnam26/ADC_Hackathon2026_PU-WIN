@@ -1,3 +1,4 @@
+import { useLocale } from '../../lib/i18n';
 import { useState } from "react";
 import {
   ArrowRight,
@@ -30,6 +31,7 @@ export default function Tasks({
   onLocation: (id: string) => void;
   notify: (s: string) => void;
 }) {
+  const {t: tr, language} = useLocale();
   const { session, transition, assignTask } = useDemoStore();
   const [filter, setFilter] = useState("all");
   const [team, setTeam] = useState("all");
@@ -46,7 +48,7 @@ export default function Tasks({
       (filter === "all" || t.status === filter) &&
       (team === "all" || t.ownerTeam === team) &&
       (priority === "all" || t.priority === priority) &&
-      `${t.title} ${locationById(t.locationId).name}`
+      `${t.title} ${tr(locationById(t.locationId).name)}`
         .toLocaleLowerCase("vi")
         .includes(query.toLocaleLowerCase("vi")),
   );
@@ -63,8 +65,8 @@ export default function Tasks({
       setNote("");
       notify(
         status === "done"
-          ? "Đã xác nhận phương án chuẩn bị."
-          : "Đã cập nhật nhiệm vụ.",
+          ? tr("Đã xác nhận phương án chuẩn bị.")
+          : tr("Đã cập nhật nhiệm vụ."),
       );
     } catch (e) {
       setError((e as Error).message);
@@ -82,18 +84,18 @@ export default function Tasks({
       <div className="page-intro">
         <span className="eyebrow">
           {role === "hr"
-            ? "KHÔNG GIAN HR & FACILITIES"
-            : "CÙNG CHUẨN BỊ CHO NGÀY ĐẦU"}
+            ? tr("KHÔNG GIAN HR & FACILITIES")
+            : tr("CÙNG CHUẨN BỊ CHO NGÀY ĐẦU")}
         </span>
         <h1>
           {role === "hr"
-            ? "Biến ghi nhận thành sự chuẩn bị."
-            : "Những điều đang được chuẩn bị."}
+            ? tr("Biến ghi nhận thành sự chuẩn bị.")
+            : tr("Những điều đang được chuẩn bị.")}
         </h1>
         <p>
           {role === "hr"
-            ? "Mỗi nhiệm vụ có một địa điểm, một người phụ trách và một bước tiếp theo."
-            : "Xem phản hồi từ HR và Facilities, rồi xác nhận phương án phù hợp với bạn."}
+            ? tr("Mỗi nhiệm vụ có một địa điểm, một người phụ trách và một bước tiếp theo.")
+            : tr("Xem phản hồi từ HR và Facilities, rồi xác nhận phương án phù hợp với bạn.")}
         </p>
       </div>
       <div className="stat-grid four">
@@ -104,7 +106,7 @@ export default function Tasks({
             key={status}
             aria-pressed={filter === status}
           >
-            <span>{statusLabels[status]}</span>
+            <span>{tr(statusLabels[status])}</span>
             <strong>
               {session.tasks
                 .filter((t) => t.status === status)
@@ -122,10 +124,10 @@ export default function Tasks({
               }
               {
                 [
-                  "Tiếp nhận & phân công",
-                  "Đang thực hiện phương án",
-                  "Cần nhân viên xem lại",
-                  "Đã xác nhận phương án",
+                  tr("Tiếp nhận & phân công"),
+                  tr("Đang thực hiện phương án"),
+                  tr("Cần nhân viên xem lại"),
+                  tr("Đã xác nhận phương án"),
                 ][i]
               }
             </span>
@@ -134,54 +136,53 @@ export default function Tasks({
       </div>
       <section className="surface">
         <div className="section-heading">
-          <h2>
-            Nhiệm vụ chuẩn bị{" "}
+          <h2>{tr("Nhiệm vụ chuẩn bị")}{" "}
             <span className="count">{session.tasks.length}</span>
           </h2>
           <span className="badge subtle">
-            Vai demo: {role === "hr" ? "HR / Facilities" : "Nhân viên"}
+            Vai demo: {role === "hr" ? "HR / Facilities" : tr("Nhân viên")}
           </span>
         </div>
         <div className="filters">
           <label className="search-field">
             <Search size={17} />
             <input
-              aria-label="Tìm nhiệm vụ"
-              placeholder="Tìm nhiệm vụ, địa điểm…"
+              aria-label={tr("Tìm nhiệm vụ")}
+              placeholder={tr("Tìm nhiệm vụ, địa điểm…")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </label>
           <select
-            aria-label="Lọc bộ phận"
+            aria-label={tr("Lọc bộ phận")}
             value={team}
             onChange={(e) => setTeam(e.target.value)}
           >
-            <option value="all">Tất cả bộ phận</option>
+            <option value="all">{tr("Tất cả bộ phận")}</option>
             <option>HR</option>
             <option>Facilities</option>
           </select>
           <select
-            aria-label="Lọc trạng thái"
+            aria-label={tr("Lọc trạng thái")}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            <option value="all">Tất cả trạng thái</option>
+            <option value="all">{tr("Tất cả trạng thái")}</option>
             {taskStatuses.map((s) => (
               <option key={s} value={s}>
-                {statusLabels[s]}
+                {tr(statusLabels[s])}
               </option>
             ))}
           </select>
           <select
-            aria-label="Lọc ưu tiên"
+            aria-label={tr("Lọc ưu tiên")}
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
           >
-            <option value="all">Mọi ưu tiên</option>
+            <option value="all">{tr("Mọi ưu tiên")}</option>
             {Object.entries(priorityLabels).map(([k, v]) => (
               <option key={k} value={k}>
-                {v}
+                {k === 'high' && language === 'en' ? 'High' : tr(v)}
               </option>
             ))}
           </select>
@@ -191,13 +192,13 @@ export default function Tasks({
             <ClipboardList size={36} />
             <h3>
               {session.tasks.length
-                ? "Không có nhiệm vụ phù hợp"
-                : "Sự chuẩn bị bắt đầu từ một ghi nhận"}
+                ? tr("Không có nhiệm vụ phù hợp")
+                : tr("Sự chuẩn bị bắt đầu từ một ghi nhận")}
             </h3>
             <p>
               {session.tasks.length
-                ? "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm."
-                : "Khám phá văn phòng, ghi nhận điều cần xác minh và tạo nhiệm vụ tại Tổng kết."}
+                ? tr("Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.")
+                : tr("Khám phá văn phòng, ghi nhận điều cần xác minh và tạo nhiệm vụ tại Tổng kết.")}
             </p>
           </div>
         ) : (
@@ -205,13 +206,13 @@ export default function Tasks({
             <table>
               <thead>
                 <tr>
-                  <th>Nhiệm vụ / Địa điểm</th>
-                  <th>Phụ trách</th>
-                  <th>Ưu tiên</th>
-                  <th>Hạn chuẩn bị</th>
-                  <th>Trạng thái</th>
+                  <th>{tr("Nhiệm vụ / Địa điểm")}</th>
+                  <th>{tr("Phụ trách")}</th>
+                  <th>{tr("Ưu tiên")}</th>
+                  <th>{tr("Hạn chuẩn bị")}</th>
+                  <th>{tr("Trạng thái")}</th>
                   <th>
-                    <span className="sr-only">Chi tiết</span>
+                    <span className="sr-only">{tr("Chi tiết")}</span>
                   </th>
                 </tr>
               </thead>
@@ -224,7 +225,7 @@ export default function Tasks({
                       </button>
                       <span className="table-location">
                         <MapPin size={13} />
-                        {locationById(t.locationId).name}
+                        {tr(locationById(t.locationId).name)}
                       </span>
                     </td>
                     <td>
@@ -238,18 +239,18 @@ export default function Tasks({
                     </td>
                     <td>
                       <span className={`priority ${t.priority}`}>
-                        {priorityLabels[t.priority]}
+                        {t.priority === 'high' && language === 'en' ? 'High' : tr(priorityLabels[t.priority])}
                       </span>
                     </td>
                     <td>
                       {formatDate(t.dueDate)}
                       {t.dueDate < officeDate() && t.status !== "done" && (
-                        <small className="overdue block">Quá hạn</small>
+                        <small className="overdue block">{tr("Quá hạn")}</small>
                       )}
                     </td>
                     <td>
                       <span className={`badge ${t.status}`}>
-                        {statusLabels[t.status]}
+                        {tr(statusLabels[t.status])}
                       </span>
                     </td>
                     <td>
@@ -268,20 +269,17 @@ export default function Tasks({
           </div>
         )}
       </section>
-      <p className="footnote">
-        Dữ liệu cục bộ trên trình duyệt này. Hoàn tất nhiệm vụ xác nhận phương
-        án trong demo, không xác minh điều kiện thực tế.
-      </p>
+      <p className="footnote">{tr("Dữ liệu cục bộ trên trình duyệt này. Hoàn tất nhiệm vụ xác nhận phương án trong demo, không xác minh điều kiện thực tế.")}</p>
       {task && (
         <Dialog
-          title="Chi tiết nhiệm vụ"
+          title={tr("Chi tiết nhiệm vụ")}
           subtitle={`${task.ownerTeam} · Hạn ${formatDate(task.dueDate)}`}
           onClose={() => setSelected(null)}
           wide
         >
           <div className="task-detail">
             <span className={`badge ${task.status}`}>
-              {statusLabels[task.status]}
+              {tr(statusLabels[task.status])}
             </span>
             <h3>{task.title}</h3>
             <button
@@ -292,7 +290,7 @@ export default function Tasks({
               }}
             >
               <MapPin size={16} />
-              {locationById(task.locationId).name}
+              {tr(locationById(task.locationId).name)}
               <ArrowRight size={15} />
             </button>
             {session.issues
@@ -300,23 +298,21 @@ export default function Tasks({
               .map((i) => (
                 <div className="detail-context" key={i.id}>
                   <p>
-                    <strong>Hoạt động:</strong> {journey[i.stepId].time} ·{" "}
-                    {journey[i.stepId].title}
+                    <strong>{tr("Hoạt động:")}</strong> {journey[i.stepId].time}{tr("·")}{" "}
+                    {tr(journey[i.stepId].title)}
                   </p>
-                  {i.objectName && <p><strong>Đồ vật:</strong> {i.objectName}</p>}
-                  {i.measurementNote && <p><strong>Số đo khi ghi nhận:</strong> {i.measurementNote}</p>}
+                  {i.objectName && <p><strong>{tr("Đồ vật:")}</strong> {i.objectName}</p>}
+                  {i.measurementNote && <p><strong>{tr("Số đo khi ghi nhận:")}</strong> {i.measurementNote}</p>}
                   <p>
-                    <strong>Mong muốn:</strong>{" "}
+                    <strong>{tr("Mong muốn:")}</strong>{" "}
                     {i.requestedSupport ||
-                      "Xác minh thông tin và phản hồi trước ngày bắt đầu."}
+                      tr("Xác minh thông tin và phản hồi trước ngày bắt đầu.")}
                   </p>
                 </div>
               ))}
             {role === "hr" && task.status !== "done" && (
               <div className="assignment">
-                <label>
-                  Bộ phận
-                  <select
+                <label>{tr("Bộ phận")}<select
                     value={owner}
                     onChange={(e) =>
                       setOwner(e.target.value as Task["ownerTeam"])
@@ -326,10 +322,8 @@ export default function Tasks({
                     <option>Facilities</option>
                   </select>
                 </label>
-                <label>
-                  Người phụ trách
-                  <input
-                    placeholder="Ví dụ: Linh"
+                <label>{tr("Người phụ trách")}<input
+                    placeholder={tr("Ví dụ: Linh")}
                     value={assignee}
                     maxLength={80}
                     onChange={(e) => setAssignee(e.target.value)}
@@ -339,33 +333,31 @@ export default function Tasks({
                   className="button secondary"
                   onClick={() => {
                     assignTask(task.id, owner, assignee);
-                    notify("Đã lưu phân công.");
+                    notify(tr("Đã lưu phân công."));
                   }}
-                >
-                  Lưu
-                </button>
+                >{tr("Lưu")}</button>
               </div>
             )}
             {task.resolutionNote && (
               <div className="resolution">
                 <ShieldCheck size={22} />
                 <div>
-                  <strong>Phương án chuẩn bị</strong>
+                  <strong>{tr("Phương án chuẩn bị")}</strong>
                   <p>{task.resolutionNote}</p>
                 </div>
               </div>
             )}
             {task.employeeResponse && (
               <p className="detail-context">
-                <strong>Phản hồi nhân viên:</strong> {task.employeeResponse}
+                <strong>{tr("Phản hồi nhân viên:")}</strong> {task.employeeResponse}
               </p>
             )}
             {((role === "hr" && task.status === "in_progress") ||
               (role === "employee" && task.status === "ready_for_review")) && (
               <label className="form-label">
                 {role === "hr"
-                  ? "Phương án chuẩn bị"
-                  : "Điều cần xem lại (nếu có)"}
+                  ? tr("Phương án chuẩn bị")
+                  : tr("Điều cần xem lại (nếu có)")}
                 <textarea
                   rows={3}
                   maxLength={1000}
@@ -373,8 +365,8 @@ export default function Tasks({
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={
                     role === "hr"
-                      ? "Mô tả cách hỗ trợ và thông tin đã chuẩn bị…"
-                      : "Ghi rõ nếu bạn muốn điều chỉnh phương án…"
+                      ? tr("Mô tả cách hỗ trợ và thông tin đã chuẩn bị…")
+                      : tr("Ghi rõ nếu bạn muốn điều chỉnh phương án…")
                   }
                 />
               </label>
@@ -389,18 +381,14 @@ export default function Tasks({
                 <button
                   className="button primary"
                   onClick={() => change("in_progress")}
-                >
-                  Bắt đầu chuẩn bị
-                  <ArrowRight size={16} />
+                >{tr("Bắt đầu chuẩn bị")}<ArrowRight size={16} />
                 </button>
               )}
               {role === "hr" && task.status === "in_progress" && (
                 <button
                   className="button primary"
                   onClick={() => change("ready_for_review")}
-                >
-                  Gửi phương án xác nhận
-                  <ArrowRight size={16} />
+                >{tr("Gửi phương án xác nhận")}<ArrowRight size={16} />
                 </button>
               )}
               {role === "employee" && task.status === "ready_for_review" && (
@@ -408,31 +396,24 @@ export default function Tasks({
                   <button
                     className="button secondary"
                     onClick={() => change("in_progress")}
-                  >
-                    Yêu cầu xem lại
-                  </button>
+                  >{tr("Yêu cầu xem lại")}</button>
                   <button
                     className="button primary"
                     onClick={() => change("done")}
                   >
-                    <Check size={16} />
-                    Xác nhận phương án
-                  </button>
+                    <Check size={16} />{tr("Xác nhận phương án")}</button>
                 </>
               )}
               {role === "hr" && task.status === "ready_for_review" && (
-                <p className="muted small">
-                  Đang chờ nhân viên xác nhận. Chuyển vai Nhân viên để tiếp tục
-                  demo.
-                </p>
+                <p className="muted small">{tr("Đang chờ nhân viên xác nhận. Chuyển vai Nhân viên để tiếp tục demo.")}</p>
               )}
             </div>
-            <h4>Lịch sử cập nhật</h4>
+            <h4>{tr("Lịch sử cập nhật")}</h4>
             <ol className="history">
               {task.history.map((h, i) => (
                 <li key={i}>
                   <span>
-                    <strong>{h.actor}</strong> ·{" "}
+                    <strong>{h.actor}</strong>{tr("·")}{" "}
                     {new Date(h.at).toLocaleString("vi-VN")}
                   </span>
                   <p>{h.message}</p>

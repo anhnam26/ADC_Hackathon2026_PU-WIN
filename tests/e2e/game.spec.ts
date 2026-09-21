@@ -81,7 +81,7 @@ test('nearby colleague shows portrait, role and support information via F; far c
   await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true); await page.evaluate(() => document.exitPointerLock());
   await page.getByRole('button', { name: /Nhật ký/ }).click();
-  await page.getByRole('button', { name: /Đồ vật & đồng nghiệp/ }).click();
+  await page.getByRole('button', { name: /^Đồng nghiệp/ }).click();
   await page.getByRole('button', { name: /Trần Đức Minh/ }).click();
   await expect(page.getByRole('dialog')).toContainText('Nhật ký ngày đầu');
   await expect(page.getByRole('img', { name: /Chân dung minh họa/ })).toHaveCount(0);

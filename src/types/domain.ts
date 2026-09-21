@@ -125,9 +125,11 @@ export const sessionSchema = z.object({
   issues: z.array(issueSchema),
   tasks: z.array(taskSchema),
   reducedMotion: z.boolean(),
+  language: z.enum(['vi', 'en']).default('vi'),
+  letters: z.array(z.object({ id: z.string(), recipientId: z.string(), body: z.string().trim().min(1).max(1500), createdAt: z.string() })).default([]),
   mobility: mobilitySchema.default(defaultMobility),
   inspectedIds: z.array(z.string()).default([]),
   openDoors: z.array(z.string()).default([]),
-  playerPose: z.object({ x: z.number().min(-9).max(9), z: z.number().min(-7).max(9.5), yaw: z.number().finite() }).default({ x: 0, z: 8.35, yaw: 0 }),
+  playerPose: z.object({ x: z.number().min(-12).max(12), z: z.number().min(-10).max(10.5), yaw: z.number().finite() }).default({ x: 0, z: 8.35, yaw: 0 }),
 });
 export type Session = z.infer<typeof sessionSchema>;

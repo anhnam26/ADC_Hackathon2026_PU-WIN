@@ -11,6 +11,7 @@ export function seedSession(): Session {
     schemaVersion: 1,
     id: crypto.randomUUID(),
     started: false,
+    language: 'vi', letters: [],
     startDate: addDays(officeDate(), 7),
     selectedNeeds: [],
     currentStep: 0,
@@ -37,6 +38,7 @@ export function parseSession(raw: string): Session {
   const taskIds = new Set(data.tasks.map((t) => t.id));
   const references = data.tasks.flatMap((t) => t.issueIds);
   if (
+    data.letters.some(letter => !objects.some(o => o.id === letter.recipientId && o.colleague)) ||
     data.inspectedIds.some(id => !objects.some(o => o.id === id)) ||
     data.openDoors.some(id => !objects.some(o => o.id === id && o.kind === 'door')) ||
     issueIds.size !== data.issues.length ||

@@ -1,3 +1,4 @@
+import { useLocale } from '../lib/i18n';
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 
@@ -14,6 +15,7 @@ export default function Dialog({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const { t, language } = useLocale();
   const ref = useRef<HTMLDialogElement>(null);
   const heading = useId();
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function Dialog({
           <h2 id={heading}>{title}</h2>
           {subtitle && <p>{subtitle}</p>}
         </div>
-        <button className="icon-button" onClick={onClose} aria-label="Đóng">
+        <button className="icon-button" onClick={onClose} aria-label={t("Đóng")}>
           <X size={20} />
         </button>
       </div>
