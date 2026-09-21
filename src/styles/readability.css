@@ -1,0 +1,54 @@
+/* Keep decorative brand text compact; interaction labels use the larger body scale. */
+.brand-mark {
+  color: #e0efc7;
+}
+.brand small {
+  font-size: 6.8px;
+}
+.sidebar-foot {
+  white-space: normal;
+  line-height: 1.7;
+}
+.timeline-copy strong {
+  line-height: 1.6;
+}
+.preferences-button {
+  white-space: normal;
+  text-align: left;
+}
+.journey-heading p {
+  flex-wrap: wrap;
+}
+.map-legend {
+  line-height: 1.7;
+}
+.map-legend .drag-hint {
+  margin-left: 0;
+}
+.contact-avatar {
+  color: #516234;
+}
+.filters input::placeholder,
+.form-stack textarea::placeholder,
+.form-label textarea::placeholder {
+  color: #667753;
+}
+@media (max-width: 600px) {
+  .sidebar nav button {
+    font-size: 10px;
+    white-space: normal;
+    line-height: 1.5;
+  }
+  .sidebar nav button svg {
+    flex-shrink: 0;
+  }
+  .brand small {
+    font-size: 6px;
+  }
+  .bottom-hint {
+    line-height: 1.8;
+  }
+  .location-picker {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}

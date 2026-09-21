@@ -1,0 +1,38 @@
+import { spawn } from 'node:child_process';
+import { mkdir } from 'node:fs/promises';
+import { chromium, expect } from '@playwright/test';
+
+const url = 'http://127.0.0.1:5174';
+const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '5174', '--strictPort'], { windowsHide: true, stdio: 'pipe' });
+let browser;
+let serverError = '';
+server.stderr.on('data', data => { serverError += String(data); });
+try {
+  let ready = false;
+  for (let attempt = 0; attempt < 40; attempt++) {
+    if (server.exitCode !== null) throw new Error(serverError || 'Preview server stopped.');
+    try { ready = (await fetch(url)).ok; } catch { /* Server is starting. */ }
+    if (ready) break;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  if (!ready) throw new Error('Preview server did not start.');
+  browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const failures = [];
+  page.on('pageerror', error => failures.push(error.message));
+  page.on('response', response => { if (response.status() >= 400) failures.push(`${response.status()}: ${response.url()}`); });
+  await page.goto(url);
+  await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
+  await expect(page.locator('canvas')).toBeVisible();
+  await page.getByRole('button', { name: /09:00/ }).click();
+  await expect(page.locator('.hotspot')).toHaveCount(6);
+  await page.getByRole('button', { name: 'Đến địa điểm', exact: true }).click();
+  await expect(page.locator('.avatar-label')).toBeVisible();
+  await mkdir('test-results', { recursive: true });
+  await page.screenshot({ path: 'test-results/dayzero-production.png', fullPage: true });
+  expect(failures).toEqual([]);
+  console.log('Production smoke passed: built assets, 3D scene, journey and avatar; no runtime or HTTP errors.');
+} finally {
+  await browser?.close();
+  server.kill();
+}

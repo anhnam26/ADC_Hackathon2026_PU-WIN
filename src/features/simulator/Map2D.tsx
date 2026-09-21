@@ -1,8 +1,126 @@
-import { MapPin } from 'lucide-react';
-import { locations, routeFor } from '../../data/office';
-import type { Floor } from '../../types/domain';
+import { MapPin } from "lucide-react";
+import { locations, routeFor } from "../../data/office";
+import type { Floor } from "../../types/domain";
 
-export default function Map2D({ floor, selected, onSelect, stepFree, destination }: { floor: Floor; selected: string; onSelect: (id: string) => void; stepFree: boolean; destination: string | null }) {
-  const points = routeFor(destination ?? selected, stepFree).map(([x, , z]) => `${(x + 10.5) * 20},${(z + 7.5) * 20}`).join(' ');
-  return <div className="map2d"><div className="map2d-plan"><svg viewBox="0 0 420 300" aria-hidden="true"><rect x="2" y="2" width="416" height="296" rx="8" fill="#eeeee3" stroke="#ccd6c6" strokeWidth="3" />{floor === 'office' ? <><rect x="12" y="12" width="190" height="136" rx="6" fill="#dce3d1" /><rect x="213" y="12" width="195" height="136" rx="6" fill="#e8dac0" /><rect x="47" y="191" width="133" height="97" rx="6" fill="#e5d4ba" /><rect x="185" y="191" width="88" height="97" rx="6" fill="#cfdfd3" /><rect x="310" y="191" width="98" height="97" rx="6" fill="#d6dfdd" /></> : <><rect x="12" y="12" width="396" height="176" rx="6" fill="#e7e3d4" /><rect x="12" y="202" width="396" height="85" rx="6" fill="#d1ddc8" /></>}<polyline points={points} fill="none" stroke="#497c57" strokeWidth="2" strokeDasharray="5 4" /></svg>{locations.filter(l => l.floor === floor).map(l => <button key={l.id} className={`map-pin ${selected === l.id ? 'active' : ''}`} style={{ left: `${(l.position[0] + 10.5) / 21 * 100}%`, top: `${(l.position[2] + 7.5) / 15 * 100}%` }} onClick={() => onSelect(l.id)}><MapPin size={15} /><span>{l.shortName}</span></button>)}</div><p>Bản đồ 2D · Cùng địa điểm, cùng hành trình</p></div>;
+export default function Map2D({
+  floor,
+  selected,
+  onSelect,
+  stepFree,
+  destination,
+}: {
+  floor: Floor;
+  selected: string;
+  onSelect: (id: string) => void;
+  stepFree: boolean;
+  destination: string | null;
+}) {
+  const points = routeFor(destination ?? selected, stepFree)
+    .map(([x, , z]) => `${(x + 10.5) * 20},${(z + 7.5) * 20}`)
+    .join(" ");
+  return (
+    <div className="map2d">
+      <div className="map2d-plan">
+        <svg viewBox="0 0 420 300" aria-hidden="true">
+          <rect
+            x="2"
+            y="2"
+            width="416"
+            height="296"
+            rx="8"
+            fill="#eeeee3"
+            stroke="#ccd6c6"
+            strokeWidth="3"
+          />
+          {floor === "office" ? (
+            <>
+              <rect
+                x="12"
+                y="12"
+                width="190"
+                height="136"
+                rx="6"
+                fill="#dce3d1"
+              />
+              <rect
+                x="213"
+                y="12"
+                width="195"
+                height="136"
+                rx="6"
+                fill="#e8dac0"
+              />
+              <rect
+                x="47"
+                y="191"
+                width="133"
+                height="97"
+                rx="6"
+                fill="#e5d4ba"
+              />
+              <rect
+                x="185"
+                y="191"
+                width="88"
+                height="97"
+                rx="6"
+                fill="#cfdfd3"
+              />
+              <rect
+                x="310"
+                y="191"
+                width="98"
+                height="97"
+                rx="6"
+                fill="#d6dfdd"
+              />
+            </>
+          ) : (
+            <>
+              <rect
+                x="12"
+                y="12"
+                width="396"
+                height="176"
+                rx="6"
+                fill="#e7e3d4"
+              />
+              <rect
+                x="12"
+                y="202"
+                width="396"
+                height="85"
+                rx="6"
+                fill="#d1ddc8"
+              />
+            </>
+          )}
+          <polyline
+            points={points}
+            fill="none"
+            stroke="#497c57"
+            strokeWidth="2"
+            strokeDasharray="5 4"
+          />
+        </svg>
+        {locations
+          .filter((l) => l.floor === floor)
+          .map((l) => (
+            <button
+              key={l.id}
+              className={`map-pin ${selected === l.id ? "active" : ""}`}
+              style={{
+                left: `${((l.position[0] + 10.5) / 21) * 100}%`,
+                top: `${((l.position[2] + 7.5) / 15) * 100}%`,
+              }}
+              onClick={() => onSelect(l.id)}
+            >
+              <MapPin size={15} />
+              <span>{l.shortName}</span>
+            </button>
+          ))}
+      </div>
+      <p>Bản đồ 2D · Cùng địa điểm, cùng hành trình</p>
+    </div>
+  );
 }
