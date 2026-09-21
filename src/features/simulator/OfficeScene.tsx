@@ -79,7 +79,7 @@ function Wheelchair({
       pose.current.z - last.current.z,
     );
     wheels.current.forEach((wheel) => {
-      if (wheel) wheel.rotation.x -= distance / radius;
+      if (wheel) wheel.rotateZ(-distance / radius);
     });
     last.current = { ...pose.current };
   });

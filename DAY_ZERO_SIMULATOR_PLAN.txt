@@ -586,3 +586,26 @@ không phải kết quả đo của một ứng dụng đã được xây dựng
 - Đây là mô phỏng hình học trên mặt phẳng; không mô phỏng lực, dốc, ma sát,
   tầm với, chuyển người hay đưa chân vào dưới bàn. Số đo mặt bằng vẫn là giả lập;
   cần khảo sát doanh nghiệp trước khi dùng để xác nhận điều kiện tiếp cận thật.
+
+22. CẬP NHẬT TRẢI NGHIỆM GAME — GÓC NHÌN, TOÀN MÀN HÌNH, ĐỒNG NGHIỆP
+
+- Luồng vào game: thiết lập/xác nhận kích thước xe → vào map. Mỗi lần tải trang
+  đều xác nhận hồ sơ; dữ liệu cũ điền sẵn, giữ nguyên tiến độ. Map chưa tải khi
+  chưa xác nhận; đóng bảng thiết lập đưa về màn chờ, không bỏ qua bước nhập.
+- Map phủ toàn vùng hiển thị. Thông tin ngắn đặt trên HUD; lịch trình nằm trong
+  Nhật ký (J), tổng kết/nhiệm vụ/cài đặt nằm trong Menu, không có sidebar web.
+- V chuyển góc nhìn thứ nhất/thứ ba, không dịch chuyển nhân vật. Góc thứ ba
+  bám phía sau xe và thu gần khi vướng vật cản. Nút toàn cảnh vẫn dùng được.
+- WASD theo hướng nhìn, F tương tác, Q/E xoay xe, Shift đi chậm. Kéo/vuốt nhìn
+  quanh; khi khóa chuột chỉ cần di chuột. Các phím game dừng khi mở bảng/nhập liệu.
+- Toàn màn hình dùng Fullscreen API trên gốc tài liệu để cả map và dialog hiện
+  đúng. Pointer Lock ẩn chuột khi chơi; Esc/mở bảng trả chuột; có nút tiếp tục.
+  Theo dõi sự kiện thật của trình duyệt và xử lý khi API không được hỗ trợ/chặn.
+- Ba đồng nghiệp giả lập: Mai Linh ở lễ tân, Đức Minh ở khu làm việc, Hoài An ở
+  pantry. Dùng cùng cự ly F và đường nhìn như đồ vật. Hồ sơ có chân dung SVG,
+  tên, vai trò, đội nhóm, lời giới thiệu, nội dung hỗ trợ, thời gian/địa điểm gặp.
+- Nhân vật đồng nghiệp đứng cố định, có va chạm; chưa có AI/hội thoại động.
+- Kiểm tra bổ sung: xác nhận hồ sơ trước map, V và không dịch chuyển xe,
+  fullscreen thật 100% viewport, pointer lock/mở dialog/trả chuột, hồ sơ NPC
+  đúng khoảng cách; giữ kiểm tra WASD, tỷ lệ xe, cửa, HR, mobile và accessibility.
+- Tham chiếu API: https://www.w3.org/TR/pointerlock-2/

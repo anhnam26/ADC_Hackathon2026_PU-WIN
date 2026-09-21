@@ -1,6 +1,6 @@
 # Day Zero — Workplace Simulator
 
-Trải nghiệm văn phòng bằng nhân vật do bạn chủ động điều khiển. Bản demo ưu tiên người dùng xe lăn: nhập kích thước xe, tự đi qua cửa, tiếp cận đồ vật, nhấn **F** để xem hình minh họa, cách sử dụng và số đo trước ngày làm việc đầu tiên.
+Trải nghiệm văn phòng như một trò chơi khám phá. Bản demo ưu tiên người dùng xe lăn: thiết lập kích thước xe trước khi vào map, tự di chuyển, gặp đồng nghiệp và nhấn **F** để tìm hiểu người hoặc đồ vật ở gần. Map phủ toàn bộ trang, có góc nhìn thứ nhất / thứ ba, toàn cảnh và chế độ toàn màn hình thật.
 
 ## Chạy demo
 
@@ -18,10 +18,10 @@ Trang trắng hoặc báo thiếu thư viện: dừng server của dự án bằ
 ## Bắt đầu trải nghiệm
 
 1. Chọn **Sử dụng xe lăn**, nhập chiều rộng, dài, cao của xe, chiều cao mặt ngồi và tay vịn bằng **cm**. Rộng cần tính cả bánh xe; dài cần tính cả gác chân. Các giá trị sẵn có là ví dụ, không phải số đo của bạn.
-2. Bấm **Bắt đầu trải nghiệm**, sau đó bấm vào không gian 3D để nhận điều khiển bàn phím.
+2. Bấm **Bắt đầu trải nghiệm**, sau đó bấm vào không gian 3D để nhận điều khiển bàn phím. Khi quay lại, số đo cũ được điền sẵn; xác nhận **Vào văn phòng** rồi map mới tải. Đóng bảng thiết lập không bỏ qua bước này.
 3. Di chuyển đến gần một đồ vật. Khi gợi ý xuất hiện, nhấn **F** hoặc bấm nút tương tác để mở thông tin.
 4. Với cửa, bấm **Mở cửa** trong bảng thông tin, đóng bảng rồi tự điều khiển xe đi qua.
-5. Ghi nhận điều cần xác minh tại chính đồ vật đó. Vào **Tổng kết trải nghiệm** để tạo nhiệm vụ chuẩn bị.
+5. Ghi nhận điều cần xác minh tại chính đồ vật đó. Mở **Menu → Tổng kết trải nghiệm** để tạo nhiệm vụ chuẩn bị. **Nhật ký / J** chứa lịch trình, danh mục đồ vật và đồng nghiệp.
 
 | Điều khiển | Hành động |
 | --- | --- |
@@ -32,12 +32,24 @@ Trang trắng hoặc báo thiếu thư viện: dừng server của dự án bằ
 | Q / E | Xoay xe tại chỗ trái / phải |
 | Giữ Shift | Di chuyển chậm để căn qua cửa |
 | F | Tương tác đồ vật ở gần, trong khoảng 1,35 m từ tâm nhân vật đến bề mặt |
-| Escape | Đóng bảng thông tin hoặc thu gọn bản đồ |
+| V | Chuyển qua lại góc nhìn thứ nhất / thứ ba |
+| J | Mở nhật ký, lịch trình và danh mục đối tượng |
+| Escape | Đóng bảng thông tin hoặc trả chuột cho trình duyệt; có thể thoát toàn màn hình tùy trình duyệt |
 | Giữ chuột trái và kéo / vuốt trên cảnh 3D | Quay hướng xe, nhìn lên/xuống |
 | Nút tâm ngắm | Chuyển giữa góc nhìn thứ nhất và toàn cảnh |
 | Đặt lại góc nhìn | Nhìn ngang trở lại; giữ vị trí và hướng xe |
+| Nút Toàn màn hình | Dùng toàn màn hình trình duyệt, khóa và ẩn chuột trên máy dùng chuột |
+| Di chuột khi đã khóa | Nhìn quanh mà không cần giữ nút chuột |
 
 Mặc định mở **góc nhìn thứ nhất**. Camera đặt tại tâm xe, cao bằng mặt ngồi + 65 cm (giả định minh họa, không phải số đo cơ thể cá nhân); nhân vật đi bộ dùng tầm mắt 1,60 m. Không có rung/lắc đầu hoặc zoom khi di chuyển. Kéo ngang hoặc Q/E quay cả xe và camera, vẫn xét va chạm khi xoay; kéo dọc nhìn lên/xuống. WASD tính theo hướng nhìn, A/D đi ngang và S lùi không tự quay camera. Đây là điều khiển khám phá bằng dấu chiếm chỗ hình chữ nhật, không mô phỏng cơ học bánh xe hoặc sức đẩy. Trong toàn cảnh/2D, WASD vẫn di chuyển theo màn hình như trước. Cuộn chuột chỉ phóng to ở toàn cảnh.
+
+**Góc nhìn thứ ba** bám sau xe, thấy được nhân vật và kích thước xe. Camera thu gần nếu tường hoặc đồ vật chắn đường nhìn; không đổi vị trí xe khi nhấn V. Cả hai góc nhìn dùng chung WASD/F, va chạm và hướng xe. V không hoạt động khi nhập liệu hoặc mở dialog.
+
+Toàn màn hình dùng Fullscreen API; map chiếm 100% chiều rộng/cao, không có viền trang hay sidebar. Pointer Lock ẩn con trỏ và nhận chuyển động chuột liên tục. Mở hồ sơ/Menu/Nhật ký sẽ trả chuột để thao tác; bấm **Tiếp tục chơi · Ẩn chuột** để khóa lại. Esc trả chuột; nút **Thoát toàn màn hình** đồng bộ theo trạng thái trình duyệt. Nếu trình duyệt chặn API, hiện thông báo và vẫn dùng map phủ trang, kéo chuột hoặc cảm ứng. Trên màn hình cảm ứng không yêu cầu khóa chuột. Trình tự gọi hai API tham chiếu [Pointer Lock 2.0](https://www.w3.org/TR/pointerlock-2/).
+
+## Gặp đồng nghiệp
+
+Có **3 nhân vật mẫu** trong map: Mai Linh (HR, lễ tân), Đức Minh (buddy, khu làm việc), Hoài An (Facilities, pantry). Đến gần rồi nhấn F để xem chân dung minh họa, vai trò, đội nhóm, lời giới thiệu, các nội dung họ có thể hỗ trợ và thời gian/địa điểm gặp. Nhân vật có hình học và va chạm, không đứng trong cửa. Hồ sơ ở xa không thể mở xuyên tường hoặc từ danh mục. Hình chân dung SVG được tạo cục bộ; đây là người giả lập, không phải ảnh/thông tin nhân viên thật. Hiện họ đứng ở vị trí cố định, chưa có hội thoại AI hoặc đi lại tự động.
 
 Nút mũi tên trên màn hình dùng được bằng chạm/chuột, hoặc giữ Enter/Space khi nút có focus. Bàn phím không điều khiển xe khi đang nhập liệu, mở dialog hoặc rời khỏi vùng trò chơi. Không có chế độ nhân vật tự đi đến đích. Chọn chặng chỉ thay đổi mục tiêu, không dịch chuyển nhân vật. **Về lối vào** là nút đặt lại vị trí có chủ ý khi cần bắt đầu lại.
 
@@ -45,13 +57,13 @@ Nút mũi tên trên màn hình dùng được bằng chạm/chuột, hoặc gi�
 
 - Một mặt bằng liên tục: lối vào, lễ tân, khu bàn làm việc, phòng họp Lotus, pantry, góc nghỉ và nhà vệ sinh.
 - **1 đơn vị 3D = 1 mét**. Ô lưới là 1 m. Cùng một hệ tỷ lệ cho xe, cửa, bàn, ghế và dụng cụ.
-- 22 đồ vật có thông tin sử dụng. Khung cửa, tường, bàn ghế, máy nước, máy in và đồ dùng có va chạm.
+- 22 đồ vật có thông tin sử dụng và 3 đồng nghiệp có hồ sơ, tổng cộng 25 điểm khám phá. Khung cửa, tường, bàn ghế, máy nước, máy in, đồ dùng và người có va chạm.
 - Xe thay đổi chiều rộng/dài thực theo số đo nhập; không chỉ đổi nhãn. Hướng quay của xe được xét trong kiểm tra va chạm.
 - Cửa phải mở trước khi đi qua. Quá trình kiểm tra mở/đóng xét toàn bộ cung quét để tránh cánh cửa xuyên người.
 - Các cửa thông thủy 126, 84, 85 và 76 cm để thử các tình huống khác nhau. Xe 70 cm có thể đi thẳng qua cửa 76 cm; xe 85 cm sẽ không lọt.
 - Hình minh họa đồ vật, mô hình 3D và dữ liệu va chạm dùng chung `objectParts()`. Hình chi tiết phóng to để đọc; vật trong văn phòng luôn giữ tỷ lệ mét.
-- Góc nhìn thứ nhất có tường kín và ẩn mô hình cơ thể để tránh che camera. Trong toàn cảnh, phần trên tường trong suốt để quan sát nhân vật; va chạm giữ nguyên.
-- Có thể chuyển giữa góc nhìn thứ nhất và toàn cảnh góc chéo mà không đổi vị trí/hướng xe. Nhấn F hoặc nút tương tác để mở thông tin; kéo nhìn không tự mở đồ vật.
+- Góc nhìn thứ nhất/thứ ba có tường kín. Góc thứ nhất ẩn cơ thể; góc thứ ba hiện nhân vật (tạm ẩn nếu camera phải thu quá sát). Trong toàn cảnh, phần trên tường trong suốt để quan sát nhân vật; va chạm giữ nguyên.
+- Nhấn F hoặc nút tương tác để mở thông tin; kéo nhìn không tự mở đối tượng.
 - Khi WebGL không khả dụng/mất context, chuyển sang bản đồ 2D với cùng vị trí, điều khiển, kích thước, cửa và va chạm.
 
 ## Thông tin và nhiệm vụ chuẩn bị
@@ -100,6 +112,10 @@ Bản preview ở **http://127.0.0.1:4173/**. Có thể đưa `dist/` lên stati
 ## Cấu trúc dữ liệu không gian
 
 - `src/data/space.ts`: mặt bằng mét, đồ vật, số đo, hướng dẫn, vị trí xuất phát và mục tiêu. Các đoạn tường cạnh cửa sinh từ cùng số đo thông thủy.
+- `src/data/colleagues.ts`: 3 hồ sơ nhân vật mẫu, vị trí, màu mô hình và thông tin hỗ trợ.
+- `src/features/simulator/ColleagueInspector.tsx`: hồ sơ đồng nghiệp và chân dung minh họa cục bộ.
+- `src/features/simulator/useGameDisplay.ts`: đồng bộ Fullscreen / Pointer Lock, xử lý lỗi trình duyệt.
+- `src/styles/game.css`: map phủ màn hình, HUD, nhật ký/menu và màn thiết lập trước khi chơi.
 - `src/lib/objectGeometry.ts`: hình học đồ vật dùng chung cho 3D, SVG minh họa, mặt bằng 2D và vùng va chạm.
 - `src/lib/physics.ts`: giao hình chữ nhật xoay, bước nhỏ chống xuyên tường, cự ly, đường nhìn và cung quét cửa.
 - `src/features/simulator/useSimulation.ts`: vòng cập nhật di chuyển, WASD, cảm ứng, dừng khi mở dialog/rời tab.

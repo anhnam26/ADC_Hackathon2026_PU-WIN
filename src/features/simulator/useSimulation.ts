@@ -273,12 +273,14 @@ export function useSimulation(
     window.addEventListener("blur", release);
     window.addEventListener("focusin", focusout);
     document.addEventListener("visibilitychange", release);
+    document.addEventListener('pointerlockchange', release);
     return () => {
       window.removeEventListener("keydown", keydown);
       window.removeEventListener("keyup", keyup);
       window.removeEventListener("blur", release);
       window.removeEventListener("focusin", focusout);
       document.removeEventListener("visibilitychange", release);
+      document.removeEventListener('pointerlockchange', release);
       release();
     };
   }, [stage]);

@@ -387,7 +387,7 @@ export default function Simulator({
             </div>
             {immersive && <div className="first-person-hint">{firstPerson ? 'Góc nhìn thứ nhất' : 'Góc nhìn thứ ba'} · {display.locked ? 'Di chuột để nhìn · Esc hiện chuột' : 'Kéo chuột / vuốt để nhìn'} · V đổi góc nhìn</div>}
             {immersive && <div className="game-crosshair" aria-hidden="true">+</div>}
-            {display.fullscreen && immersive && !display.locked && <button className="resume-pointer" onClick={display.lock}>Tiếp tục chơi · Ẩn chuột</button>}
+            {display.fullscreen && immersive && !display.locked && display.canLock && <button className="resume-pointer" onClick={display.lock}>Tiếp tục chơi · Ẩn chuột</button>}
             <div className="movement-hud">
               <div className="movement-pad">
                 {controls.map((c) => (

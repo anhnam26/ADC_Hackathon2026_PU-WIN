@@ -26,6 +26,11 @@ test('setup precedes map; V toggles first and third person without teleporting o
   const bounds = await stage.boundingBox();
   const viewport = page.viewportSize()!;
   expect(bounds).toEqual({ x: 0, y: 0, ...viewport });
+  await page.reload();
+  await expect(stage).toHaveCount(0);
+  await expect(page.getByRole('spinbutton', { name: 'Chiều rộng xe', exact: true })).toHaveValue('75');
+  await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click();
+  await expect(stage).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -43,6 +48,8 @@ test('native fullscreen fills viewport, locks pointer, releases it for interacti
   expect(full.x).toBe(0); expect(full.y).toBe(0);
   expect(full.width).toBe(full.screenWidth); expect(full.height).toBe(full.screenHeight);
   await expect(stage).toHaveAttribute('data-pointer-locked', 'true');
+  await page.mouse.move(650, 450);
+  await expect.poll(async () => Math.abs(Number(await stage.getAttribute('data-yaw')))).toBeGreaterThan(.02);
   await page.keyboard.press('v'); await expect(stage).toHaveAttribute('data-camera', 'third-person');
   await page.keyboard.press('f'); await expect(page.getByRole('dialog')).toBeVisible();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(false);
@@ -62,6 +69,7 @@ test('nearby colleague shows portrait, role and support information via F; far c
   const session = seedSession(); session.started = true; session.playerPose = { x: 2.55, z: 5.5, yaw: 0 }; session.openDoors = ['entry-door'];
   await page.addInitScript(data => localStorage.setItem('dayzero.session.v1', JSON.stringify(data)), session);
   await page.goto('/');
+  await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click();
   await expect(page.locator('.interact-button')).toContainText('Nguyễn Mai Linh');
   await page.getByTestId('game-stage').focus(); await page.keyboard.press('f');
   await expect(page.getByRole('dialog')).toContainText('Chuyên viên nhân sự');

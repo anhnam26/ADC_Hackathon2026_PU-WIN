@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState, type RefObject } from 'react';
 export function useGameDisplay(stage: RefObject<HTMLDivElement | null>, immersive: boolean, notify: (message: string) => void) {
   const [fullscreen, setFullscreen] = useState(!!document.fullscreenElement);
   const [locked, setLocked] = useState(false);
+  const canLock = matchMedia('(pointer: fine)').matches && 'requestPointerLock' in document.documentElement;
   const lock = useCallback(() => {
     if (!immersive || !stage.current || !matchMedia('(pointer: fine)').matches) return;
     stage.current.focus({ preventScroll: true });
@@ -40,5 +41,5 @@ export function useGameDisplay(stage: RefObject<HTMLDivElement | null>, immersiv
     };
   }, [stage]);
   useEffect(() => { if (!immersive) document.exitPointerLock?.(); }, [immersive]);
-  return { fullscreen, locked, lock, toggleFullscreen };
+  return { fullscreen, locked, lock, toggleFullscreen, canLock };
 }

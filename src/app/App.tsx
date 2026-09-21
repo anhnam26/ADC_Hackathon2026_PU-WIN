@@ -33,7 +33,8 @@ export default function App() {
     useDemoStore();
   const [page, setPage] = useState<Page>("journey");
   const [role, setRole] = useState<"employee" | "hr">("employee");
-  const [welcome, setWelcome] = useState(!session.started);
+  const [welcome, setWelcome] = useState(true);
+  const [entered, setEntered] = useState(false);
   const [issueContext, setIssueContext] = useState<IssueContext | null>(null);
   const [settings, setSettings] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
@@ -220,12 +221,12 @@ export default function App() {
               {notice}
             </div>
           )}
-          {page === "journey" && !session.started && <div className="game-launch">
+          {page === "journey" && !entered && <div className="game-launch">
             <span className="eyebrow">YOUR FIRST DAY, REIMAGINED</span><h1>DAY ZERO<span>Hành trình của bạn bắt đầu ở đây.</span></h1>
             <p>Thiết lập xe của bạn. Gặp đồng nghiệp mới. Làm quen văn phòng theo nhịp riêng.</p>
             <button className="button primary" onClick={() => setWelcome(true)}>Thiết lập nhân vật</button>
           </div>}
-          {page === "journey" && session.started && (
+          {page === "journey" && session.started && entered && (
             <Simulator
               key={`${session.id}-${target ?? 'default'}`}
               target={target}
@@ -269,7 +270,7 @@ export default function App() {
           <span>Dữ liệu mô phỏng · Lưu trên trình duyệt này</span>
         </footer>
       </div>
-      {welcome && <Welcome onClose={() => setWelcome(false)} />}
+      {welcome && <Welcome entering={!entered} onConfirm={() => { setEntered(true); setWelcome(false); }} onClose={() => setWelcome(false)} />}
       {gameMenu && <Dialog title="Tạm dừng" subtitle="DAY ZERO · Không gian của bạn, nhịp đi của bạn." onClose={() => setGameMenu(false)}>
         <div className="game-menu-actions">
           <button className="button primary" onClick={() => setGameMenu(false)}>Trở lại trò chơi</button>
@@ -353,6 +354,7 @@ export default function App() {
               className="button primary"
               onClick={() => {
                 reset();
+                setEntered(false);
                 setResetConfirm(false);
                 setRole("employee");
                 goTo("journey");

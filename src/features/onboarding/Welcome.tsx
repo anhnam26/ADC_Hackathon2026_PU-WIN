@@ -12,7 +12,7 @@ import { mobilitySchema, type MobilityProfile } from "../../types/simulator";
 import { useDemoStore } from "../../store/useDemoStore";
 import { WheelchairDiagram } from "../simulator/ObjectIllustration";
 
-export default function Welcome({ onClose }: { onClose: () => void }) {
+export default function Welcome({ onClose, onConfirm, entering = false }: { onClose: () => void; onConfirm?: () => void; entering?: boolean }) {
   const { session, start, setMobility } = useDemoStore();
   const [needs, setNeeds] = useState<Category[]>(session.selectedNeeds);
   const [profile, setProfile] = useState<MobilityProfile>({
@@ -47,7 +47,7 @@ export default function Welcome({ onClose }: { onClose: () => void }) {
     }
     setMobility(result.data);
     start(needs);
-    onClose();
+    (onConfirm ?? onClose)();
   };
   return (
     <Dialog
@@ -161,6 +161,7 @@ export default function Welcome({ onClose }: { onClose: () => void }) {
             <kbd>Q</kbd>
             <kbd>E</kbd> Xoay tại chỗ
           </span>
+          <span><kbd>V</kbd> Góc nhìn thứ nhất / thứ ba</span>
         </div>
         <p className="profile-disclaimer">Góc nhìn thứ nhất · Giữ chuột trái và kéo hoặc vuốt trên cảnh để nhìn quanh. Q/E xoay xe khi dùng bàn phím.</p>
         <p className="profile-disclaimer">
@@ -174,7 +175,7 @@ export default function Welcome({ onClose }: { onClose: () => void }) {
         )}
         <div className="dialog-actions">
           <button className="button primary" type="submit">
-            {session.started ? "Lưu nhân vật" : "Bắt đầu trải nghiệm"}
+            {session.started ? entering ? 'Vào văn phòng' : "Lưu nhân vật" : "Bắt đầu trải nghiệm"}
             <ArrowRight size={17} />
           </button>
         </div>

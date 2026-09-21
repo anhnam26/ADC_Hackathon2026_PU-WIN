@@ -41,7 +41,7 @@ test('WASD drives the wheelchair, F opens nearby objects, a closed door blocks e
 test('entered dimensions persist; a wide chair cannot pass the same doorway as a smaller chair', async ({ page }) => {
   const session = seedSession(); session.started = true; session.playerPose = { x: 5.65, z: 2.15, yaw: 0 }; session.mobility.widthCm = 85;
   await page.addInitScript(data => localStorage.setItem('dayzero.session.v1', JSON.stringify(data)), session);
-  await page.goto('/'); await page.getByRole('button', { name: '2D', exact: true }).click();
+  await page.goto('/'); await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click(); await page.getByRole('button', { name: '2D', exact: true }).click();
   await page.getByTestId('game-stage').focus(); await expect(page.locator('.interact-button')).toContainText('Cửa nhà vệ sinh'); await page.keyboard.press('f');
   await expect(page.getByRole('dialog')).toContainText('Xe không lọt ô cửa');
   await expect(page.getByRole('dialog')).toContainText('− xe 85 cm = -9 cm');
@@ -77,7 +77,7 @@ test('object-specific report keeps its measurements through the HR workflow and 
   await page.getByRole('button', { name: 'Cần hỗ trợ mở cửa khi đến làm việc.', exact: true }).click();
   await page.getByRole('button', { name: 'Xác nhận phương án', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Đã hoàn tất');
-  await page.reload(); await page.getByRole('button', { name: 'Menu', exact: true }).click(); await page.getByRole('button', { name: /Nhiệm vụ chuẩn bị/ }).click();
+  await page.reload(); await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click(); await page.getByRole('button', { name: 'Menu', exact: true }).click(); await page.getByRole('button', { name: /Nhiệm vụ chuẩn bị/ }).click();
   await expect(page.locator('tbody')).toContainText('Đã hoàn tất');
 });
 
@@ -92,7 +92,8 @@ test('first-person movement, drag look, overview and F interaction work without 
   const before = await z(page);
   await holdUntil(page, 's', async () => await z(page) > before + .15);
   await expect(stage).toHaveAttribute('data-yaw', '0.000');
-  await holdUntil(page, 'w', async () => await z(page) < before + .03);
+  await holdUntil(page, 'w', async () => await z(page) < before - .08);
+  await expect(page.locator('.interact-button')).toBeVisible();
   await stage.focus(); await page.keyboard.press('f');
   await expect(page.locator('.object-illustration')).toBeVisible();
   await page.getByRole('button', { name: 'Mở cửa', exact: true }).click();
