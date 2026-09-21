@@ -283,7 +283,7 @@ export default function App() {
             <label className="setting-row">
               <div>
                 <strong>Giảm chuyển động</strong>
-                <span>Chuyển vị trí tức thì, tắt hiệu ứng giao diện.</span>
+                <span>Tắt hiệu ứng giao diện và làm mượt camera; nhân vật vẫn do bạn điều khiển.</span>
               </div>
               <input
                 type="checkbox"
@@ -360,8 +360,7 @@ export default function App() {
               <section>
                 <h3>01 · Làm quen không gian</h3>
                 <p>
-                  Chọn một chặng trong lịch trình. Kéo để xoay mô hình, hoặc
-                  dùng danh sách địa điểm và bản đồ 2D.
+                  Nhập kích thước xe lăn trong hồ sơ nhân vật. Bấm vào không gian và dùng WASD hoặc phím mũi tên để tự di chuyển. Q/E xoay tại chỗ, giữ Shift để đi chậm.
                 </p>
               </section>
             </div>
@@ -370,8 +369,7 @@ export default function App() {
               <section>
                 <h3>02 · Thử và ghi nhận</h3>
                 <p>
-                  Bấm “Đến địa điểm”, xem checklist và lưu những điều cần xác
-                  minh. Thông tin chưa rõ luôn được đánh dấu.
+                  Đến gần đồ vật rồi nhấn F để xem hình minh họa, kích thước, cách dùng và lưu ý. Cửa cần mở bằng nút trong bảng tương tác. Xe có va chạm với khung cửa, bàn ghế và tường.
                 </p>
               </section>
             </div>

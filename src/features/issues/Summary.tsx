@@ -89,6 +89,8 @@ export default function Summary({
                     <MapPin size={20} />
                   </div>
                   <div className="issue-copy">
+                    {issue.objectName && <p><strong>{issue.objectName}</strong></p>}
+                    {issue.measurementNote && <p className="measurement-context">{issue.measurementNote}</p>}
                     <div className="inline-meta">
                       <span>{locationById(issue.locationId).name}</span>
                       <span>· {journey[issue.stepId].time}</span>

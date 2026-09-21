@@ -1,126 +1,135 @@
-import { MapPin } from "lucide-react";
-import { locations, routeFor } from "../../data/office";
-import type { Floor } from "../../types/domain";
+import { useEffect, type MutableRefObject } from "react";
+import { objects, walls } from "../../data/space";
+import { objectObstacles } from "../../lib/objectGeometry";
+import { footprint } from "../../lib/physics";
+import type { MobilityProfile, Pose } from "../../types/simulator";
 
 export default function Map2D({
-  floor,
-  selected,
+  pose,
+  profile,
+  openDoors,
+  nearest,
   onSelect,
-  stepFree,
-  destination,
+  cameraYaw,
 }: {
-  floor: Floor;
-  selected: string;
+  pose: Pose;
+  profile: MobilityProfile;
+  openDoors: string[];
+  nearest: string | null;
   onSelect: (id: string) => void;
-  stepFree: boolean;
-  destination: string | null;
+  cameraYaw: MutableRefObject<number>;
 }) {
-  const points = routeFor(destination ?? selected, stepFree)
-    .map(([x, , z]) => `${(x + 10.5) * 20},${(z + 7.5) * 20}`)
-    .join(" ");
+  useEffect(() => {
+    cameraYaw.current = 0;
+  }, [cameraYaw]);
+  const body = footprint(profile);
   return (
-    <div className="map2d">
-      <div className="map2d-plan">
-        <svg viewBox="0 0 420 300" aria-hidden="true">
-          <rect
-            x="2"
-            y="2"
-            width="416"
-            height="296"
-            rx="8"
-            fill="#eeeee3"
-            stroke="#ccd6c6"
-            strokeWidth="3"
-          />
-          {floor === "office" ? (
-            <>
-              <rect
-                x="12"
-                y="12"
-                width="190"
-                height="136"
-                rx="6"
-                fill="#dce3d1"
-              />
-              <rect
-                x="213"
-                y="12"
-                width="195"
-                height="136"
-                rx="6"
-                fill="#e8dac0"
-              />
-              <rect
-                x="47"
-                y="191"
-                width="133"
-                height="97"
-                rx="6"
-                fill="#e5d4ba"
-              />
-              <rect
-                x="185"
-                y="191"
-                width="88"
-                height="97"
-                rx="6"
-                fill="#cfdfd3"
-              />
-              <rect
-                x="310"
-                y="191"
-                width="98"
-                height="97"
-                rx="6"
-                fill="#d6dfdd"
-              />
-            </>
-          ) : (
-            <>
-              <rect
-                x="12"
-                y="12"
-                width="396"
-                height="176"
-                rx="6"
-                fill="#e7e3d4"
-              />
-              <rect
-                x="12"
-                y="202"
-                width="396"
-                height="85"
-                rx="6"
-                fill="#d1ddc8"
-              />
-            </>
-          )}
-          <polyline
-            points={points}
-            fill="none"
-            stroke="#497c57"
-            strokeWidth="2"
-            strokeDasharray="5 4"
-          />
-        </svg>
-        {locations
-          .filter((l) => l.floor === floor)
-          .map((l) => (
-            <button
-              key={l.id}
-              className={`map-pin ${selected === l.id ? "active" : ""}`}
-              style={{
-                left: `${((l.position[0] + 10.5) / 21) * 100}%`,
-                top: `${((l.position[2] + 7.5) / 15) * 100}%`,
-              }}
-              onClick={() => onSelect(l.id)}
-            >
-              <MapPin size={15} />
-              <span>{l.shortName}</span>
-            </button>
+    <svg
+      className="simulation-map2d"
+      viewBox="-9.8 -7.8 19.6 18"
+      role="img"
+      aria-label="Văn phòng nhìn từ trên, dùng WASD hoặc các nút điều khiển để di chuyển"
+    >
+      <rect x="-9" y="-7" width="18" height="16.5" fill="#e7edde" />
+      <rect x="-9" y="-7" width="18" height="14" fill="#f1eee1" />
+      <rect x="-9" y="-7" width="6" height="7" fill="#d7e4cd" />
+      <rect x="3.5" y="-7" width="5.5" height="7" fill="#eadcc4" />
+      <rect x="3.5" y="3.4" width="5.5" height="3.6" fill="#d4e4d9" />
+      {walls.map((w) => (
+        <rect
+          key={w.id}
+          x={w.position[0] - w.size[0] / 2}
+          y={w.position[2] - w.size[2] / 2}
+          width={w.size[0]}
+          height={w.size[2]}
+          fill="#8da189"
+        />
+      ))}
+      {objects.map((o) => (
+        <g key={o.id} onClick={() => onSelect(o.id)} cursor="pointer">
+          {objectObstacles(o, openDoors.includes(o.id)).map((b, i) => (
+            <rect
+              key={i}
+              x={b.x - b.width / 2}
+              y={b.z - b.depth / 2}
+              width={b.width}
+              height={b.depth}
+              transform={`rotate(${(-b.yaw * 180) / Math.PI} ${b.x} ${b.z})`}
+              fill={o.color}
+              stroke={nearest === o.id ? "#246b4a" : "#899b7e"}
+              strokeWidth={nearest === o.id ? 0.07 : 0.025}
+            />
           ))}
-      </div>
-      <p>Bản đồ 2D · Cùng địa điểm, cùng hành trình</p>
-    </div>
+          <title>{o.name}</title>
+        </g>
+      ))}
+      {[
+        [-6, -6.4, "BÀN LÀM VIỆC"],
+        [6.1, -6.4, "PHÒNG LOTUS"],
+        [-5.5, 1.8, "PANTRY"],
+        [6.2, 6.8, "WC"],
+        [0, 5.5, "LỄ TÂN"],
+      ].map(([x, z, name]) => (
+        <text
+          key={name}
+          x={Number(x)}
+          y={Number(z)}
+          fontSize=".28"
+          textAnchor="middle"
+          fill="#506447"
+        >
+          {name}
+        </text>
+      ))}
+      <g
+        transform={`translate(${pose.x} ${pose.z}) rotate(${(-pose.yaw * 180) / Math.PI})`}
+      >
+        <rect
+          x={-body.width / 2}
+          y={-body.depth / 2}
+          width={body.width}
+          height={body.depth}
+          rx=".05"
+          fill="#71935b"
+          fillOpacity=".3"
+          stroke="#386044"
+          strokeWidth=".045"
+        />
+        <rect
+          x={-body.width / 2 + 0.08}
+          y={-body.depth / 2 + 0.14}
+          width={body.width - 0.16}
+          height={body.depth * 0.55}
+          rx=".07"
+          fill="#2d694d"
+        />
+        {profile.mode === "wheelchair" &&
+          [-1, 1].map((s) => (
+            <rect
+              key={s}
+              x={s * (body.width / 2 - 0.03) - 0.03}
+              y={-body.depth * 0.15}
+              width=".06"
+              height={body.depth * 0.48}
+              rx=".03"
+              fill="#273e32"
+            />
+          ))}
+        <path
+          d="M0 -.2L-.1 -.05H.1Z"
+          transform={`translate(0 ${-body.depth / 2 - 0.07})`}
+          fill="#234b32"
+        />
+      </g>
+      <text
+        x={pose.x}
+        y={pose.z + body.depth / 2 + 0.38}
+        fontSize=".3"
+        textAnchor="middle"
+        fill="#234b32"
+      >
+        BẠN
+      </text>
+    </svg>
   );
 }

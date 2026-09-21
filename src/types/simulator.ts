@@ -1,27 +1,87 @@
-import { z } from 'zod';
-import type { Category, Point } from './domain';
+import { z } from "zod";
+import type { Category, Point } from "./domain";
 
-export const mobilitySchema = z.object({
-  mode: z.enum(['wheelchair', 'walking']).default('wheelchair'),
-  widthCm: z.number().min(45).max(130).default(70),
-  lengthCm: z.number().min(70).max(180).default(110),
-  heightCm: z.number().min(55).max(150).default(95),
-  seatHeightCm: z.number().min(30).max(80).default(48),
-  armrestHeightCm: z.number().min(45).max(120).default(70),
-}).refine(p => p.seatHeightCm < p.armrestHeightCm && p.armrestHeightCm <= p.heightCm, { message: 'Chiều cao ghế ngồi phải thấp hơn tay vịn; tay vịn không cao hơn tổng chiều cao xe.' });
+export const mobilitySchema = z
+  .object({
+    mode: z.enum(["wheelchair", "walking"]).default("wheelchair"),
+    widthCm: z.number().min(45).max(130).default(70),
+    lengthCm: z.number().min(70).max(180).default(110),
+    heightCm: z.number().min(55).max(150).default(95),
+    seatHeightCm: z.number().min(30).max(80).default(48),
+    armrestHeightCm: z.number().min(45).max(120).default(70),
+  })
+  .refine(
+    (p) =>
+      p.seatHeightCm < p.armrestHeightCm && p.armrestHeightCm <= p.heightCm,
+    {
+      message:
+        "Chiều cao ghế ngồi phải thấp hơn tay vịn; tay vịn không cao hơn tổng chiều cao xe.",
+    },
+  );
 export type MobilityProfile = z.infer<typeof mobilitySchema>;
-export const defaultMobility: MobilityProfile = { mode: 'wheelchair', widthCm: 70, lengthCm: 110, heightCm: 95, seatHeightCm: 48, armrestHeightCm: 70 };
-export type ObjectKind = 'door' | 'desk' | 'chair' | 'counter' | 'water' | 'printer' | 'sofa' | 'toilet' | 'sink' | 'plant' | 'screen';
+export const defaultMobility: MobilityProfile = {
+  mode: "wheelchair",
+  widthCm: 70,
+  lengthCm: 110,
+  heightCm: 95,
+  seatHeightCm: 48,
+  armrestHeightCm: 70,
+};
+export type ObjectKind =
+  | "door"
+  | "desk"
+  | "chair"
+  | "counter"
+  | "water"
+  | "printer"
+  | "sofa"
+  | "toilet"
+  | "sink"
+  | "plant"
+  | "screen";
 export interface WorldObject {
-  id: string; name: string; kind: ObjectKind; locationId: string; category: Category;
-  position: Point; yaw: number; size: Point; color: string;
-  description: string; usage: string[]; notes: string[];
-  clearWidth?: number; underHeight?: number; underWidth?: number; controlHeight?: number;
+  id: string;
+  name: string;
+  kind: ObjectKind;
+  locationId: string;
+  category: Category;
+  position: Point;
+  yaw: number;
+  size: Point;
+  color: string;
+  description: string;
+  usage: string[];
+  notes: string[];
+  clearWidth?: number;
+  underHeight?: number;
+  underWidth?: number;
+  controlHeight?: number;
 }
 export interface Part {
-  position: Point; size: Point; color: string; yaw?: number;
-  shape?: 'box' | 'cylinder' | 'sphere'; roll?: number; solid?: boolean;
+  position: Point;
+  size: Point;
+  color: string;
+  yaw?: number;
+  shape?: "box" | "cylinder" | "sphere";
+  roll?: number;
+  solid?: boolean;
 }
-export interface Obstacle { id: string; name: string; x: number; z: number; width: number; depth: number; yaw: number }
-export interface Pose { x: number; z: number; yaw: number }
-export interface WorldWall { id: string; position: Point; size: Point }
+export interface Obstacle {
+  id: string;
+  name: string;
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+  yaw: number;
+}
+export interface Pose {
+  x: number;
+  z: number;
+  yaw: number;
+}
+export interface WorldWall {
+  id: string;
+  position: Point;
+  size: Point;
+}

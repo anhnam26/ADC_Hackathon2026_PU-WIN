@@ -1,481 +1,301 @@
 import {
   Component,
   useEffect,
-  useMemo,
   useRef,
-  type ReactNode,
   type ComponentRef,
+  type MutableRefObject,
+  type ReactNode,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, Line, OrbitControls } from "@react-three/drei";
-import { Group, Vector3 } from "three";
-import { MapPin } from "lucide-react";
-import { locations, routeFor } from "../../data/office";
-import type { Floor, Point } from "../../types/domain";
+import { Html, OrbitControls } from "@react-three/drei";
+import { Group, Vector3, Mesh } from "three";
+import { objects, walls } from "../../data/space";
+import { objectParts } from "../../lib/objectGeometry";
+import type {
+  MobilityProfile,
+  Part,
+  Pose,
+  WorldObject,
+} from "../../types/simulator";
+import type { Point } from "../../types/domain";
 
-type BoxProps = {
-  position: Point;
-  size: Point;
-  color: string;
-  rotation?: Point;
-};
-function Box({ position, size, color, rotation }: BoxProps) {
+function PartMesh({ part }: { part: Part }) {
   return (
-    <mesh position={position} rotation={rotation} castShadow receiveShadow>
-      <boxGeometry args={size} />
-      <meshStandardMaterial color={color} roughness={0.85} />
+    <mesh
+      position={part.position}
+      rotation={[0, part.yaw ?? 0, part.roll ?? 0]}
+      castShadow
+      receiveShadow
+    >
+      {part.shape === "sphere" ? (
+        <sphereGeometry args={[0.5, 10, 8]} />
+      ) : (
+        <boxGeometry args={part.size} />
+      )}
+      {part.shape === "sphere" && (
+        <primitive object={new Vector3(...part.size)} attach="scale" />
+      )}
+      <meshStandardMaterial color={part.color} roughness={0.8} />
     </mesh>
   );
 }
-function Plant({
-  x,
-  z,
-  large = false,
+export function ObjectModel({
+  object,
+  open,
 }: {
-  x: number;
-  z: number;
-  large?: boolean;
+  object: WorldObject;
+  open?: boolean;
 }) {
-  const scale = large ? 1.25 : 0.85;
-  return (
-    <group position={[x, 0.12, z]} scale={scale}>
-      <mesh position={[0, 0.26, 0]} castShadow>
-        <cylinderGeometry args={[0.3, 0.23, 0.5, 12]} />
-        <meshStandardMaterial color="#e4cbb5" />
-      </mesh>
-      <mesh position={[0, 0.8, 0]} castShadow>
-        <sphereGeometry args={[0.5, 7, 6]} />
-        <meshStandardMaterial color="#6e9472" />
-      </mesh>
-      <mesh position={[0.15, 1.12, 0]} castShadow>
-        <sphereGeometry args={[0.35, 7, 6]} />
-        <meshStandardMaterial color="#8ca57b" />
-      </mesh>
-    </group>
-  );
-}
-function Chair({
-  x,
-  z,
-  rotate = false,
-  color = "#819b98",
-}: {
-  x: number;
-  z: number;
-  rotate?: boolean;
-  color?: string;
-}) {
-  return (
-    <group position={[x, 0.1, z]} rotation={[0, rotate ? Math.PI : 0, 0]}>
-      <Box position={[0, 0.5, 0]} size={[0.65, 0.14, 0.65]} color={color} />
-      <Box position={[0, 0.87, 0.28]} size={[0.65, 0.65, 0.1]} color={color} />
-      <Box position={[0, 0.23, 0]} size={[0.1, 0.45, 0.1]} color="#62716d" />
-      <Box position={[0, 0.04, 0]} size={[0.65, 0.05, 0.55]} color="#62716d" />
-    </group>
-  );
-}
-function Desk({
-  x,
-  z,
-  highlighted = false,
-}: {
-  x: number;
-  z: number;
-  highlighted?: boolean;
-}) {
-  return (
-    <group position={[x, 0.1, z]}>
-      <Box
-        position={[0, 0.82, 0]}
-        size={[2.1, 0.13, 1.1]}
-        color={highlighted ? "#c5dcbc" : "#e7d8bd"}
-      />
-      {[-0.87, 0.87].map((a) => (
-        <Box
-          key={a}
-          position={[a, 0.4, 0]}
-          size={[0.08, 0.8, 0.85]}
-          color="#edeeea"
-        />
-      ))}
-      <Box
-        position={[0, 1.28, -0.28]}
-        size={[0.83, 0.52, 0.06]}
-        color="#3c5551"
-      />
-      <Box
-        position={[0, 1.27, -0.24]}
-        size={[0.72, 0.4, 0.02]}
-        color="#b8d9d0"
-      />
-      <Box
-        position={[0, 0.99, -0.28]}
-        size={[0.07, 0.3, 0.08]}
-        color="#5e726d"
-      />
-      <Box
-        position={[0, 0.91, 0.14]}
-        size={[0.64, 0.035, 0.2]}
-        color="#bec8c1"
-      />
-      <Chair x={0} z={1.03} />
-      <mesh position={[0.73, 0.99, 0.1]}>
-        <cylinderGeometry args={[0.09, 0.08, 0.19, 12]} />
-        <meshStandardMaterial color="#cfac79" />
-      </mesh>
-    </group>
-  );
-}
-function WorkingFloor() {
   return (
     <group>
-      <Box position={[0, -0.22, 0]} size={[21, 0.6, 15]} color="#d0d8cf" />
-      <Box position={[0, 0.11, 0]} size={[20.8, 0.1, 14.8]} color="#f0eee4" />
-      <Box
-        position={[-4.8, 0.18, -3.3]}
-        size={[10.2, 0.025, 6.5]}
-        color="#e0e4d5"
-      />
-      <Box
-        position={[5.15, 0.18, -3.3]}
-        size={[8.9, 0.025, 6.5]}
-        color="#e6dac6"
-      />
-      <Box
-        position={[-4.7, 0.18, 4.7]}
-        size={[6.5, 0.025, 4.6]}
-        color="#e4d3bb"
-      />
-      <Box
-        position={[1.3, 0.18, 4.7]}
-        size={[4.2, 0.025, 4.6]}
-        color="#cfded3"
-      />
-      <Box
-        position={[7.25, 0.18, 4.7]}
-        size={[4.4, 0.025, 4.6]}
-        color="#d9e0df"
-      />
-      <Box position={[0, 1.1, -7.1]} size={[21, 2, 0.2]} color="#e5e8df" />
-      <Box position={[-10.35, 1.1, 0]} size={[0.2, 2, 14.3]} color="#e5e8df" />
-      <Box position={[10.35, 0.7, 0]} size={[0.2, 1.2, 14.3]} color="#e5e8df" />
-      {[-7, -3, 1, 5, 8.5].map((x) => (
-        <group key={x}>
-          <Box
-            position={[x, 1.28, -6.96]}
-            size={[2.9, 1.25, 0.07]}
-            color="#bbd4cd"
-          />
-          <Box
-            position={[x, 1.28, -6.88]}
-            size={[0.06, 1.28, 0.05]}
-            color="#f8faf1"
-          />
-        </group>
+      {objectParts(object, open).map((p, i) => (
+        <PartMesh part={p} key={i} />
       ))}
-      <Box
-        position={[0.25, 0.9, -3.8]}
-        size={[0.16, 1.5, 6.3]}
-        color="#dce2d9"
-      />
-      <Box position={[2.2, 0.67, -0.2]} size={[4, 1.0, 0.14]} color="#dce2d9" />
-      <Box
-        position={[8.2, 0.67, -0.2]}
-        size={[4.1, 1.0, 0.14]}
-        color="#dce2d9"
-      />
-      <Box
-        position={[-1.3, 0.7, 4.8]}
-        size={[0.15, 1.1, 4.5]}
-        color="#e5e8df"
-      />
-      <Box position={[3.8, 0.7, 4.8]} size={[0.15, 1.1, 4.5]} color="#e5e8df" />
-      <Box position={[5, 0.7, 4.8]} size={[0.15, 1.1, 4.5]} color="#e5e8df" />
-      {[-7, -4, -1.4].map((x) =>
-        [-5.4, -2.9].map((z) => (
-          <Desk
-            key={`${x}-${z}`}
-            x={x}
-            z={z}
-            highlighted={x === -4 && z === -2.9}
-          />
-        )),
-      )}
-      <Box position={[5, 0.88, -3.8]} size={[4.5, 0.16, 2]} color="#c29d73" />
-      <Box
-        position={[5, 0.43, -3.8]}
-        size={[2.7, 0.85, 0.25]}
-        color="#f1ebe0"
-      />
-      {[3.5, 5, 6.5].map((x) => (
-        <group key={x}>
-          <Chair x={x} z={-2.35} />
-          <Chair x={x} z={-5.25} rotate />
-        </group>
-      ))}
-      <Box
-        position={[9.95, 1.3, -3.5]}
-        size={[0.1, 1.4, 2.8]}
-        color="#39524c"
-      />
-      <Box
-        position={[9.87, 1.3, -3.5]}
-        size={[0.02, 1.17, 2.5]}
-        color="#adcbbd"
-      />
-      <Box
-        position={[-4.5, 0.65, 6.35]}
-        size={[5.3, 1, 0.95]}
-        color="#bca789"
-      />
-      <Box
-        position={[-4.5, 1.2, 6.35]}
-        size={[5.5, 0.12, 1.05]}
-        color="#faf6ec"
-      />
-      <Box
-        position={[-6, 1.52, 6.35]}
-        size={[0.65, 0.6, 0.6]}
-        color="#53635c"
-      />
-      <Box
-        position={[-2.65, 1.65, 6.35]}
-        size={[0.8, 1, 0.7]}
-        color="#d7e0dc"
-      />
-      <mesh position={[-4.1, 1, 3.8]} castShadow>
-        <cylinderGeometry args={[0.95, 0.95, 0.14, 32]} />
-        <meshStandardMaterial color="#eae1ce" />
-      </mesh>
-      <Box
-        position={[-4.1, 0.55, 3.8]}
-        size={[0.2, 0.8, 0.2]}
-        color="#8d9285"
-      />
-      <Chair x={-4.1} z={2.55} rotate color="#bc906a" />
-      <Chair x={-4.1} z={5} color="#bc906a" />
-      <Box
-        position={[1.3, 0.52, 5.9]}
-        size={[2.9, 0.7, 1.05]}
-        color="#6e9381"
-      />
-      <Box position={[1.3, 1.0, 6.4]} size={[2.9, 0.7, 0.22]} color="#6e9381" />
-      <Box
-        position={[1.2, 0.48, 4.5]}
-        size={[1.1, 0.1, 0.75]}
-        color="#eedac1"
-      />
-      <Plant x={2.9} z={3.1} />
-      <Box
-        position={[7.4, 0.58, 6.3]}
-        size={[3.2, 0.8, 0.85]}
-        color="#b4c6c2"
-      />
-      {[6.5, 8.3].map((x) => (
-        <mesh key={x} position={[x, 1.03, 6.3]}>
-          <cylinderGeometry args={[0.32, 0.2, 0.12, 20]} />
-          <meshStandardMaterial color="#ffffff" />
-        </mesh>
-      ))}
-      <Box position={[-8.6, 1.1, 6.85]} size={[2.1, 2, 0.16]} color="#778e87" />
-      <Box
-        position={[-8.6, 1.1, 6.72]}
-        size={[0.04, 1.95, 0.02]}
-        color="#d6e2d9"
-      />
-      <Plant x={-9.25} z={-5.9} large />
-      <Plant x={8.9} z={-6.1} large />
-      <Plant x={-9.3} z={0.2} />
-      <Plant x={3} z={-6.15} />
     </group>
   );
 }
-function GroundFloor() {
-  return (
-    <group>
-      <Box position={[0, -0.22, 0]} size={[21, 0.6, 15]} color="#c7d2c5" />
-      <Box position={[0, 0.11, -2.5]} size={[20.8, 0.1, 9.7]} color="#eeeade" />
-      <Box position={[0, 0.11, 4.8]} size={[20.8, 0.1, 4.9]} color="#d6dccf" />
-      <Box position={[0, 1.15, -7.1]} size={[21, 2.1, 0.2]} color="#e5e8df" />
-      <Box
-        position={[-10.3, 1.15, -2.4]}
-        size={[0.2, 2.1, 9.6]}
-        color="#e5e8df"
-      />
-      <Box
-        position={[10.3, 0.8, -2.4]}
-        size={[0.2, 1.4, 9.6]}
-        color="#e5e8df"
-      />
-      <Box
-        position={[-7.6, 0.9, 2.2]}
-        size={[5.5, 1.5, 0.15]}
-        color="#b7cdc3"
-      />
-      <Box position={[1, 0.9, 2.2]} size={[7.6, 1.5, 0.15]} color="#b7cdc3" />
-      <Box position={[9.5, 0.9, 2.2]} size={[1.6, 1.5, 0.15]} color="#b7cdc3" />
-      <Box
-        position={[-4, 0.24, 3.15]}
-        size={[2.2, 0.15, 0.45]}
-        color="#aeb9a9"
-      />
-      <Box position={[-4, 0.35, 2.7]} size={[2.2, 0.3, 0.45]} color="#bdc6b7" />
-      <Box
-        position={[-4.5, 0.75, -3.5]}
-        size={[4.2, 1.2, 1.4]}
-        color="#bfab8e"
-      />
-      <Box
-        position={[-4.5, 1.4, -3.5]}
-        size={[4.35, 0.15, 1.55]}
-        color="#f6efdf"
-      />
-      <Box
-        position={[-4.5, 1.72, -3.6]}
-        size={[0.8, 0.55, 0.08]}
-        color="#4b6359"
-      />
-      <Chair x={-4.5} z={-4.8} rotate />
-      <Box
-        position={[-4.5, 1.4, -6.9]}
-        size={[4.5, 1.25, 0.05]}
-        color="#2f6655"
-      />
-      <Html
-        position={[-4.5, 1.5, -6.8]}
-        center
-        transform
-        rotation={[0, 0, 0]}
-        distanceFactor={5}
-      >
-        <div className="wall-logo">
-          DAY ZERO<span>MAKE YOURSELF AT HOME</span>
-        </div>
-      </Html>
-      {[0, 2].map((x) => (
-        <Box
-          key={x}
-          position={[x, 0.62, -2.5]}
-          size={[0.6, 1.0, 1.9]}
-          color="#879a91"
-        />
-      ))}
-      <Box position={[1, 0.98, -2.2]} size={[1.3, 0.4, 0.08]} color="#b9dcd0" />
-      <Box position={[7, 1.35, -6.9]} size={[2.8, 2.5, 0.17]} color="#799086" />
-      <Box
-        position={[7, 1.35, -6.78]}
-        size={[0.035, 2.5, 0.03]}
-        color="#e4e8df"
-      />
-      <Box position={[7, 2.9, -6.84]} size={[0.8, 0.25, 0.1]} color="#31594c" />
-      <Box position={[-8.5, 0.55, -0.8]} size={[1.3, 0.7, 3]} color="#7a9581" />
-      <Box position={[-9, 0.97, -0.8]} size={[0.25, 0.7, 3]} color="#7a9581" />
-      <Plant x={-9} z={-5.8} large />
-      <Plant x={9} z={-5.8} large />
-      <Plant x={4.2} z={-5.9} />
-      {[-1, 2, 5].map((x) => (
-        <group key={x}>
-          <Box
-            position={[x, 0.36, 6.3]}
-            size={[1.7, 0.4, 0.65]}
-            color="#9fae91"
-          />
-          <Plant x={x} z={6.3} />
-        </group>
-      ))}
-      <Box position={[-7, 0.24, 5.1]} size={[3, 0.07, 1.5]} color="#b9cab5" />
-    </group>
-  );
-}
-function Avatar({
-  route,
-  reducedMotion,
-  onArrival,
+function Wheelchair({
+  profile,
+  pose,
 }: {
-  route: Point[];
-  reducedMotion: boolean;
-  onArrival: () => void;
+  profile: MobilityProfile;
+  pose: MutableRefObject<Pose>;
 }) {
-  const ref = useRef<Group>(null);
-  const segment = useRef(1);
-  const arrived = useRef(false);
-  const target = useMemo(() => route.map((p) => new Vector3(...p)), [route]);
-  const direction = useMemo(() => new Vector3(), []);
-  useEffect(() => {
-    segment.current = 1;
-    arrived.current = false;
-    ref.current?.position.copy(target[reducedMotion ? target.length - 1 : 0]);
-    if (reducedMotion) {
-      arrived.current = true;
-      onArrival();
-    }
-  }, [target, reducedMotion, onArrival]);
-  useFrame((_, delta) => {
-    if (!ref.current || arrived.current) return;
-    const next = target[segment.current];
-    if (!next) {
-      arrived.current = true;
-      onArrival();
-      return;
-    }
-    direction.subVectors(next, ref.current.position);
-    const distance = direction.length();
-    const travel = Math.min(delta, 0.05) * 5;
-    if (distance <= travel) {
-      ref.current.position.copy(next);
-      segment.current++;
-    } else ref.current.position.addScaledVector(direction.normalize(), travel);
+  const group = useRef<Group>(null),
+    wheels = useRef<(Mesh | null)[]>([]),
+    last = useRef({ ...pose.current });
+  const w = profile.widthCm / 100,
+    l = profile.lengthCm / 100,
+    h = profile.heightCm / 100,
+    seat = profile.seatHeightCm / 100,
+    arms = profile.armrestHeightCm / 100;
+  const radius = Math.min(0.31, l * 0.28, h * 0.34),
+    rearZ = l / 2 - radius - 0.02;
+  useFrame(() => {
+    if (!group.current) return;
+    group.current.position.set(pose.current.x, 0, pose.current.z);
+    group.current.rotation.y = pose.current.yaw;
+    const distance = Math.hypot(
+      pose.current.x - last.current.x,
+      pose.current.z - last.current.z,
+    );
+    wheels.current.forEach((wheel) => {
+      if (wheel) wheel.rotation.x -= distance / radius;
+    });
+    last.current = { ...pose.current };
   });
+  const box = (position: Point, size: Point, color: string, key: string) => (
+    <PartMesh key={key} part={{ position, size, color }} />
+  );
   return (
-    <group ref={ref}>
-      <mesh position={[0, 0.57, 0]} castShadow>
-        <capsuleGeometry args={[0.19, 0.45, 5, 10]} />
-        <meshStandardMaterial color="#23664f" />
+    <group ref={group}>
+      {profile.mode === "wheelchair" ? (
+        <>
+          {[-1, 1].map((s, i) => (
+            <group key={s}>
+              {
+                <mesh
+                  ref={(el) => {
+                    wheels.current[i] = el;
+                  }}
+                  position={[s * (w / 2 - 0.025), radius, rearZ]}
+                  rotation={[0, Math.PI / 2, 0]}
+                  castShadow
+                >
+                  <torusGeometry args={[radius - 0.027, 0.027, 8, 28]} />
+                  <meshStandardMaterial color="#293d36" />
+                </mesh>
+              }
+              <mesh
+                position={[s * (w / 2 - 0.025), radius, rearZ]}
+                rotation={[0, 0, Math.PI / 2]}
+              >
+                <cylinderGeometry
+                  args={[radius * 0.75, radius * 0.75, 0.012, 20]}
+                />
+                <meshStandardMaterial
+                  color="#7c9b8a"
+                  transparent
+                  opacity={0.4}
+                />
+              </mesh>
+              <mesh
+                position={[s * w * 0.35, 0.065, -l / 2 + 0.08]}
+                rotation={[0, 0, Math.PI / 2]}
+                castShadow
+              >
+                <cylinderGeometry args={[0.065, 0.065, 0.04, 16]} />
+                <meshStandardMaterial color="#35483f" />
+              </mesh>
+              {box(
+                [s * (w / 2 - 0.06), arms - 0.025, 0],
+                [0.055, 0.05, l * 0.5],
+                "#325b4b",
+                `arm${s}`,
+              )}
+              {box(
+                [s * (w / 2 - 0.07), seat / 2, rearZ],
+                [0.025, seat, 0.025],
+                "#7b9388",
+                `frame${s}`,
+              )}
+            </group>
+          ))}
+          {box(
+            [0, seat - 0.035, 0.04],
+            [Math.max(0.3, w - 0.13), 0.07, l * 0.48],
+            "#537e60",
+            "seat",
+          )}
+          {box(
+            [0, (h + seat) / 2, l * 0.24],
+            [Math.max(0.3, w - 0.13), h - seat, 0.045],
+            "#2f654f",
+            "back",
+          )}
+          {box(
+            [0, 0.11, -l / 2 + 0.06],
+            [w * 0.62, 0.025, 0.12],
+            "#627f71",
+            "footrest",
+          )}
+          {box(
+            [0, seat + 0.21, l * 0.06],
+            [0.28, 0.42, 0.19],
+            "#d5b784",
+            "body",
+          )}
+          {box(
+            [-0.1, seat - 0.14, -l * 0.22],
+            [0.11, 0.25, 0.12],
+            "#36524a",
+            "leg1",
+          )}
+          {box(
+            [0.1, seat - 0.14, -l * 0.22],
+            [0.11, 0.25, 0.12],
+            "#36524a",
+            "leg2",
+          )}
+          <mesh position={[0, seat + 0.53, l * 0.05]} castShadow>
+            <sphereGeometry args={[0.12, 16, 12]} />
+            <meshStandardMaterial color="#c69e78" />
+          </mesh>
+        </>
+      ) : (
+        <>
+          <mesh position={[0, 0.98, 0]} castShadow>
+            <capsuleGeometry args={[0.16, 0.52, 5, 12]} />
+            <meshStandardMaterial color="#547f62" />
+          </mesh>
+          <mesh position={[0, 1.48, 0]} castShadow>
+            <sphereGeometry args={[0.13, 16, 12]} />
+            <meshStandardMaterial color="#c69e78" />
+          </mesh>
+          {box([-0.1, 0.32, 0], [0.13, 0.64, 0.15], "#345549", "walk1")}
+          {box([0.1, 0.32, 0], [0.13, 0.64, 0.15], "#345549", "walk2")}
+        </>
+      )}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]}>
+        <planeGeometry
+          args={[
+            profile.mode === "wheelchair" ? w : 0.46,
+            profile.mode === "wheelchair" ? l : 0.4,
+          ]}
+        />
+        <meshBasicMaterial
+          color="#a7c889"
+          transparent
+          opacity={0.24}
+          depthWrite={false}
+        />
       </mesh>
-      <mesh position={[0, 1.05, 0]} castShadow>
-        <sphereGeometry args={[0.2, 16, 12]} />
-        <meshStandardMaterial color="#d9b591" />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.07, 0]}>
-        <ringGeometry args={[0.35, 0.45, 32]} />
-        <meshBasicMaterial color="#378360" />
-      </mesh>
-      <Html position={[0, 1.55, 0]} center zIndexRange={[15, 0]}>
-        <span className="avatar-label">Bạn đang ở đây</span>
+      <Html
+        position={[
+          0,
+          profile.mode === "wheelchair" ? Math.max(h, seat + 0.65) + 0.2 : 1.8,
+          0,
+        ]}
+        center
+        zIndexRange={[12, 0]}
+      >
+        <span className="player-tag">
+          BẠN<span>▼</span>
+        </span>
       </Html>
     </group>
   );
 }
-function Camera({ reset, onLost }: { reset: number; onLost: () => void }) {
+function CameraRig({
+  pose,
+  cameraYaw,
+  follow,
+  reset,
+  reducedMotion,
+  onLost,
+}: {
+  pose: MutableRefObject<Pose>;
+  cameraYaw: MutableRefObject<number>;
+  follow: boolean;
+  reset: number;
+  reducedMotion: boolean;
+  onLost: () => void;
+}) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const { camera, size, gl } = useThree();
   useEffect(() => {
-    camera.position.set(22, 24, 26);
-    camera.zoom = Math.max(12, Math.min(size.width / 36, size.height / 27));
+    const center = follow
+      ? new Vector3(pose.current.x, 0, pose.current.z)
+      : new Vector3(0, 0, 1);
+    camera.position.copy(center).add(new Vector3(17, 23, 17));
+    camera.zoom = Math.max(
+      12,
+      Math.min(
+        size.width / (follow ? 11 : 27),
+        size.height / (follow ? 9 : 22),
+      ),
+    );
     camera.updateProjectionMatrix();
-    controls.current?.target.set(0, 0, 0);
+    controls.current?.target.copy(center);
     controls.current?.update();
-  }, [camera, size.width, size.height, reset]);
+  }, [camera, size, follow, reset, pose]);
   useEffect(() => {
     const canvas = gl.domElement;
-    const handleLost = (event: Event) => {
-      event.preventDefault();
+    const lost = (e: Event) => {
+      e.preventDefault();
       onLost();
     };
-    canvas.addEventListener("webglcontextlost", handleLost);
-    return () => canvas.removeEventListener("webglcontextlost", handleLost);
+    canvas.addEventListener("webglcontextlost", lost);
+    return () => canvas.removeEventListener("webglcontextlost", lost);
   }, [gl, onLost]);
+  useFrame((_, delta) => {
+    if (!controls.current) return;
+    if (follow) {
+      const target = controls.current.target;
+      const alpha = reducedMotion ? 1 : 1 - Math.exp(-delta * 7);
+      const dx = (pose.current.x - target.x) * alpha,
+        dz = (pose.current.z - target.z) * alpha;
+      target.x += dx;
+      target.z += dz;
+      camera.position.x += dx;
+      camera.position.z += dz;
+    }
+    cameraYaw.current = Math.atan2(
+      camera.position.x - controls.current.target.x,
+      camera.position.z - controls.current.target.z,
+    );
+    controls.current.update();
+  });
   return (
     <OrbitControls
       ref={controls}
       makeDefault
       enablePan={false}
-      minZoom={10}
-      maxZoom={60}
+      enableDamping={!reducedMotion}
+      minZoom={12}
+      maxZoom={100}
       minPolarAngle={0.35}
-      maxPolarAngle={1.2}
-      enableDamping
-      dampingFactor={0.12}
+      maxPolarAngle={1.1}
     />
   );
 }
@@ -495,107 +315,160 @@ class SceneBoundary extends Component<
   }
 }
 export interface SceneProps {
-  floor: Floor;
-  selected: string;
-  onSelect: (id: string) => void;
-  issueLocations: string[];
-  destination: string | null;
-  trip: number;
-  stepFree: boolean;
+  profile: MobilityProfile;
+  pose: MutableRefObject<Pose>;
+  cameraYaw: MutableRefObject<number>;
+  openDoors: string[];
+  nearest: string | null;
+  destinationIds: string[];
+  inspected: string[];
+  follow: boolean;
+  reset: number;
   reducedMotion: boolean;
-  cameraReset: number;
-  onArrival: () => void;
   onUnavailable: () => void;
+  onSelect: (id: string) => void;
 }
-export default function OfficeScene(props: SceneProps) {
-  const route = useMemo(
-    () => routeFor(props.destination ?? props.selected, props.stepFree),
-    [props.destination, props.selected, props.stepFree],
-  );
+export default function OfficeScene(p: SceneProps) {
   return (
-    <SceneBoundary onError={props.onUnavailable}>
+    <SceneBoundary onError={p.onUnavailable}>
       <Canvas
         orthographic
         shadows
         dpr={[1, 1.5]}
-        camera={{ position: [22, 24, 26], zoom: 20, near: 0.1, far: 150 }}
-        gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
-        fallback={<p>Đang chuyển sang bản đồ 2D…</p>}
-        onCreated={({ gl }) => {
-          gl.setClearColor("#edf0e8", 0);
-        }}
+        camera={{ position: [17, 23, 17], zoom: 25, near: 0.1, far: 120 }}
+        gl={{ antialias: true, powerPreference: "low-power" }}
+        onCreated={({ gl }) => gl.setClearColor("#edf1e7")}
       >
-        <ambientLight intensity={1.4} />
-        <hemisphereLight args={["#fff8e9", "#96afa0", 1.6]} />
+        <ambientLight intensity={1.25} />
+        <hemisphereLight args={["#fff8e8", "#a6baa1", 1.2]} />
         <directionalLight
-          position={[4, 18, 10]}
-          intensity={2.2}
+          position={[-6, 15, 10]}
+          intensity={2}
           castShadow
           shadow-mapSize={[1024, 1024]}
-          shadow-camera-left={-16}
-          shadow-camera-right={16}
-          shadow-camera-top={16}
-          shadow-camera-bottom={-16}
-          shadow-normalBias={0.05}
+          shadow-camera-left={-13}
+          shadow-camera-right={13}
+          shadow-camera-top={13}
+          shadow-camera-bottom={-13}
+          shadow-normalBias={0.04}
         />
-        <mesh
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[0, -0.58, 0]}
-          receiveShadow
-        >
-          <planeGeometry args={[200, 200]} />
-          <shadowMaterial opacity={0.12} />
-        </mesh>
-        {props.floor === "office" ? <WorkingFloor /> : <GroundFloor />}
-        <Line
-          points={route}
-          color="#60956d"
-          lineWidth={2.5}
-          dashed
-          dashSize={0.18}
-          gapSize={0.14}
+        <PartMesh
+          part={{
+            position: [0, -0.18, 1.25],
+            size: [18.25, 0.35, 16.7],
+            color: "#d4ddcc",
+          }}
         />
-        {props.destination && (
-          <Avatar
-            key={`${props.floor}-${props.trip}`}
-            route={route}
-            reducedMotion={props.reducedMotion}
-            onArrival={props.onArrival}
+        <PartMesh
+          part={{
+            position: [0, -0.005, 0],
+            size: [18, 0.02, 14],
+            color: "#f1ede0",
+          }}
+        />
+        <PartMesh
+          part={{
+            position: [0, 0.008, 8.25],
+            size: [18, 0.025, 2.5],
+            color: "#dce5d3",
+          }}
+        />
+        {[
+          { x: -6, z: -3.5, w: 5.85, d: 6.85, c: "#dfe6d5" },
+          { x: 6.25, z: -3.5, w: 5.35, d: 6.85, c: "#e4d6bf" },
+          { x: -6, z: 3.5, w: 5.85, d: 6.85, c: "#ebe0cd" },
+          { x: 6.25, z: 5.2, w: 5.35, d: 3.45, c: "#dce8e1" },
+        ].map((r) => (
+          <PartMesh
+            key={r.x + ":" + r.z}
+            part={{
+              position: [r.x, 0.014, r.z],
+              size: [r.w, 0.012, r.d],
+              color: r.c,
+            }}
           />
-        )}
-        {locations
-          .filter((l) => l.floor === props.floor)
-          .map((l) => (
-            <group position={l.position} key={l.id}>
-              <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[0.32, 0.42, 32]} />
+        ))}
+        <gridHelper
+          args={[18, 18, "#b6c3ad", "#d2dbca"]}
+          position={[0, 0.025, 1.25]}
+          material-transparent
+          material-opacity={0.2}
+        />
+        {walls.map((w) => (
+          <group key={w.id}>
+            <PartMesh
+              part={{
+                position: [w.position[0], 0.48, w.position[2]],
+                size: [w.size[0], 0.96, w.size[2]],
+                color: "#c6d3c3",
+              }}
+            />
+            <mesh position={[w.position[0], 1.78, w.position[2]]}>
+              <boxGeometry args={[w.size[0], 1.64, w.size[2]]} />
+              <meshStandardMaterial
+                color="#b0c4af"
+                transparent
+                opacity={0.085}
+                depthWrite={false}
+              />
+            </mesh>
+          </group>
+        ))}
+        {objects.map((o) => (
+          <group
+            key={o.id}
+            position={o.position}
+            rotation={[0, o.yaw, 0]}
+            onClick={(e) => {
+              e.stopPropagation();
+              p.onSelect(o.id);
+            }}
+          >
+            <ObjectModel object={o} open={p.openDoors.includes(o.id)} />
+            {(p.nearest === o.id || p.destinationIds.includes(o.id)) && (
+              <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <ringGeometry
+                  args={[
+                    Math.max(o.size[0], o.size[2]) / 2 + 0.1,
+                    Math.max(o.size[0], o.size[2]) / 2 + 0.14,
+                    40,
+                  ]}
+                />
                 <meshBasicMaterial
-                  color={
-                    props.issueLocations.includes(l.id)
-                      ? "#c98739"
-                      : props.selected === l.id
-                        ? "#2c7959"
-                        : "#a0b49d"
-                  }
+                  color={p.nearest === o.id ? "#2d7658" : "#b39451"}
+                  transparent
+                  opacity={0.8}
+                  depthWrite={false}
                 />
               </mesh>
-              <Html position={[0, 1.8, 0]} center zIndexRange={[20, 0]}>
-                <button
-                  className={`hotspot ${props.selected === l.id ? "active" : ""} ${props.issueLocations.includes(l.id) ? "has-issue" : ""}`}
-                  onClick={() => props.onSelect(l.id)}
-                  tabIndex={-1}
-                  aria-hidden="true"
-                >
-                  <MapPin size={12} />
-                  {l.shortName}
-                  {props.issueLocations.includes(l.id) && (
-                    <span className="hotspot-dot" />
-                  )}
-                </button>
-              </Html>
-            </group>
-          ))}
-        <Camera reset={props.cameraReset} onLost={props.onUnavailable} />
+            )}
+          </group>
+        ))}
+        {[
+          [-6, -6.45, "KHU LÀM VIỆC"],
+          [6.1, -6.45, "PHÒNG LOTUS"],
+          [-5.6, 1.25, "PANTRY"],
+          [6.2, 6.65, "NHÀ VỆ SINH"],
+          [0, 5.8, "LỄ TÂN"],
+        ].map(([x, z, name]) => (
+          <Html
+            key={name}
+            position={[x as number, 0.15, z as number]}
+            center
+            zIndexRange={[5, 0]}
+          >
+            <span className="room-label">{name}</span>
+          </Html>
+        ))}
+        <Wheelchair profile={p.profile} pose={p.pose} />
+        <CameraRig
+          pose={p.pose}
+          cameraYaw={p.cameraYaw}
+          follow={p.follow}
+          reset={p.reset}
+          reducedMotion={p.reducedMotion}
+          onLost={p.onUnavailable}
+        />
       </Canvas>
     </SceneBoundary>
   );

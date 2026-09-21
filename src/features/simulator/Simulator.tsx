@@ -7,43 +7,44 @@ import {
   useState,
 } from "react";
 import {
+  Accessibility,
+  ArrowDown,
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
+  BookOpen,
   Check,
-  CheckCircle2,
   ChevronRight,
-  CircleHelp,
-  Clock3,
+  Crosshair,
   Flag,
-  Footprints,
-  Layers3,
-  MapPin,
+  Gamepad2,
   Maximize,
-  MousePointer2,
-  Play,
   RotateCcw,
-  SlidersHorizontal,
-  Sparkles,
-  VolumeX,
+  RotateCw,
+  Ruler,
+  Settings2,
+  X,
 } from "lucide-react";
+import { objects, objectById, objectives, WORLD } from "../../data/space";
 import { journey } from "../../data/journey";
-import { locationById, locations } from "../../data/office";
 import { useDemoStore } from "../../store/useDemoStore";
-import type { IssueContext } from "../issues/IssueForm";
+import { doorCanToggle, canInteract, objectDistance } from "../../lib/physics";
+import { useSimulation, type Control } from "./useSimulation";
 import Map2D from "./Map2D";
+import ObjectInspector, { measurementSummary } from "./ObjectInspector";
+import type { IssueContext } from "../issues/IssueForm";
 
 const OfficeScene = lazy(() => import("./OfficeScene"));
-function supportsWebGL() {
+const webglAvailable = () => {
   try {
-    const c = document.createElement("canvas");
-    const context = c.getContext("webgl2");
-    const supported = !!context;
-    context?.getExtension("WEBGL_lose_context")?.loseContext();
-    return supported;
+    const gl = document.createElement("canvas").getContext("webgl2");
+    const result = !!gl;
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    return result;
   } catch {
     return false;
   }
-}
+};
 export default function Simulator({
   onIssue,
   onSummary,
@@ -57,484 +58,541 @@ export default function Simulator({
   notify: (s: string) => void;
   target: string | null;
 }) {
-  const { session, selectStep, setStepStatus, setAnswer } = useDemoStore();
-  const step = journey[session.currentStep];
-  const [selected, setSelected] = useState(target ?? step.locationId);
+  const {
+    session,
+    inspectObject,
+    setOpenDoors,
+    savePose,
+    selectStep,
+    setStepStatus,
+  } = useDemoStore();
+  const stage = useRef<HTMLDivElement>(null);
+  const [inspected, setInspected] = useState<string | null>(null);
+  const [chosen, setChosen] = useState<string | null>(null);
   const [mode, setMode] = useState<"3d" | "2d">(() =>
-    supportsWebGL() ? "3d" : "2d",
+    webglAvailable() ? "3d" : "2d",
   );
-  const [unavailable, setUnavailable] = useState(() => mode === "2d");
-  const [destination, setDestination] = useState<string | null>(null);
-  const [trip, setTrip] = useState(0);
-  const [moving, setMoving] = useState(false);
-  const [cameraReset, setCameraReset] = useState(0);
-  const [stepFree, setStepFree] = useState(
-    session.selectedNeeds.includes("entrance"),
+  const [failed, setFailed] = useState(mode === "2d");
+  const [follow, setFollow] = useState(false),
+    [reset, setReset] = useState(0),
+    [full, setFull] = useState(false);
+  const [catalog, setCatalog] = useState(false);
+  const handleInteract = useCallback(
+    (id: string) => {
+      inspectObject(id);
+      setInspected(id);
+    },
+    [inspectObject],
   );
-  const [fullMap, setFullMap] = useState(false);
-  const location = locationById(selected);
-  const completed = session.stepStatuses.filter(
-    (s) => s === "completed",
+  const sim = useSimulation(
+    session.mobility,
+    session.openDoors,
+    stage,
+    handleInteract,
+    session.playerPose,
+  );
+  const nearestId = sim.view.nearby.includes(chosen ?? "")
+    ? chosen
+    : (sim.view.nearby[0] ?? null);
+  const nearest = nearestId ? objectById(nearestId) : null;
+  const activeObject = inspected ? objectById(inspected) : undefined;
+  const objective = objectives[session.currentStep];
+  const objectiveIds = target
+    ? objects.filter((o) => o.locationId === target).map((o) => o.id)
+    : objective.ids;
+  const seen = objective.ids.filter((id) =>
+    session.inspectedIds.includes(id),
   ).length;
-  const issueLocations = session.issues.map((i) => i.locationId);
-  const lastStep = useRef(step.id);
   useEffect(() => {
-    if (lastStep.current !== step.id) {
-      setSelected(step.locationId);
-      setDestination(null);
-      setMoving(false);
-      lastStep.current = step.id;
-    }
-  }, [step.id, step.locationId]);
+    if (nearestId) sim.chooseNearby(nearestId);
+  }, [nearestId, sim]);
   useEffect(() => {
-    setDestination(null);
-    setMoving(false);
-  }, [stepFree]);
-  useEffect(() => {
-    if (!fullMap) return;
-    const handle = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setFullMap(false);
+    let last = { ...sim.pose.current };
+    const timer = setInterval(() => {
+      const current = sim.pose.current;
+      if (
+        Math.hypot(current.x - last.x, current.z - last.z) > 0.02 ||
+        Math.abs(current.yaw - last.yaw) > 0.02
+      ) {
+        savePose(current);
+        last = { ...current };
+      }
+    }, 900);
+    const persist = () => savePose(sim.pose.current);
+    window.addEventListener("pagehide", persist);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("pagehide", persist);
+      persist();
     };
-    window.addEventListener("keydown", handle);
-    return () => window.removeEventListener("keydown", handle);
-  }, [fullMap]);
-  const onArrival = useCallback(() => setMoving(false), []);
-  const onUnavailable = useCallback(() => {
-    setUnavailable(true);
+  }, [savePose, sim.pose]);
+  useEffect(() => {
+    if (full) {
+      const escape = (e: KeyboardEvent) => {
+        if (e.key === "Escape" && !document.querySelector("dialog[open]"))
+          setFull(false);
+      };
+      window.addEventListener("keydown", escape);
+      return () => window.removeEventListener("keydown", escape);
+    }
+  }, [full]);
+  const unavailable = useCallback(() => {
+    setFailed(true);
     setMode("2d");
-    setMoving(false);
   }, []);
-  const choose = (id: string) => {
-    setSelected(id);
-    setDestination(null);
-    setMoving(false);
+  const focusGame = () => stage.current?.focus({ preventScroll: true });
+  const closeInspector = () => {
+    setInspected(null);
+    requestAnimationFrame(focusGame);
   };
-  const visit = () => {
-    setTrip((t) => t + 1);
-    setDestination(selected);
-    setMoving(mode === "3d" && !session.reducedMotion);
-    if (mode === "2d") notify(`Đã đến ${location.name}.`);
-  };
-  const changeStep = (id: number) => {
-    selectStep(id);
-    setSelected(journey[id].locationId);
-    setDestination(null);
-    setMoving(false);
-  };
-  const record = (
-    checklist?: (typeof step.checklist)[number],
-    kind: "verification" | "barrier" = "verification",
-  ) => {
-    const mapped =
-      checklist?.category === "restroom"
-        ? "restroom"
-        : checklist?.id === "gate-width"
-          ? "gate"
-          : checklist?.id === "arrival-route"
-            ? "side-entry"
-            : selected;
-    const previous =
-      checklist &&
-      session.issues.find(
-        (i) => i.checklistId === checklist.id && i.state === "draft",
-      );
+  const report = () => {
+    const o = activeObject ?? nearest;
+    if (!o) return;
+    setInspected(null);
     onIssue({
-      locationId: previous?.locationId ?? mapped,
-      stepId: step.id,
-      category: checklist?.category ?? location.category,
-      checklistId: checklist?.id,
-      suggestion: checklist?.suggestion,
-      kind,
-      issue: previous,
+      locationId: o.locationId,
+      stepId: session.currentStep,
+      objectId: o.id,
+      objectName: o.name,
+      category: o.category,
+      measurementNote: measurementSummary(o, session.mobility),
+      suggestion: `Cần xác minh điều kiện sử dụng ${o.name.toLocaleLowerCase("vi")} với xe của tôi.`,
     });
   };
+  const choose = (id: string) => {
+    if (sim.view.nearby.includes(id)) {
+      setChosen(id);
+      sim.chooseNearby(id);
+      sim.triggerInteraction(id);
+    } else
+      notify(
+        `Hãy tự di chuyển đến gần ${objectById(id)?.name ?? "đồ vật"} rồi nhấn F.`,
+      );
+    focusGame();
+  };
+  const toggleDoor = () => {
+    if (
+      !activeObject ||
+      !canInteract(
+        sim.pose.current,
+        activeObject,
+        sim.obstacles,
+        session.openDoors,
+      )
+    )
+      return "Bạn cần ở gần cửa để thao tác.";
+    if (
+      !doorCanToggle(
+        activeObject,
+        session.openDoors,
+        sim.pose.current,
+        session.mobility,
+      )
+    )
+      return "Xe đang nằm trong vùng quét của cánh cửa. Đóng bảng thông tin, lùi ra rồi thử lại.";
+    setOpenDoors(
+      session.openDoors.includes(activeObject.id)
+        ? session.openDoors.filter((id) => id !== activeObject.id)
+        : [...session.openDoors, activeObject.id],
+    );
+    return null;
+  };
+  const controls: { key: Control; label: string; icon: React.ReactNode }[] = [
+    { key: "forward", label: "Tiến lên màn hình", icon: <ArrowUp size={19} /> },
+    {
+      key: "left",
+      label: "Di chuyển sang trái",
+      icon: <ArrowLeft size={19} />,
+    },
+    {
+      key: "backward",
+      label: "Lùi xuống màn hình",
+      icon: <ArrowDown size={19} />,
+    },
+    {
+      key: "right",
+      label: "Di chuyển sang phải",
+      icon: <ArrowRight size={19} />,
+    },
+    {
+      key: "turnLeft",
+      label: "Xoay trái tại chỗ",
+      icon: <RotateCcw size={16} />,
+    },
+    {
+      key: "turnRight",
+      label: "Xoay phải tại chỗ",
+      icon: <RotateCw size={16} />,
+    },
+  ];
   return (
-    <div className="simulator-page">
-      <div className="sim-intro">
+    <div className="play-page">
+      <div className="play-heading">
         <div>
           <span className="eyebrow">
-            <span className="live-dot" /> HÀNH TRÌNH CỦA AN
+            <span className="live-dot" /> DAY ZERO · WORKPLACE SIMULATOR
           </span>
           <h1>
-            Làm quen hôm nay.
-            <br className="mobile-break" /> Tự tin ngày đầu.
+            Không gian mới. <span>Nhịp đi của bạn.</span>
           </h1>
-          <p>Một vòng văn phòng, từng bước theo nhịp của bạn.</p>
+          <p>
+            Tự mình khám phá, chạm tới những điều quen thuộc trước ngày đầu.
+          </p>
         </div>
-        <button
-          className="button secondary preferences-button"
-          onClick={onPreferences}
-        >
-          <SlidersHorizontal size={17} />
-          Điều kiện của bạn
-          {session.selectedNeeds.length > 0 && (
-            <span className="mini-count">{session.selectedNeeds.length}</span>
-          )}
+        <button className="button secondary" onClick={onPreferences}>
+          <Accessibility size={17} />
+          {session.mobility.mode === "wheelchair"
+            ? `Xe của bạn · ${session.mobility.widthCm} × ${session.mobility.lengthCm} cm`
+            : "Nhân vật đi bộ"}
+          <Settings2 size={15} />
         </button>
       </div>
-      <div className="simulation-layout">
-        <section className="journey-panel" aria-label="Lịch trình ngày đầu">
-          <div className="journey-heading">
-            <span className="eyebrow">NGÀY ĐẦU TIÊN</span>
-            <h2>Hành trình của bạn</h2>
-            <p>
-              <Clock3 size={13} /> 08:30 — 17:00 <span>·</span> 7 chặng
-            </p>
-          </div>
-          <ol className="timeline">
-            {journey.map((s, i) => (
-              <li
-                key={s.id}
-                className={`${session.currentStep === i ? "current" : ""} ${session.stepStatuses[i] === "completed" ? "completed" : ""}`}
-              >
-                <button
-                  onClick={() => changeStep(i)}
-                  aria-current={session.currentStep === i ? "step" : undefined}
-                >
-                  <span className="step-marker">
-                    {session.stepStatuses[i] === "completed" ? (
-                      <Check size={14} />
-                    ) : session.stepStatuses[i] === "skipped" ? (
-                      "–"
-                    ) : (
-                      String(i + 1).padStart(2, "0")
-                    )}
-                  </span>
-                  <span className="timeline-copy">
-                    <time>{s.time}</time>
-                    <strong>{s.title}</strong>
-                    {session.currentStep === i && (
-                      <small>
-                        Đang khám phá <span>→</span>
-                      </small>
-                    )}
-                    {session.stepStatuses[i] === "skipped" && (
-                      <small>Đã bỏ qua</small>
-                    )}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ol>
-          <div className="journey-progress">
+      <div className="play-layout">
+        <section className={`world-card ${full ? "world-expanded" : ""}`}>
+          <header className="world-topbar">
             <div>
-              <span>Đã trải nghiệm</span>
-              <strong>{completed}/7</strong>
+              <span className="world-status" />
+              <strong>Day Zero Office</strong>
+              <span className="world-divider">/</span>
+              <span>Khám phá tự do</span>
             </div>
-            <div className="progress-track">
-              <span style={{ width: `${(completed / 7) * 100}%` }} />
-            </div>
-            <p>Đi một chút, hiểu thêm một chút.</p>
-          </div>
-          <div className="journey-note">
-            <Sparkles size={20} />
-            <p>
-              Không cần vội.
-              <br />
-              <strong>Bạn có thể quay lại mọi lúc.</strong>
-            </p>
-          </div>
-        </section>
-        <section
-          className={`map-card ${fullMap ? "expanded" : ""}`}
-          aria-label="Khám phá văn phòng"
-        >
-          <div className="map-toolbar">
-            <div className="floor-label">
-              <span className="floor-icon">
-                <Layers3 size={18} />
-              </span>
-              <div>
-                <strong>
-                  {location.floor === "office"
-                    ? "Tầng 2 · Không gian làm việc"
-                    : "Tầng trệt · Chào đón bạn"}
-                </strong>
-                <span>Day Zero Office</span>
+            <div className="world-tools">
+              <div className="segmented">
+                <button
+                  disabled={failed}
+                  aria-pressed={mode === "3d"}
+                  onClick={() => setMode("3d")}
+                >
+                  3D
+                </button>
+                <button
+                  aria-pressed={mode === "2d"}
+                  onClick={() => setMode("2d")}
+                >
+                  2D
+                </button>
               </div>
-            </div>
-            <div className="segmented">
               <button
-                aria-pressed={mode === "3d"}
-                disabled={unavailable}
-                onClick={() => setMode("3d")}
+                className="icon-button"
+                aria-label={follow ? "Xem toàn văn phòng" : "Theo nhân vật"}
+                onClick={() => setFollow((v) => !v)}
+                aria-pressed={follow}
               >
-                3D
+                <Crosshair size={18} />
               </button>
-              <button
-                aria-pressed={mode === "2d"}
-                onClick={() => {
-                  setMode("2d");
-                  setMoving(false);
-                }}
-              >
-                2D
-              </button>
-            </div>
-          </div>
-          <div className="map-scene">
-            <div className="scene-kicker">
-              <span className="live-dot" /> KHÁM PHÁ TỰ DO
-            </div>
-            <div className="scene-controls">
               <button
                 className="icon-button"
                 aria-label="Đặt lại góc nhìn"
-                onClick={() => setCameraReset((n) => n + 1)}
-                disabled={mode === "2d"}
+                onClick={() => setReset((v) => v + 1)}
               >
                 <RotateCcw size={16} />
               </button>
               <button
                 className="icon-button"
-                aria-label={fullMap ? "Thu gọn bản đồ" : "Mở rộng bản đồ"}
-                onClick={() => setFullMap((v) => !v)}
+                aria-label={full ? "Thu gọn bản đồ" : "Mở rộng bản đồ"}
+                onClick={() => setFull((v) => !v)}
               >
-                <Maximize size={16} />
+                {full ? <X size={18} /> : <Maximize size={17} />}
               </button>
             </div>
+          </header>
+          <div
+            className="world-stage"
+            ref={stage}
+            tabIndex={0}
+            role="region"
+            aria-label="Điều khiển nhân vật bằng WASD. F tương tác. Q E xoay tại chỗ."
+            data-testid="game-stage"
+            data-x={sim.view.pose.x.toFixed(3)}
+            data-z={sim.view.pose.z.toFixed(3)}
+            data-yaw={sim.view.pose.yaw.toFixed(3)}
+            onPointerDown={(e) => {
+              if (!(e.target as HTMLElement).closest("button,select"))
+                focusGame();
+            }}
+          >
             {mode === "3d" ? (
               <Suspense
                 fallback={
                   <div className="scene-loading">
                     <span className="loader" />
-                    <p>Đang mở cánh cửa văn phòng…</p>
+                    <p>Đang mở văn phòng của bạn…</p>
                   </div>
                 }
               >
                 <OfficeScene
-                  floor={location.floor}
-                  selected={selected}
-                  onSelect={choose}
-                  issueLocations={issueLocations}
-                  destination={destination}
-                  trip={trip}
-                  stepFree={stepFree}
+                  profile={session.mobility}
+                  pose={sim.pose}
+                  cameraYaw={sim.cameraYaw}
+                  openDoors={session.openDoors}
+                  nearest={nearestId}
+                  destinationIds={objectiveIds}
+                  inspected={session.inspectedIds}
+                  follow={follow}
+                  reset={reset}
                   reducedMotion={session.reducedMotion}
-                  cameraReset={cameraReset}
-                  onArrival={onArrival}
-                  onUnavailable={onUnavailable}
+                  onUnavailable={unavailable}
+                  onSelect={choose}
                 />
               </Suspense>
             ) : (
               <Map2D
-                floor={location.floor}
-                selected={selected}
+                pose={sim.view.pose}
+                profile={session.mobility}
+                openDoors={session.openDoors}
+                nearest={nearestId}
                 onSelect={choose}
-                stepFree={stepFree}
-                destination={destination}
+                cameraYaw={sim.cameraYaw}
               />
             )}
-            <div className="map-compass">
-              <span>N</span>
-              <span className="compass-arrow">↑</span>
+            <div className="world-scale">
+              <Ruler size={14} />
+              <span>
+                TỶ LỆ THỐNG NHẤT<strong>1 ô lưới = 1 m</strong>
+              </span>
             </div>
-            <span className="map-scale">Mặt bằng mô phỏng</span>
+            <div className="world-discovered">
+              <BookOpen size={15} />
+              {session.inspectedIds.length}/{objects.length}
+              <span> đồ vật đã tìm hiểu</span>
+            </div>
+            <div className="movement-hud">
+              <div className="movement-pad">
+                {controls.map((c) => (
+                  <button
+                    key={c.key}
+                    className={`pad-${c.key}`}
+                    aria-label={c.label}
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                      focusGame();
+                      sim.setControl(c.key, true);
+                    }}
+                    onPointerUp={() => sim.setControl(c.key, false)}
+                    onPointerCancel={() => sim.setControl(c.key, false)}
+                    onLostPointerCapture={() => sim.setControl(c.key, false)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        sim.setControl(c.key, true);
+                      }
+                    }}
+                    onKeyUp={() => sim.setControl(c.key, false)}
+                    onBlur={() => sim.setControl(c.key, false)}
+                  >
+                    {c.icon}
+                  </button>
+                ))}
+              </div>
+              <span>WASD / Mũi tên</span>
+            </div>
+            <div className="interaction-hud" aria-live="polite">
+              {nearest ? (
+                <>
+                  <span className="proximity-label">
+                    TRONG TẦM TƯƠNG TÁC ·{" "}
+                    {objectDistance(
+                      sim.view.pose,
+                      nearest,
+                      session.openDoors,
+                    ).toFixed(1)}{" "}
+                    m
+                  </span>
+                  <button
+                    className="interact-button"
+                    onClick={() => sim.triggerInteraction(nearest.id)}
+                  >
+                    <kbd>F</kbd>
+                    <span>
+                      <strong>{nearest.name}</strong>
+                      <small>Xem cách dùng, lưu ý & kích thước</small>
+                    </span>
+                    <ChevronRight size={20} />
+                  </button>
+                  {sim.view.nearby.length > 1 && (
+                    <select
+                      aria-label="Chọn đồ vật ở gần"
+                      value={nearestId ?? ""}
+                      onChange={(e) => {
+                        setChosen(e.target.value);
+                        sim.chooseNearby(e.target.value);
+                        focusGame();
+                      }}
+                    >
+                      {sim.view.nearby.map((id) => (
+                        <option key={id} value={id}>
+                          {objectById(id)!.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </>
+              ) : (
+                <div className="no-nearby">
+                  <Gamepad2 size={19} />
+                  <span>
+                    Di chuyển đến gần đồ vật để tương tác
+                    <small>Bấm vào không gian, rồi dùng WASD.</small>
+                  </span>
+                </div>
+              )}
+            </div>
+            {sim.view.blocked && (
+              <div className="collision-hint" role="status">
+                <span>!</span>Đang chạm: {sim.view.blocked}. Lùi hoặc đổi hướng
+                để tiếp tục.
+              </div>
+            )}
           </div>
-          {unavailable && (
-            <p className="fallback-note" role="status">
-              3D chưa khả dụng trên thiết bị này. Bạn vẫn có thể trải nghiệm đầy
-              đủ bằng bản đồ 2D.
+          {failed && (
+            <p className="fallback-note">
+              Thiết bị chưa hiển thị được 3D. Chế độ 2D giữ nguyên kích thước,
+              va chạm và điều khiển WASD.
             </p>
           )}
-          <div className="map-legend">
+          <footer className="world-bottom">
             <span>
-              <i className="legend-dot selected" />
-              Địa điểm đang xem
+              <kbd>W</kbd>
+              <kbd>A</kbd>
+              <kbd>S</kbd>
+              <kbd>D</kbd> Di chuyển theo màn hình
             </span>
             <span>
-              <i className="legend-dot issue" />
-              Có ghi nhận
+              <kbd>F</kbd> Tương tác
             </span>
-            <span className="drag-hint">
-              <MousePointer2 size={13} />
-              Kéo để xoay · Cuộn để phóng to
+            <span>
+              <kbd>Q</kbd>
+              <kbd>E</kbd> Xoay xe
             </span>
-          </div>
-          <div className="location-picker">
-            <label htmlFor="location-select">
-              <MapPin size={15} />
-              Khám phá địa điểm
-            </label>
-            <select
-              id="location-select"
-              value={selected}
-              onChange={(e) => choose(e.target.value)}
+            <span>
+              <kbd>Shift</kbd> Đi chậm
+            </span>
+            <button
+              onClick={() => {
+                sim.returnToEntry();
+                focusGame();
+                notify("Đã trở về điểm bắt đầu.");
+              }}
             >
-              {locations
-                .filter((l) => l.floor === location.floor)
-                .map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                    {issueLocations.includes(l.id) ? " · Có ghi nhận" : ""}
-                  </option>
-                ))}
-            </select>
-            <button className="button primary compact" onClick={visit}>
-              <Play size={14} fill="currentColor" />
-              {moving ? "Đi lại tuyến này" : "Đến địa điểm"}
+              <RotateCcw size={13} />
+              Về lối vào
             </button>
-          </div>
-          <label className="route-toggle">
-            <input
-              type="checkbox"
-              checked={stepFree}
-              onChange={(e) => setStepFree(e.target.checked)}
-            />
-            <Footprints size={15} />
-            <span>
-              Ưu tiên tuyến không có bậc thang{" "}
-              <small>· Chưa xác minh thực tế</small>
-            </span>
-          </label>
+          </footer>
         </section>
-        <aside className="activity-panel">
-          <div className="activity-heading">
-            <span className="badge subtle">
-              CHẶNG {String(step.id + 1).padStart(2, "0")} / 07
+        <aside className="explore-sidebar">
+          <section className="current-mission">
+            <span className="eyebrow">
+              LÀM QUEN NGÀY ĐẦU · {journey[session.currentStep].time}
             </span>
-            <span className="activity-time">
-              <Clock3 size={13} />
-              {step.time}
-            </span>
-          </div>
-          <div className="activity-title">
-            <h2>{step.title}</h2>
-            <p>{step.subtitle}</p>
-          </div>
-          <div className="location-detail">
-            <span className="detail-icon">
-              <MapPin size={20} />
-            </span>
-            <div>
-              <h3>{location.name}</h3>
-              <p>{location.description}</p>
-            </div>
-          </div>
-          <div className="instructions">
-            <h3>Thử một chút nhé</h3>
-            {step.instructions.map((text, i) => (
-              <p key={text}>
-                <span>{i + 1}</span>
-                {text}
-              </p>
-            ))}
-          </div>
-          <div className="checklist">
-            <div className="section-heading">
-              <h3>Điều bạn muốn kiểm tra</h3>
-              <CircleHelp size={15} />
-            </div>
-            <p className="muted small">
-              Ghi lại điều bạn cần làm rõ trước ngày đầu.
-            </p>
-            {step.checklist.map((c) => {
-              const value = session.answers[c.id];
-              const suggested = session.selectedNeeds.includes(c.category);
-              return (
-                <div
-                  key={c.id}
-                  className={`check-item ${suggested ? "suggested" : ""}`}
+            <h2>{objective.label}</h2>
+            <p>{objective.hint}</p>
+            <div className="mission-progress">
+              {objective.ids.map((id) => (
+                <span
+                  key={id}
+                  className={session.inspectedIds.includes(id) ? "seen" : ""}
                 >
-                  <div>
-                    <span>{c.label}</span>
-                    {suggested && (
-                      <span className="suggested-label">Dành cho bạn</span>
-                    )}
-                  </div>
-                  <select
-                    aria-label={c.label}
-                    value={value ?? ""}
-                    onChange={(e) => {
-                      if (e.target.value === "looks_suitable")
-                        setAnswer(c.id, "looks_suitable");
-                      else if (e.target.value)
-                        record(
-                          c,
-                          e.target.value === "barrier"
-                            ? "barrier"
-                            : "verification",
-                        );
-                    }}
-                  >
-                    <option value="">Chưa xem xét</option>
-                    <option value="looks_suitable">Có vẻ phù hợp</option>
-                    <option value="needs_verification">Cần xác minh</option>
-                    <option value="barrier">Có thể có rào cản</option>
-                  </select>
-                </div>
-              );
-            })}
-          </div>
-          <div className="unknown-fact">
-            <CircleHelp size={16} />
-            <span>{location.fact}</span>
-          </div>
-          <button className="button report-button" onClick={() => record()}>
-            <Flag size={16} />
-            Ghi nhận một vấn đề
-          </button>
-          <div className="support-contact">
-            <span className="contact-avatar">
-              {location.contact.startsWith("Linh") ? "L" : "D"}
-            </span>
-            <div>
-              <small>Người có thể hỗ trợ</small>
-              <strong>{location.contact}</strong>
-              <span>Liên hệ mẫu trong demo</span>
+                  {session.inspectedIds.includes(id) ? (
+                    <Check size={14} />
+                  ) : (
+                    <span className="mission-dot" />
+                  )}
+                  {objectById(id)?.name}
+                </span>
+              ))}
             </div>
-          </div>
+            <button
+              className="button primary"
+              disabled={
+                seen !== objective.ids.length ||
+                (session.currentStep === 6 && sim.view.pose.z < 7.6)
+              }
+              onClick={() => {
+                setStepStatus("completed");
+                if (session.currentStep < 6)
+                  selectStep(session.currentStep + 1);
+                else onSummary();
+              }}
+            >
+              Hoàn thành chặng
+              <ArrowRight size={15} />
+            </button>
+            <small>
+              Chọn chặng chỉ đổi mục tiêu. Bạn tự điều khiển đến đó.
+            </small>
+          </section>
+          <section className="play-journey">
+            <div className="section-heading">
+              <h3>Lịch trình của bạn</h3>
+              <span>
+                {session.stepStatuses.filter((v) => v === "completed").length}/7
+              </span>
+            </div>
+            {journey.map((step, i) => (
+              <button
+                key={step.id}
+                className={session.currentStep === i ? "selected" : ""}
+                onClick={() => selectStep(i)}
+              >
+                <span className="play-step">
+                  {session.stepStatuses[i] === "completed" ? (
+                    <Check size={12} />
+                  ) : (
+                    i + 1
+                  )}
+                </span>
+                <span>
+                  <time>{step.time}</time>
+                  <strong>{step.title}</strong>
+                </span>
+                {session.currentStep === i && <ChevronRight size={14} />}
+              </button>
+            ))}
+          </section>
+          <button
+            className="catalog-toggle"
+            onClick={() => setCatalog((v) => !v)}
+          >
+            <BookOpen size={16} />
+            Danh mục đồ vật<span>{objects.length}</span>
+          </button>
+          {catalog && (
+            <div className="object-catalog">
+              {objects.map((o) => (
+                <button key={o.id} onClick={() => choose(o.id)}>
+                  <span>{o.name}</span>
+                  <small>
+                    {session.inspectedIds.includes(o.id)
+                      ? "Đã tìm hiểu"
+                      : `${objectDistance(sim.view.pose, o, session.openDoors).toFixed(1)} m`}
+                  </small>
+                </button>
+              ))}
+            </div>
+          )}
+          <button className="button secondary" onClick={onSummary}>
+            <Flag size={15} />
+            Ghi nhận & nhiệm vụ ({session.issues.length})
+          </button>
+          <p className="world-note">
+            Va chạm theo dấu chiếm chỗ của xe. Đến gần trong khoảng{" "}
+            {WORLD.interactionRange.toFixed(2)} m để nhấn F. Mô hình chưa mô
+            phỏng lực, tầm với hoặc chuyển người.
+          </p>
         </aside>
       </div>
-      <div className="journey-footer">
-        <div>
-          <span className="footer-leaf">
-            <CheckCircle2 size={20} />
-          </span>
-          <p>
-            <strong>Mỗi điều được làm rõ, một nỗi lo được bớt đi.</strong>
-            <span>
-              Hoàn thành chặng nghĩa là bạn đã trải nghiệm, không xác nhận điều
-              kiện thực tế.
-            </span>
-          </p>
-        </div>
-        <div className="footer-actions">
-          <button
-            className="icon-button"
-            disabled={step.id === 0}
-            aria-label="Chặng trước"
-            onClick={() => changeStep(step.id - 1)}
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <button
-            className="text-button skip-button"
-            onClick={() => {
-              setStepStatus("skipped");
-              step.id < 6 ? changeStep(step.id + 1) : onSummary();
-            }}
-          >
-            Bỏ qua
-          </button>
-          <button
-            className="button primary"
-            onClick={() => {
-              setStepStatus("completed");
-              if (step.id < 6) changeStep(step.id + 1);
-              else onSummary();
-            }}
-          >
-            {step.id === 6 ? "Hoàn thành & tổng kết" : "Hoàn thành chặng"}
-            {step.id === 6 ? <Check size={16} /> : <ChevronRight size={17} />}
-          </button>
-        </div>
-      </div>
-      <div className="bottom-hint">
-        <VolumeX size={13} />
-        <span>Không tự phát âm thanh · Trải nghiệm theo nhịp của bạn</span>
-        <span>VĂN PHÒNG MẪU · PHIÊN BẢN 01</span>
-      </div>
+      {activeObject && (
+        <ObjectInspector
+          key={activeObject.id}
+          object={activeObject}
+          profile={session.mobility}
+          open={session.openDoors.includes(activeObject.id)}
+          onClose={closeInspector}
+          onToggle={toggleDoor}
+          onReport={report}
+        />
+      )}
     </div>
   );
 }

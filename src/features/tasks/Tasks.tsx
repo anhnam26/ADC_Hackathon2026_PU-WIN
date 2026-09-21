@@ -303,6 +303,8 @@ export default function Tasks({
                     <strong>Hoạt động:</strong> {journey[i.stepId].time} ·{" "}
                     {journey[i.stepId].title}
                   </p>
+                  {i.objectName && <p><strong>Đồ vật:</strong> {i.objectName}</p>}
+                  {i.measurementNote && <p><strong>Số đo khi ghi nhận:</strong> {i.measurementNote}</p>}
                   <p>
                     <strong>Mong muốn:</strong>{" "}
                     {i.requestedSupport ||

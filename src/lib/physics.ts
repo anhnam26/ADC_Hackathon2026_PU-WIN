@@ -60,12 +60,9 @@ export function canInteract(pose: Pose, object: WorldObject, obstacles: Obstacle
 export function doorCanToggle(o: WorldObject, openDoors: string[], pose: Pose, profile: MobilityProfile): boolean {
   const isOpen = openDoors.includes(o.id), body = bodyAt(pose, profile);
   // Sweep the leaf through the entire quarter turn, not just its destination.
-  const width = o.clearWidth!;
   for (let i = 0; i <= 30; i++) {
-    const a = (isOpen ? 1 - i / 30 : i / 30) * -Math.PI / 2;
-    const lx = -width / 2 + Math.cos(a) * width / 2, lz = -Math.sin(a) * width / 2;
-    const leaf: Obstacle = { id: o.id, name: o.name, x: o.position[0] + Math.cos(o.yaw) * lx + Math.sin(o.yaw) * lz, z: o.position[2] - Math.sin(o.yaw) * lx + Math.cos(o.yaw) * lz, width, depth: .045, yaw: o.yaw + a };
-    if (overlaps(body, leaf, .015)) return false;
+    const a = (isOpen ? 1 - i / 30 : i / 30) * Math.PI / 2;
+    if (objectObstacles(o, false, a).some(part => overlaps(body, part, .015))) return false;
   }
   return true;
 }
