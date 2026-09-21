@@ -27,3 +27,17 @@ export const colleagues: WorldObject[] = [
       available: '11:30 – 12:00 · Khu pantry', skin: '#b77e58', hair: '#4b3932' },
   },
 ];
+const roaming: [string, string, string, string, [number, number][], string][] = [
+  ['huy', 'Phạm Quang Huy', 'Hỗ trợ công nghệ', 'reception', [[-1.7, -6], [-1.7, 1.2]], '#8270a6'],
+  ['thao', 'Vũ Thanh Thảo', 'Thiết kế sản phẩm', 'desk', [[-10.5, -7.8], [-4.5, -7.8]], '#bc726c'],
+  ['nam', 'Đỗ Hải Nam', 'Điều phối cuộc họp', 'meeting', [[10.3, -7.8], [10.3, -1.7]], '#618c9e'],
+  ['yen', 'Ngô Bảo Yến', 'Vận hành văn phòng', 'pantry', [[-10.3, 1.5], [-10.3, 5.5]], '#ab9155'],
+];
+for (const [id, name, role, locationId, patrol, color] of roaming) colleagues.push({
+  id: `colleague-${id}`, name, kind: 'colleague', locationId, category: 'guidance',
+  position: [patrol[0][0], 0, patrol[0][1]], yaw: 0, size: [.54, 1.72, .44], color, patrol,
+  description: 'Đồng nghiệp đang đi lại trong văn phòng. Họ dừng để trò chuyện khi bạn đến gần.', usage: [], notes: [],
+  colleague: { role, team: 'Day Zero Office', greeting: `Chào bạn! Mình là ${name.split(' ').at(-1)}. Rất vui được làm quen và hỗ trợ bạn trong ngày đầu.`,
+    helpsWith: ['Giới thiệu công việc và những người trong nhóm.', 'Hỗ trợ tìm phòng hoặc kết nối với HR khi cần.'],
+    available: 'Có mặt trong văn phòng · Dừng lại khi bạn đến gần', skin: '#ce9d78', hair: '#35312e' },
+});

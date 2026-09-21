@@ -57,6 +57,9 @@ export interface WorldObject {
   underHeight?: number;
   underWidth?: number;
   controlHeight?: number;
+  roomLabel?: string;
+  patrol?: [number, number][];
+  walking?: boolean;
   colleague?: {
     role: string;
     team: string;

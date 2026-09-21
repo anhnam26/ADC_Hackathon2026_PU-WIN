@@ -3,10 +3,10 @@ import { colleagues } from './colleagues';
 
 // All spatial data is in METRES. Width=x, height=y, depth=z. Never scale individual assets to fit.
 export const WORLD = {
-  minX: -9,
-  maxX: 9,
-  minZ: -7,
-  maxZ: 9.5,
+  minX: -12,
+  maxX: 12,
+  minZ: -10,
+  maxZ: 10.5,
   wallHeight: 2.6,
   wallThickness: 0.14,
   interactionRange: 1.35,
@@ -62,9 +62,10 @@ export const objects: WorldObject[] = [
     category: "entrance",
     position: [0, 0, 7],
     yaw: 0,
-    size: [1.38, 2.2, 0.18],
+    size: [1.58, 2.2, 0.18],
+    roomLabel: 'SẢNH · LỄ TÂN',
     color: "#8ca89a",
-    clearWidth: 1.26,
+    clearWidth: 1.46,
     controlHeight: 1.02,
     description:
       "Lối vào chính của văn phòng mẫu. Cánh cửa quay quanh bản lề bên trái.",
@@ -74,7 +75,7 @@ export const objects: WorldObject[] = [
       "Giữ khoảng cách với cung quét của cánh cửa.",
     ],
     notes: [
-      "Rộng thông thủy 126 cm khi mở hoàn toàn.",
+      "Rộng thông thủy 146 cm khi mở hoàn toàn.",
       "Tay nắm dạng gạt cao 102 cm; cần xác minh lực mở ở văn phòng thật.",
     ],
   }),
@@ -108,8 +109,9 @@ export const objects: WorldObject[] = [
     category: "entrance",
     position: [-6, 0, 0],
     yaw: 0,
-    size: [0.96, 2.2, 0.18],
-    clearWidth: 0.84,
+    size: [1.16, 2.2, 0.18],
+    clearWidth: 1.04,
+    roomLabel: 'KHU LÀM VIỆC',
     controlHeight: 1.0,
     color: "#a0b5a3",
     description: "Cửa nối hành lang và khu bàn làm việc.",
@@ -119,7 +121,7 @@ export const objects: WorldObject[] = [
       "Nếu xe không lọt, lùi lại và ghi nhận rào cản.",
     ],
     notes: [
-      "Rộng thông thủy 84 cm, khung và cánh cửa có va chạm.",
+      "Rộng thông thủy 104 cm, khung và cánh cửa có va chạm.",
       "Phần chênh lệch rộng chỉ là so sánh hình học, chưa tính tay đẩy và đồ mang theo.",
     ],
   }),
@@ -201,8 +203,9 @@ export const objects: WorldObject[] = [
     category: "entrance",
     position: [5.9, 0, 0],
     yaw: 0,
-    size: [0.97, 2.2, 0.18],
-    clearWidth: 0.85,
+    size: [1.17, 2.2, 0.18],
+    clearWidth: 1.05,
+    roomLabel: 'PHÒNG HỌP LOTUS',
     controlHeight: 1.05,
     color: "#a0b5a3",
     description:
@@ -213,7 +216,7 @@ export const objects: WorldObject[] = [
       "Ghi nhận nếu khung cửa hoặc ghế làm hạn chế lối đi.",
     ],
     notes: [
-      "Rộng thông thủy 85 cm. Tay nắm cao 105 cm.",
+      "Rộng thông thủy 105 cm. Tay nắm cao 105 cm.",
       "Lối vào có thể không đủ cho xe rộng hoặc có phụ kiện.",
     ],
   }),
@@ -363,8 +366,9 @@ export const objects: WorldObject[] = [
     category: "restroom",
     position: [5.65, 0, 3.4],
     yaw: Math.PI,
-    size: [0.88, 2.2, 0.18],
-    clearWidth: 0.76,
+    size: [1.08, 2.2, 0.18],
+    clearWidth: 0.96,
+    roomLabel: 'NHÀ VỆ SINH',
     controlHeight: 1.0,
     color: "#abc0b5",
     description:
@@ -375,7 +379,7 @@ export const objects: WorldObject[] = [
       "Nếu không đi qua được, ghi nhận để Facilities chuẩn bị phương án.",
     ],
     notes: [
-      "Rộng thông thủy 76 cm. Xe rộng hơn ô cửa sẽ bị chặn.",
+      "Rộng thông thủy 96 cm. Xe rộng hơn ô cửa sẽ bị chặn.",
       "Có lọt ô cửa chưa đồng nghĩa đủ không gian xoay và sử dụng bên trong.",
     ],
   }),
@@ -454,11 +458,11 @@ const partition = (id: string, left: number, right: number, doorId: string): Wor
   return [wall(`${id}-left`, (left + x - half) / 2, z, x - half - left, WORLD.wallThickness), wall(`${id}-right`, (x + half + right) / 2, z, right - x - half, WORLD.wallThickness)];
 };
 export const walls: WorldWall[] = [
-  wall('north', 0, -7, 18, .14), wall('west', -9, 0, .14, 14), wall('east', 9, 0, .14, 14),
-  ...partition('entry', -9, 9, 'entry-door'),
-  wall('desk-side', -3, -3.5, .14, 7), ...partition('desk-front', -9, -3, 'desk-door'),
-  wall('meeting-side', 3.5, -3.5, .14, 7), ...partition('meeting-front', 3.5, 9, 'meeting-door'),
-  ...partition('bath-front', 3.5, 9, 'restroom-door'), wall('bath-side', 3.5, 5.2, .14, 3.6),
+  wall('north', 0, -10, 24, .14), wall('west', -12, -1.5, .14, 17), wall('east', 12, -1.5, .14, 17),
+  ...partition('entry', -12, 12, 'entry-door'),
+  wall('desk-side', -3, -5, .14, 10), ...partition('desk-front', -12, -3, 'desk-door'),
+  wall('meeting-side', 3.5, -5, .14, 10), ...partition('meeting-front', 3.5, 12, 'meeting-door'),
+  ...partition('bath-front', 3.5, 12, 'restroom-door'), wall('bath-side', 3.5, 5.2, .14, 3.6),
 ];
 export const objectives = [
   {
@@ -474,7 +478,7 @@ export const objectives = [
   {
     ids: ["desk-a12", "printer"],
     label: "Khám phá bàn A12 và máy in",
-    hint: "Khu làm việc ở góc trái phía trong. Cửa rộng 84 cm.",
+    hint: "Khu làm việc ở góc trái phía trong. Cửa rộng 104 cm.",
   },
   {
     ids: ["meeting-door", "meeting-table"],

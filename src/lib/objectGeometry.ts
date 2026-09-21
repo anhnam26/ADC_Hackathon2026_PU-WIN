@@ -157,7 +157,7 @@ export function objectObstacles(o: WorldObject, open = false, doorAngle?: number
       yaw: o.yaw + (p.yaw ?? 0),
     }));
 }
-export function worldObstacles(openDoors: string[]): Obstacle[] {
+export function worldObstacles(openDoors: string[], sceneObjects = objects): Obstacle[] {
   return [
     ...walls.map((w) => ({
       id: w.id,
@@ -168,6 +168,6 @@ export function worldObstacles(openDoors: string[]): Obstacle[] {
       depth: w.size[2],
       yaw: 0,
     })),
-    ...objects.flatMap((o) => objectObstacles(o, openDoors.includes(o.id))),
+    ...sceneObjects.flatMap((o) => objectObstacles(o, openDoors.includes(o.id))),
   ];
 }
