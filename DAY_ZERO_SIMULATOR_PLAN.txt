@@ -1,7 +1,7 @@
 DAY ZERO SIMULATOR — KẾ HOẠCH DEMO 3D TRÊN WEB
 ĐIỀU CHỈNH PHẠM VI: Theo yêu cầu mới, demo đã chuyển thành simulator điều khiển
-chủ động WASD cho người sử dụng xe lăn. Phụ lục 21 cuối file thay thế các mục
-về waypoint, di chuyển tự động và phạm vi 3D cũ. README.md mô tả cách chạy hiện tại.
+chủ động WASD cho người sử dụng xe lăn. Phụ lục 21–23 cuối file cập nhật phạm vi;
+phụ lục 23 mới nhất bổ sung tự đi, giọng nói và người đi lại. README.md mô tả cách chạy hiện tại.
 Ngày lập: 21/09/2026
 Mục đích: Tài liệu triển khai demo, đủ để giao cho lập trình viên hoặc AI coding agent.
 
@@ -609,3 +609,30 @@ không phải kết quả đo của một ứng dụng đã được xây dựng
   fullscreen thật 100% viewport, pointer lock/mở dialog/trả chuột, hồ sơ NPC
   đúng khoảng cách; giữ kiểm tra WASD, tỷ lệ xe, cửa, HR, mobile và accessibility.
 - Tham chiếu API: https://www.w3.org/TR/pointerlock-2/
+
+23. CẬP NHẬT KHÁM PHÁ CÓ HƯỚNG DẪN VÀ VĂN PHÒNG SINH ĐỘNG
+
+Phần này thay thế các mô tả không có tự đi, không âm thanh và NPC đứng yên ở trên.
+- Vào map tự khóa/ẩn chuột từ thao tác xác nhận hồ sơ. Di chuột xoay góc nhìn,
+  không cần giữ nút. Esc hiện chuột, Enter tiếp tục. Không tự khóa lại sau Esc.
+  Đóng bảng bằng nút tiếp tục sẽ thử khóa lại; trình duyệt chặn thì hiện thông báo.
+- N mở lựa chọn điểm đến. Chọn Hiện đường đi để có vạch vàng ngay trên sàn 3D
+  và bản đồ 2D, hoặc Tự đi đến đây để bật hỗ trợ di chuyển. P bật/dừng, WASD/F
+  trả quyền điều khiển. Tạm dừng khi mở dialog, rời tab hoặc mất focus.
+- Tìm đường A* trên lưới 25 cm, kiểm tra vùng chiếm chỗ xe và từng đoạn di chuyển.
+  Xe giữ hướng theo trục map (có đi ngang/lùi), không phải động học xe lăn thực.
+  Cửa mở khi đến gần, có kiểm tra cung quét với xe/người. Gặp người chắn lối thì
+  chờ; không có đường thì báo thay vì đi xuyên. Điểm đến di động có thể cần chọn lại.
+- Giọng hướng dẫn tiếng Việt dùng SpeechSynthesis, có phụ đề, bật/tắt H, nghe lại,
+  hủy giọng cũ khi đổi hướng dẫn. Không dùng microphone. Giọng tùy thiết bị;
+  không có giọng vi-VN/lỗi phát thì thông báo và giữ hướng dẫn chữ.
+- Mặt bằng mở từ 18 × 16,5 m thành 24 × 20,5 m. Đồ dùng/xe giữ nguyên kích thước.
+  Tăng cửa thêm 20 cm: 146/104/105/96 cm; khung, vách, số đo cùng cập nhật.
+  Biển tên phòng ở trên mỗi khung cửa, đọc được từ hai phía.
+- Tổng 7 đồng nghiệp: 3 đầu mối cố định, thêm 4 người đi theo tuyến trong phòng.
+  Có chuyển động tay/chân, va chạm và dừng khi người dùng đến gần. Vị trí đồ họa,
+  tương tác F, hồ sơ và bản đồ cùng lấy dữ liệu di chuyển hiện tại.
+- Kiểm tra: tìm đường tới mọi phòng với xe mặc định; từ chối cửa hẹp với xe rộng;
+  người đi không xuyên vật; tự mở cửa/đến nơi; ngắt tự đi bằng phím; giọng/phụ đề;
+  khóa chuột ngay khi vào; giữ kiểm tra HR, dữ liệu cũ và WebGL fallback.
+- Tài liệu SpeechSynthesis: https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis

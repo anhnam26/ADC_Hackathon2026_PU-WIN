@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { seedSession } from '../../src/lib/persistence';
 
 test('floor guidance, automatic door opening, arrival, manual override and voice controls', async ({ page }) => {
   await page.addInitScript(() => {
@@ -24,6 +25,7 @@ test('floor guidance, automatic door opening, arrival, manual override and voice
   await expect(stage).toHaveAttribute('data-autowalk', 'false');
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dayzero.session.v1')!));
   expect(saved.openDoors).toContain('entry-door');
+  await expect(page.locator('.interact-button')).toContainText('Quầy lễ tân');
   await page.keyboard.press('n');
   await page.getByRole('combobox', { name: 'Điểm đến', exact: true }).selectOption('meeting-table');
   await page.getByRole('button', { name: 'Tự đi đến đây', exact: true }).click();
@@ -56,4 +58,20 @@ test('walking colleagues move on the map and pause during dialogs', async ({ pag
   const pausedX = await colleague.getAttribute('data-x');
   await page.waitForTimeout(450);
   await expect(colleague).toHaveAttribute('data-x', pausedX!);
+});
+
+test('autowalk opens a room door and reaches a destination inside without tunnelling', async ({ page }) => {
+  const session = seedSession(); session.started = true; session.playerPose = {x:5.65,z:2.15,yaw:0};
+  await page.addInitScript(data => localStorage.setItem('dayzero.session.v1', JSON.stringify(data)), session);
+  await page.goto('/'); await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
+  await page.evaluate(() => document.exitPointerLock());
+  await page.getByRole('button', { name: '2D', exact: true }).click();
+  await page.getByTestId('game-stage').focus(); await page.keyboard.press('n');
+  await page.getByRole('combobox', {name:'Điểm đến',exact:true}).selectOption('sink');
+  await page.getByRole('button',{name:'Tự đi đến đây',exact:true}).click();
+  await expect(page.locator('.guide-caption')).toContainText('Đã đến Bồn rửa tay', {timeout:20000});
+  expect(Number(await page.getByTestId('game-stage').getAttribute('data-z'))).toBeGreaterThan(4.5);
+  await page.getByTestId('game-stage').focus(); await page.keyboard.press('f');
+  await expect(page.getByRole('dialog')).toContainText('Bồn rửa tay');
 });

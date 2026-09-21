@@ -298,6 +298,7 @@ export function useSimulation(
       if ((e.target as HTMLElement)?.closest("input,select,textarea")) return;
       if (bindings[e.code]) {
         e.preventDefault();
+        if (navigation.current.auto) { navigation.current.auto = false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; }
         pressed.current.add(e.code);
       }
       if (e.code === "KeyF" && !e.repeat) {
@@ -311,24 +312,25 @@ export function useSimulation(
     const focusout = () => {
       if (!stage.current?.contains(document.activeElement)) release();
     };
+    const unlock = () => { if (!document.pointerLockElement) release(); };
     window.addEventListener("keydown", keydown);
     window.addEventListener("keyup", keyup);
     window.addEventListener("blur", release);
     window.addEventListener("focusin", focusout);
     document.addEventListener("visibilitychange", release);
-    document.addEventListener('pointerlockchange', release);
+    document.addEventListener('pointerlockchange', unlock);
     return () => {
       window.removeEventListener("keydown", keydown);
       window.removeEventListener("keyup", keyup);
       window.removeEventListener("blur", release);
       window.removeEventListener("focusin", focusout);
       document.removeEventListener("visibilitychange", release);
-      document.removeEventListener('pointerlockchange', release);
+      document.removeEventListener('pointerlockchange', unlock);
       release();
     };
   }, [stage]);
   const setControl = (control: Control, active: boolean) => {
-    if (active) virtual.current.add(control);
+    if (active) { if (navigation.current.auto) { navigation.current.auto = false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; } virtual.current.add(control); }
     else virtual.current.delete(control);
   };
   const chooseNearby = (id: string) => {

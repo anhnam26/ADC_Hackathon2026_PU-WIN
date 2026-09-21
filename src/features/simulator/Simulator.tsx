@@ -126,6 +126,7 @@ export default function Simulator({
   useEffect(() => { voice.speak(`${objective.label}. ${objective.hint} Nhấn N để chọn điểm đến và dẫn đường.`); }, [objective, voice.speak]);
   useEffect(() => { if (sim.view.navigationStatus !== 'Chọn một điểm đến để bắt đầu dẫn đường.') voice.speak(sim.view.navigationStatus); }, [sim.view.navigationStatus, voice.speak]);
   const navigateToSelected = (automatic: boolean) => {
+    setChosen(destination);
     sim.navigate(destination, automatic);
     setNavigationOpen(false);
     requestAnimationFrame(() => stage.current?.focus({ preventScroll: true }));
@@ -163,7 +164,7 @@ export default function Simulator({
       }
       if (e.code === 'KeyJ') { e.preventDefault(); setJournal(true); }
       if (e.code === 'KeyN') { e.preventDefault(); setNavigationOpen(true); }
-      if (e.code === 'KeyP') { e.preventDefault(); if (sim.view.auto) sim.stopNavigation(); else sim.navigate(destination, true); }
+      if (e.code === 'KeyP') { e.preventDefault(); if (sim.view.auto) sim.stopNavigation(); else { setChosen(destination); sim.navigate(destination, true); } }
       if (e.code === 'KeyH') { e.preventDefault(); voice.toggle(); }
     };
     window.addEventListener('keydown', hotkey);

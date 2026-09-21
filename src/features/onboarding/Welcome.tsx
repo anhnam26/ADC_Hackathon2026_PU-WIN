@@ -163,7 +163,7 @@ export default function Welcome({ onClose, onConfirm, entering = false }: { onCl
           </span>
           <span><kbd>V</kbd> Góc nhìn thứ nhất / thứ ba</span>
         </div>
-        <p className="profile-disclaimer">Góc nhìn thứ nhất · Giữ chuột trái và kéo hoặc vuốt trên cảnh để nhìn quanh. Q/E xoay xe khi dùng bàn phím.</p>
+        <p className="profile-disclaimer">Vào map sẽ ẩn chuột: di chuột để nhìn quanh, không cần giữ nút. Esc hiện chuột, Enter tiếp tục. N chọn điểm đến, P tự đi/dừng, H bật/tắt giọng hướng dẫn. Trên điện thoại, vuốt để nhìn.</p>
         <p className="profile-disclaimer">
           Văn phòng mẫu · 1 đơn vị = 1 mét. So sánh hình học giúp phát hiện điều
           cần xác minh, không xác nhận khả năng tiếp cận ở công ty thật.

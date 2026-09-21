@@ -387,7 +387,7 @@ export default function App() {
               <section>
                 <h3>01 · Làm quen không gian</h3>
                 <p>
-                  Nhập kích thước xe lăn trong hồ sơ nhân vật. Góc nhìn thứ nhất đặt bạn ở tầm mắt người ngồi xe. Bấm vào không gian và dùng WASD hoặc phím mũi tên để di chuyển theo hướng nhìn. Giữ chuột trái và kéo hoặc vuốt để nhìn quanh. Q/E xoay xe, giữ Shift để đi chậm. Nút tâm ngắm chuyển sang toàn cảnh.
+                  Nhập kích thước xe rồi vào map. Di chuột để nhìn quanh, WASD di chuyển, V đổi góc nhìn, Esc hiện chuột và Enter chơi tiếp. Nhấn N để chọn điểm đến, theo vạch vàng hoặc bật tự đi. P/WASD dừng tự đi. H bật/tắt giọng hướng dẫn, có phụ đề và nút nghe lại.
                 </p>
               </section>
             </div>
