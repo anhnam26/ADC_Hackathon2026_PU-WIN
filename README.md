@@ -13,6 +13,15 @@ npm run dev
 
 Mở **http://127.0.0.1:5173/**. Nếu cổng bận, xem địa chỉ Vite in trong terminal. Máy chủ mặc định chỉ nghe trên máy của bạn.
 
+Nếu trang chỉ hiện màu trắng, thử `Ctrl + Shift + R`. Nếu vẫn lỗi hoặc terminal báo thiếu thư viện, dừng server bằng `Ctrl + C` trước khi cài lại:
+
+```sh
+npm ci
+npm run dev -- --force
+```
+
+Trên Windows, không chạy `npm ci` trong lúc Vite còn chạy: tiến trình esbuild có thể khóa file, làm quá trình cài đặt dừng với lỗi `EPERM` và để lại thư mục thư viện chưa đầy đủ. Đóng các terminal đang chạy server của dự án rồi thực hiện lại hai lệnh trên. Giữ terminal chạy demo mở trong lúc sử dụng.
+
 ```sh
 npm run typecheck
 npm test
