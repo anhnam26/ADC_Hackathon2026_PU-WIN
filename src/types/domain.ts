@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { mobilitySchema, defaultMobility } from './simulator';
 
 export type Point = [number, number, number];
 export type Floor = "ground" | "office";
@@ -79,6 +80,9 @@ export const issueSchema = z.object({
   stepId: z.number().int().min(0).max(6),
   locationId: id,
   checklistId: z.string().optional(),
+  objectId: z.string().optional(),
+  objectName: z.string().optional(),
+  measurementNote: z.string().optional(),
   category: z.enum(categories),
   kind: z.enum(["verification", "barrier"]),
   impact: z.enum(["normal", "medium", "high"]),
@@ -121,5 +125,9 @@ export const sessionSchema = z.object({
   issues: z.array(issueSchema),
   tasks: z.array(taskSchema),
   reducedMotion: z.boolean(),
+  mobility: mobilitySchema.default(defaultMobility),
+  inspectedIds: z.array(z.string()).default([]),
+  openDoors: z.array(z.string()).default([]),
+  playerPose: z.object({ x: z.number().min(-9).max(9), z: z.number().min(-7).max(9.5), yaw: z.number().finite() }).default({ x: 0, z: 8.35, yaw: 0 }),
 });
 export type Session = z.infer<typeof sessionSchema>;

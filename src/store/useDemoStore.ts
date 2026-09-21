@@ -8,6 +8,7 @@ import type {
 } from "../types/domain";
 import { loadSession, seedSession, STORAGE_KEY } from "../lib/persistence";
 import { createTasks, transitionTask } from "../lib/taskRules";
+import type { MobilityProfile, Pose } from '../types/simulator';
 
 type IssueInput = Pick<
   Issue,
@@ -19,12 +20,19 @@ type IssueInput = Pick<
   | "description"
   | "requestedSupport"
   | "checklistId"
+  | "objectId"
+  | "objectName"
+  | "measurementNote"
 >;
 interface DemoState {
   session: Session;
   notice: string;
   persistenceBlocked: boolean;
   start: (needs: Category[]) => void;
+  setMobility: (profile: MobilityProfile) => void;
+  inspectObject: (id: string) => void;
+  setOpenDoors: (ids: string[]) => void;
+  savePose: (pose: Pose) => void;
   selectStep: (step: number) => void;
   setStepStatus: (status: Session["stepStatuses"][number]) => void;
   setAnswer: (id: string, value: Session["answers"][string]) => void;
@@ -46,6 +54,10 @@ export const useDemoStore = create<DemoState>((set) => ({
   session: initial.session,
   notice: initial.notice,
   persistenceBlocked: initial.blocked,
+  setMobility: mobility => set(s => ({ session: { ...s.session, mobility } })),
+  inspectObject: id => set(s => s.session.inspectedIds.includes(id) ? {} : ({ session: { ...s.session, inspectedIds: [...s.session.inspectedIds, id] } })),
+  setOpenDoors: openDoors => set(s => ({ session: { ...s.session, openDoors } })),
+  savePose: playerPose => set(s => ({ session: { ...s.session, playerPose: { ...playerPose } } })),
   start: (selectedNeeds) =>
     set((s) => ({ session: { ...s.session, started: true, selectedNeeds } })),
   selectStep: (currentStep) =>

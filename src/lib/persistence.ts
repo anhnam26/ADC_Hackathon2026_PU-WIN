@@ -2,6 +2,8 @@ import { sessionSchema, type Session } from "../types/domain";
 import { locations } from "../data/office";
 import { journey } from "../data/journey";
 import { addDays, officeDate } from "./taskRules";
+import { defaultMobility } from '../types/simulator';
+import { objects, SPAWN } from '../data/space';
 
 export const STORAGE_KEY = "dayzero.session.v1";
 export function seedSession(): Session {
@@ -16,6 +18,10 @@ export function seedSession(): Session {
     answers: {},
     issues: [],
     tasks: [],
+    mobility: { ...defaultMobility },
+    inspectedIds: [],
+    openDoors: [],
+    playerPose: { ...SPAWN },
     reducedMotion:
       typeof matchMedia !== "undefined" &&
       matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -31,6 +37,8 @@ export function parseSession(raw: string): Session {
   const taskIds = new Set(data.tasks.map((t) => t.id));
   const references = data.tasks.flatMap((t) => t.issueIds);
   if (
+    data.inspectedIds.some(id => !objects.some(o => o.id === id)) ||
+    data.openDoors.some(id => !objects.some(o => o.id === id && o.kind === 'door')) ||
     issueIds.size !== data.issues.length ||
     taskIds.size !== data.tasks.length ||
     new Set(references).size !== references.length ||

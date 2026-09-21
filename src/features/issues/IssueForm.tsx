@@ -19,6 +19,9 @@ export interface IssueContext {
   suggestion?: string;
   kind?: Issue["kind"];
   issue?: Issue;
+  objectId?: string;
+  objectName?: string;
+  measurementNote?: string;
 }
 export default function IssueForm({
   context,
@@ -63,6 +66,9 @@ export default function IssueForm({
         impact,
         description: description.trim(),
         requestedSupport: support.trim(),
+        objectId: issue?.objectId ?? context.objectId,
+        objectName: issue?.objectName ?? context.objectName,
+        measurementNote: issue?.measurementNote ?? context.measurementNote,
       },
       issue?.id,
     );
@@ -78,11 +84,13 @@ export default function IssueForm({
         <MapPin size={18} />
         <div>
           <strong>{locationById(context.locationId).name}</strong>
+          {(context.objectName ?? issue?.objectName) && <strong>{context.objectName ?? issue?.objectName}</strong>}
           <span>
             {journey[context.stepId].time} · {journey[context.stepId].title}
           </span>
         </div>
       </div>
+      {(context.measurementNote ?? issue?.measurementNote) && <p className="measurement-context">{context.measurementNote ?? issue?.measurementNote}</p>}
       <form onSubmit={submit} className="form-stack">
         <fieldset className="kind-options">
           <legend>Loại ghi nhận</legend>
