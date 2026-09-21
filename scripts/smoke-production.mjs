@@ -24,14 +24,18 @@ try {
   await page.goto(url);
   await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
   await expect(page.locator('canvas')).toBeVisible();
-  await page.getByRole('button', { name: /09:00/ }).click();
-  await expect(page.locator('.hotspot')).toHaveCount(6);
-  await page.getByRole('button', { name: 'Đến địa điểm', exact: true }).click();
-  await expect(page.locator('.avatar-label')).toBeVisible();
+  await expect(page.locator('.player-tag')).toBeVisible();
+  await page.getByRole('button', { name: 'Theo nhân vật', exact: true }).click();
+  await page.getByTestId('game-stage').focus();
+  await expect(page.locator('.interact-button')).toBeVisible();
+  await page.keyboard.press('f');
+  await expect(page.locator('.object-illustration')).toBeVisible();
+  await page.getByRole('button', { name: 'Mở cửa', exact: true }).click();
+  await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
   await mkdir('test-results', { recursive: true });
   await page.screenshot({ path: 'test-results/dayzero-production.png', fullPage: true });
   expect(failures).toEqual([]);
-  console.log('Production smoke passed: built assets, 3D scene, journey and avatar; no runtime or HTTP errors.');
+  console.log('Production smoke passed: 3D wheelchair, F interaction, measured object illustration and door action; no runtime or HTTP errors.');
 } finally {
   await browser?.close();
   server.kill();

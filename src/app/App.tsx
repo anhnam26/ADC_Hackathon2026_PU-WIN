@@ -221,7 +221,7 @@ export default function App() {
           )}
           {page === "journey" && (
             <Simulator
-              key={target ?? "default"}
+              key={`${session.id}-${target ?? 'default'}`}
               target={target}
               onIssue={setIssueContext}
               onSummary={() => goTo("summary")}

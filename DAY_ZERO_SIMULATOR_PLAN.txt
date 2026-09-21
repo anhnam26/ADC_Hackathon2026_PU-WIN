@@ -1,4 +1,7 @@
 DAY ZERO SIMULATOR — KẾ HOẠCH DEMO 3D TRÊN WEB
+ĐIỀU CHỈNH PHẠM VI: Theo yêu cầu mới, demo đã chuyển thành simulator điều khiển
+chủ động WASD cho người sử dụng xe lăn. Phụ lục 21 cuối file thay thế các mục
+về waypoint, di chuyển tự động và phạm vi 3D cũ. README.md mô tả cách chạy hiện tại.
 Ngày lập: 21/09/2026
 Mục đích: Tài liệu triển khai demo, đủ để giao cho lập trình viên hoặc AI coding agent.
 
@@ -557,3 +560,29 @@ viết README và báo rõ chức năng đã hoàn thành cùng giới hạn cò
 
 Các con số về thời gian, hiệu năng và phạm vi là đề xuất lập kế hoạch cho demo,
 không phải kết quả đo của một ứng dụng đã được xây dựng.
+
+21. PHẠM VI ĐÃ ĐIỀU CHỈNH — SIMULATOR XE LĂN ĐIỀU KHIỂN CHỦ ĐỘNG
+
+- Một không gian liên tục, không tự di chuyển theo tuyến. WASD/phím mũi tên
+  điều khiển nhân vật theo hướng màn hình; Q/E xoay tại chỗ, Shift đi chậm.
+- Nhập số đo xe bằng cm: rộng, dài, cao, cao ghế, cao tay vịn. Xe lăn là chế độ
+  mặc định, có lựa chọn đi bộ cho người muốn khám phá cùng môi trường.
+- Một đơn vị 3D bằng 1 m. Dữ liệu vật, hình minh họa và vùng va chạm dùng chung
+  hình học; kích thước xe quyết định vùng chiếm chỗ hình chữ nhật có hướng quay.
+- Cửa, khung cửa, bàn ghế, máy nước, máy in, bồn rửa, tay vịn và đồ trang trí
+  đều có số đo và ảnh minh họa. Mặt bằng mẫu có 22 đối tượng tương tác.
+- F mở hồ sơ khi tâm nhân vật cách bề mặt vật không quá 1,35 m và không có
+  tường/vật cản che đường tương tác. Có nút trên màn hình tương đương F.
+- Hồ sơ hiển thị cách sử dụng, lưu ý, số đo tổng thể, độ cao điều khiển,
+  khoảng trống đặc thù và so sánh với xe. Có thao tác mở/đóng cửa; kiểm tra
+  cung quét để không đóng/mở xuyên nhân vật.
+- Bảy chặng trở thành các mục tiêu khám phá. Chọn chặng không dịch chuyển xe.
+  Hoàn thành dựa trên việc xem các đối tượng, chặng cuối cần trở ra lối vào.
+- Mọi ghi nhận gắn với đồ vật, số đo của vật và xe ở thời điểm tạo để HR/
+  Facilities nhận được bối cảnh cụ thể. Giữ luồng tổng kết, task và xác nhận.
+- Tự lưu hồ sơ, vị trí, cửa và vật đã xem; giữ phiên cũ qua giá trị mặc định.
+- Chế độ 2D dùng cùng hình học, va chạm và điều khiển. Có điều khiển cảm ứng,
+  hỗ trợ bàn phím, giảm chuyển động và tạm dừng input khi nhập liệu/mở dialog.
+- Đây là mô phỏng hình học trên mặt phẳng; không mô phỏng lực, dốc, ma sát,
+  tầm với, chuyển người hay đưa chân vào dưới bàn. Số đo mặt bằng vẫn là giả lập;
+  cần khảo sát doanh nghiệp trước khi dùng để xác nhận điều kiện tiếp cận thật.

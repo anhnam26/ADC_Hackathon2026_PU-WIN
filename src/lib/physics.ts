@@ -62,7 +62,7 @@ export function doorCanToggle(o: WorldObject, openDoors: string[], pose: Pose, p
   // Sweep the leaf through the entire quarter turn, not just its destination.
   for (let i = 0; i <= 30; i++) {
     const a = (isOpen ? 1 - i / 30 : i / 30) * Math.PI / 2;
-    if (objectObstacles(o, false, a).some(part => overlaps(body, part, .015))) return false;
+    if (objectObstacles(o, false, a).some(part => overlaps(body, part, .001))) return false;
   }
   return true;
 }

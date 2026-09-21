@@ -24,6 +24,7 @@ function PartMesh({ part }: { part: Part }) {
     <mesh
       position={part.position}
       rotation={[0, part.yaw ?? 0, part.roll ?? 0]}
+      scale={part.shape === 'sphere' ? part.size : undefined}
       castShadow
       receiveShadow
     >
@@ -31,9 +32,6 @@ function PartMesh({ part }: { part: Part }) {
         <sphereGeometry args={[0.5, 10, 8]} />
       ) : (
         <boxGeometry args={part.size} />
-      )}
-      {part.shape === "sphere" && (
-        <primitive object={new Vector3(...part.size)} attach="scale" />
       )}
       <meshStandardMaterial color={part.color} roughness={0.8} />
     </mesh>

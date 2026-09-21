@@ -140,6 +140,12 @@ export default function Simulator({
     setFailed(true);
     setMode("2d");
   }, []);
+  useEffect(() => {
+    const element = stage.current;
+    const lost = (event: Event) => { event.preventDefault(); unavailable(); };
+    element?.addEventListener('webglcontextlost', lost, true);
+    return () => element?.removeEventListener('webglcontextlost', lost, true);
+  }, [unavailable]);
   const focusGame = () => stage.current?.focus({ preventScroll: true });
   const closeInspector = () => {
     setInspected(null);

@@ -29,6 +29,7 @@ test('WASD drives the wheelchair, F opens nearby objects, a closed door blocks e
   await page.getByRole('button', { name: 'Mở cửa', exact: true }).click();
   await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
   await holdUntil(page, 'w', async () => (await z(page)) < 6.25);
+  await page.waitForTimeout(150); // HUD publishes at 90 ms; wait for the stopped position.
   const after = await z(page); expect(after).toBeLessThan(before - 1);
   await page.getByRole('button', { name: /09:30/ }).click();
   expect(await z(page)).toBeCloseTo(after, 1); // selecting a mission must never teleport
@@ -37,7 +38,7 @@ test('WASD drives the wheelchair, F opens nearby objects, a closed door blocks e
 });
 
 test('entered dimensions persist; a wide chair cannot pass the same doorway as a smaller chair', async ({ page }) => {
-  const session = seedSession(); session.started = true; session.playerPose = { x: 5.65, z: 2, yaw: 0 }; session.mobility.widthCm = 85;
+  const session = seedSession(); session.started = true; session.playerPose = { x: 5.65, z: 2.15, yaw: 0 }; session.mobility.widthCm = 85;
   await page.addInitScript(data => localStorage.setItem('dayzero.session.v1', JSON.stringify(data)), session);
   await page.goto('/'); await page.getByRole('button', { name: '2D', exact: true }).click();
   await page.getByTestId('game-stage').focus(); await expect(page.locator('.interact-button')).toContainText('Cửa nhà vệ sinh'); await page.keyboard.press('f');
