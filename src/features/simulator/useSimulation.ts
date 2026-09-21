@@ -204,7 +204,7 @@ export function useSimulation(
       pendingTurn.current = 0;
     };
     const down = (e: PointerEvent) => {
-      if (!(e.target instanceof HTMLCanvasElement) || e.button !== 0 || document.querySelector('dialog[open]')) return;
+      if (document.pointerLockElement || !(e.target instanceof HTMLCanvasElement) || e.button !== 0 || document.querySelector('dialog[open]')) return;
       drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
       e.target.setPointerCapture(e.pointerId);
     };

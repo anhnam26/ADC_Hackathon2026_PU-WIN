@@ -32,6 +32,9 @@ import { doorCanToggle, canInteract, objectDistance } from "../../lib/physics";
 import { useSimulation, type Control } from "./useSimulation";
 import Map2D from "./Map2D";
 import ObjectInspector, { measurementSummary } from "./ObjectInspector";
+import ColleagueInspector from './ColleagueInspector';
+import Dialog from '../../components/Dialog';
+import { useGameDisplay } from './useGameDisplay';
 import type { IssueContext } from "../issues/IssueForm";
 
 const OfficeScene = lazy(() => import("./OfficeScene"));
@@ -51,12 +54,14 @@ export default function Simulator({
   onPreferences,
   notify,
   target,
+  onMenu,
 }: {
   onIssue: (context: IssueContext) => void;
   onSummary: () => void;
   onPreferences: () => void;
   notify: (s: string) => void;
   target: string | null;
+  onMenu: () => void;
 }) {
   const {
     session,
@@ -73,9 +78,12 @@ export default function Simulator({
     webglAvailable() ? "3d" : "2d",
   );
   const [failed, setFailed] = useState(mode === "2d");
-  const [firstPerson, setFirstPerson] = useState(true),
-    [reset, setReset] = useState(0),
-    [full, setFull] = useState(false);
+  const [cameraMode, setCameraMode] = useState<'first-person' | 'third-person' | 'overview'>('first-person');
+  const firstPerson = cameraMode === 'first-person';
+  const [reset, setReset] = useState(0);
+  const [journal, setJournal] = useState(false);
+  const immersive = mode === '3d' && cameraMode !== 'overview';
+  const display = useGameDisplay(stage, immersive, notify);
   const [catalog, setCatalog] = useState(false);
   const handleInteract = useCallback(
     (id: string) => {
@@ -90,7 +98,7 @@ export default function Simulator({
     stage,
     handleInteract,
     session.playerPose,
-    mode === '3d' && firstPerson,
+    immersive,
   );
   const nearestId = sim.view.nearby.includes(chosen ?? "")
     ? chosen
@@ -128,15 +136,18 @@ export default function Simulator({
     };
   }, [savePose, sim.pose]);
   useEffect(() => {
-    if (full) {
-      const escape = (e: KeyboardEvent) => {
-        if (e.key === "Escape" && !document.querySelector("dialog[open]"))
-          setFull(false);
-      };
-      window.addEventListener("keydown", escape);
-      return () => window.removeEventListener("keydown", escape);
-    }
-  }, [full]);
+    const hotkey = (e: KeyboardEvent) => {
+      if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || document.querySelector('dialog[open]') ||
+        !stage.current?.contains(document.activeElement) || (e.target as HTMLElement).closest('input,textarea,select')) return;
+      if (e.code === 'KeyV' && mode === '3d') {
+        e.preventDefault();
+        setCameraMode(current => current === 'first-person' ? 'third-person' : 'first-person');
+      }
+      if (e.code === 'KeyJ') { e.preventDefault(); setJournal(true); }
+    };
+    window.addEventListener('keydown', hotkey);
+    return () => window.removeEventListener('keydown', hotkey);
+  }, [mode]);
   const unavailable = useCallback(() => {
     setFailed(true);
     setMode("2d");
@@ -168,6 +179,7 @@ export default function Simulator({
   };
   const choose = (id: string) => {
     if (sim.view.nearby.includes(id)) {
+      setJournal(false);
       setChosen(id);
       sim.chooseNearby(id);
       sim.triggerInteraction(id);
@@ -255,15 +267,17 @@ export default function Simulator({
         </button>
       </div>
       <div className="play-layout">
-        <section className={`world-card ${full ? "world-expanded" : ""}`}>
+        <section className="world-card" data-fullscreen={display.fullscreen}>
           <header className="world-topbar">
             <div>
               <span className="world-status" />
-              <strong>Day Zero Office</strong>
+              <strong>DAY ZERO<span className="game-brand-sub">OFFICE SIMULATOR</span></strong>
               <span className="world-divider">/</span>
               <span>Khám phá tự do</span>
             </div>
             <div className="world-tools">
+              <button className="game-tool" onClick={() => setJournal(true)}><BookOpen size={16} /><span>Nhật ký</span><kbd>J</kbd></button>
+              <button className="game-tool" disabled={mode !== '3d'} onClick={() => { setCameraMode(current => current === 'first-person' ? 'third-person' : 'first-person'); focusGame(); }} aria-label="Đổi góc nhìn V"><kbd>V</kbd><span>{firstPerson ? 'Góc nhìn 1' : cameraMode === 'third-person' ? 'Góc nhìn 3' : 'Toàn cảnh'}</span></button>
               <div className="segmented">
                 <button
                   disabled={failed}
@@ -281,11 +295,11 @@ export default function Simulator({
               </div>
               <button
                 className="icon-button"
-                aria-label={firstPerson ? "Xem toàn văn phòng" : "Góc nhìn thứ nhất"}
-                title={firstPerson ? "Xem toàn văn phòng" : "Góc nhìn thứ nhất"}
+                aria-label={cameraMode !== 'overview' ? "Xem toàn văn phòng" : "Góc nhìn thứ nhất"}
+                title={cameraMode !== 'overview' ? "Xem toàn văn phòng" : "Góc nhìn thứ nhất"}
                 disabled={mode !== '3d'}
-                onClick={() => setFirstPerson((v) => !v)}
-                aria-pressed={firstPerson}
+                onClick={() => setCameraMode(current => current === 'overview' ? 'first-person' : 'overview')}
+                aria-pressed={cameraMode === 'overview'}
               >
                 <Crosshair size={18} />
               </button>
@@ -298,11 +312,13 @@ export default function Simulator({
               </button>
               <button
                 className="icon-button"
-                aria-label={full ? "Thu gọn bản đồ" : "Mở rộng bản đồ"}
-                onClick={() => setFull((v) => !v)}
+                aria-label={display.fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                title={display.fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                onClick={display.toggleFullscreen}
               >
-                {full ? <X size={18} /> : <Maximize size={17} />}
+                {display.fullscreen ? <X size={18} /> : <Maximize size={17} />}
               </button>
+              <button className="game-tool" onClick={onMenu}>Menu</button>
             </div>
           </header>
           <div
@@ -315,7 +331,8 @@ export default function Simulator({
             data-x={sim.view.pose.x.toFixed(3)}
             data-z={sim.view.pose.z.toFixed(3)}
             data-yaw={sim.view.pose.yaw.toFixed(3)}
-            data-camera={mode === '2d' ? 'map' : firstPerson ? 'first-person' : 'overview'}
+            data-camera={mode === '2d' ? 'map' : cameraMode}
+            data-pointer-locked={display.locked}
             onPointerDown={(e) => {
               if (!(e.target as HTMLElement).closest("button,select"))
                 focusGame();
@@ -339,6 +356,7 @@ export default function Simulator({
                   destinationIds={objectiveIds}
                   inspected={session.inspectedIds}
                   firstPerson={firstPerson}
+                  thirdPerson={cameraMode === 'third-person'}
                   lookPitch={sim.lookPitch}
                   reset={reset}
                   reducedMotion={session.reducedMotion}
@@ -365,9 +383,11 @@ export default function Simulator({
             <div className="world-discovered">
               <BookOpen size={15} />
               {session.inspectedIds.length}/{objects.length}
-              <span> đồ vật đã tìm hiểu</span>
+              <span> điểm đã khám phá</span>
             </div>
-            {mode === '3d' && firstPerson && <div className="first-person-hint">Góc nhìn thứ nhất · Kéo chuột / vuốt để nhìn · Q/E xoay xe</div>}
+            {immersive && <div className="first-person-hint">{firstPerson ? 'Góc nhìn thứ nhất' : 'Góc nhìn thứ ba'} · {display.locked ? 'Di chuột để nhìn · Esc hiện chuột' : 'Kéo chuột / vuốt để nhìn'} · V đổi góc nhìn</div>}
+            {immersive && <div className="game-crosshair" aria-hidden="true">+</div>}
+            {display.fullscreen && immersive && !display.locked && <button className="resume-pointer" onClick={display.lock}>Tiếp tục chơi · Ẩn chuột</button>}
             <div className="movement-hud">
               <div className="movement-pad">
                 {controls.map((c) => (
@@ -418,7 +438,7 @@ export default function Simulator({
                     <kbd>F</kbd>
                     <span>
                       <strong>{nearest.name}</strong>
-                      <small>Xem cách dùng, lưu ý & kích thước</small>
+                      <small>{nearest.kind === 'colleague' ? 'Làm quen · Xem hồ sơ đồng nghiệp' : 'Xem cách dùng, lưu ý & kích thước'}</small>
                     </span>
                     <ChevronRight size={20} />
                   </button>
@@ -468,7 +488,7 @@ export default function Simulator({
               <kbd>W</kbd>
               <kbd>A</kbd>
               <kbd>S</kbd>
-              <kbd>D</kbd> {mode === '3d' && firstPerson ? 'Di chuyển theo hướng nhìn' : 'Di chuyển theo màn hình'}
+              <kbd>D</kbd> {immersive ? 'Di chuyển' : 'Theo màn hình'}
             </span>
             <span>
               <kbd>F</kbd> Tương tác
@@ -480,6 +500,8 @@ export default function Simulator({
             <span>
               <kbd>Shift</kbd> Đi chậm
             </span>
+            <span><kbd>V</kbd> Góc nhìn</span>
+            <span><kbd>Esc</kbd> Hiện chuột</span>
             <button
               onClick={() => {
                 sim.returnToEntry();
@@ -534,6 +556,7 @@ export default function Simulator({
               Chọn chặng chỉ đổi mục tiêu. Bạn tự điều khiển đến đó.
             </small>
           </section>
+          {journal && <Dialog title="Nhật ký ngày đầu" subtitle="Lịch trình, đồ vật và những đồng nghiệp bạn sẽ gặp." onClose={() => { setJournal(false); focusGame(); }}>
           <section className="play-journey">
             <div className="section-heading">
               <h3>Lịch trình của bạn</h3>
@@ -567,7 +590,7 @@ export default function Simulator({
             onClick={() => setCatalog((v) => !v)}
           >
             <BookOpen size={16} />
-            Danh mục đồ vật<span>{objects.length}</span>
+            Đồ vật & đồng nghiệp<span>{objects.length}</span>
           </button>
           {catalog && (
             <div className="object-catalog">
@@ -592,9 +615,10 @@ export default function Simulator({
             {WORLD.interactionRange.toFixed(2)} m để nhấn F. Mô hình chưa mô
             phỏng lực, tầm với hoặc chuyển người.
           </p>
+          </Dialog>}
         </aside>
       </div>
-      {activeObject && (
+      {activeObject?.kind === 'colleague' ? <ColleagueInspector person={activeObject} onClose={closeInspector} /> : activeObject && (
         <ObjectInspector
           key={activeObject.id}
           object={activeObject}

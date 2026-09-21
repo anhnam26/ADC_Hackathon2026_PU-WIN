@@ -471,6 +471,7 @@ export default function OfficeScene(p: SceneProps) {
             }}
           >
             <ObjectModel object={o} open={p.openDoors.includes(o.id)} />
+            {o.colleague && Math.hypot(p.pose.current.x - o.position[0], p.pose.current.z - o.position[2]) < 4.5 && <Html position={[0, o.size[1] + .2, 0]} center occlude zIndexRange={[10, 0]}><span className="colleague-tag">{o.name}<small>{o.colleague.role}</small></span></Html>}
             {(p.nearest === o.id || p.destinationIds.includes(o.id)) && (
               <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <ringGeometry

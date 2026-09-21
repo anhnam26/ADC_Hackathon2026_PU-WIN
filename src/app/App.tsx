@@ -38,6 +38,7 @@ export default function App() {
   const [settings, setSettings] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [help, setHelp] = useState(false);
+  const [gameMenu, setGameMenu] = useState(false);
   const [target, setTarget] = useState<string | null>(null);
   const [toast, setToast] = useState("");
   const notify = useCallback((text: string) => setToast(text), []);
@@ -73,7 +74,7 @@ export default function App() {
     notify("Đã xuất báo cáo JSON.");
   };
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${page === 'journey' ? 'game-shell' : ''}`}>
       <a href="#main-content" className="skip-link">
         Đến nội dung chính
       </a>
@@ -219,7 +220,12 @@ export default function App() {
               {notice}
             </div>
           )}
-          {page === "journey" && (
+          {page === "journey" && !session.started && <div className="game-launch">
+            <span className="eyebrow">YOUR FIRST DAY, REIMAGINED</span><h1>DAY ZERO<span>Hành trình của bạn bắt đầu ở đây.</span></h1>
+            <p>Thiết lập xe của bạn. Gặp đồng nghiệp mới. Làm quen văn phòng theo nhịp riêng.</p>
+            <button className="button primary" onClick={() => setWelcome(true)}>Thiết lập nhân vật</button>
+          </div>}
+          {page === "journey" && session.started && (
             <Simulator
               key={`${session.id}-${target ?? 'default'}`}
               target={target}
@@ -227,6 +233,7 @@ export default function App() {
               onSummary={() => goTo("summary")}
               onPreferences={() => setWelcome(true)}
               notify={notify}
+              onMenu={() => setGameMenu(true)}
             />
           )}
           {page === "summary" && (
@@ -263,6 +270,16 @@ export default function App() {
         </footer>
       </div>
       {welcome && <Welcome onClose={() => setWelcome(false)} />}
+      {gameMenu && <Dialog title="Tạm dừng" subtitle="DAY ZERO · Không gian của bạn, nhịp đi của bạn." onClose={() => setGameMenu(false)}>
+        <div className="game-menu-actions">
+          <button className="button primary" onClick={() => setGameMenu(false)}>Trở lại trò chơi</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); goTo('summary'); }}>Tổng kết trải nghiệm</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); goTo('tasks'); }}>Nhiệm vụ chuẩn bị</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); setWelcome(true); }}>Nhân vật & kích thước xe</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); setSettings(true); }}>Tùy chọn & dữ liệu</button>
+          <button className="button secondary" onClick={() => { setGameMenu(false); setHelp(true); }}>Hướng dẫn trải nghiệm</button>
+        </div>
+      </Dialog>}
       {issueContext && (
         <IssueForm
           context={issueContext}

@@ -31,6 +31,7 @@ test('WASD drives the wheelchair, F opens nearby objects, a closed door blocks e
   await holdUntil(page, 'w', async () => (await z(page)) < 6.25);
   await page.waitForTimeout(150); // HUD publishes at 90 ms; wait for the stopped position.
   const after = await z(page); expect(after).toBeLessThan(before - 1);
+  await page.getByRole('button', { name: /Nhật ký/ }).click();
   await page.getByRole('button', { name: /09:30/ }).click();
   expect(await z(page)).toBeCloseTo(after, 1); // selecting a mission must never teleport
   await expect(page.locator('.current-mission')).toContainText('Thử vào phòng họp Lotus');
@@ -60,6 +61,7 @@ test('object-specific report keeps its measurements through the HR workflow and 
   await page.keyboard.press('f'); await page.getByRole('button', { name: 'Ghi nhận về đồ vật này' }).click();
   await page.getByLabel('Điều bạn muốn ghi nhận').fill('Cần hỗ trợ mở cửa khi đến làm việc.');
   await page.getByRole('button', { name: 'Lưu vào tổng kết' }).click();
+  await page.getByRole('button', { name: 'Menu', exact: true }).click();
   await page.getByRole('button', { name: /Tổng kết trải nghiệm/ }).click();
   await expect(page.locator('.issue-row')).toContainText('Xe: 70 × 110 cm');
   await page.getByRole('button', { name: 'Tạo 1 nhiệm vụ chuẩn bị' }).click();
@@ -75,7 +77,7 @@ test('object-specific report keeps its measurements through the HR workflow and 
   await page.getByRole('button', { name: 'Cần hỗ trợ mở cửa khi đến làm việc.', exact: true }).click();
   await page.getByRole('button', { name: 'Xác nhận phương án', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Đã hoàn tất');
-  await page.reload(); await page.getByRole('button', { name: /Nhiệm vụ chuẩn bị/ }).click();
+  await page.reload(); await page.getByRole('button', { name: 'Menu', exact: true }).click(); await page.getByRole('button', { name: /Nhiệm vụ chuẩn bị/ }).click();
   await expect(page.locator('tbody')).toContainText('Đã hoàn tất');
 });
 

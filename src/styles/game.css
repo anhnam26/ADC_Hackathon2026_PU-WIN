@@ -1,0 +1,86 @@
+/* The game owns the viewport. Menus and journals sit above the map. */
+.game-shell{display:block!important;min-height:100dvh;background:#172b2b;color:#eaf4ef}
+.game-shell>.sidebar,.game-shell .topbar,.game-shell .welcome-bar,.game-shell .app-footer{display:none!important}
+.game-shell .main-shell{margin:0!important;width:100%;min-width:0}
+.game-shell #main-content{padding:0!important;margin:0!important}
+.game-shell .play-page,.game-shell .play-layout{padding:0;margin:0;display:block}
+.game-shell .world-card{border:0;border-radius:0;background:transparent;overflow:visible}
+.game-shell .world-stage{position:fixed;inset:0;width:100%;height:100dvh!important;max-height:none;min-height:0}
+.game-shell .world-stage:after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 130px #102b2733}
+.game-shell .world-topbar{position:fixed;z-index:40;top:22px;left:26px;right:26px;height:auto;padding:0;background:transparent;pointer-events:none;align-items:flex-start}
+.game-shell .world-topbar>div{pointer-events:auto;color:#ecf5ed}
+.game-shell .world-topbar>div:first-child{background:#142d2be8;border:1px solid #8aa99b50;border-radius:12px;padding:13px 18px}
+.game-shell .world-topbar strong{color:#edf5e5;font-size:23px;letter-spacing:3px;line-height:1.05}
+.game-brand-sub{display:block;font-size:8px;letter-spacing:2px;color:#b8d9c9;margin-top:7px}
+.game-shell .world-topbar .world-divider,.game-shell .world-topbar>div:first-child>span:last-child{display:none}
+.game-shell .world-status{background:#bfe1a6;margin-right:5px}
+.game-shell .world-tools{padding:8px;background:#142d2be8;border:1px solid #8aa99b50;border-radius:12px;gap:6px!important;flex-wrap:wrap;justify-content:flex-end}
+.game-shell .world-tools .icon-button,.game-tool{border:1px solid #73918466;background:#203e38;color:#ecf5ec;min-height:36px;min-width:36px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:12px;padding:7px 10px}
+.game-shell .world-tools .icon-button[aria-pressed=true]{background:#52775b;color:white}
+.game-tool:disabled{opacity:.5;cursor:default}
+.game-shell .segmented{background:#203e38;border-color:#73918466}
+.game-shell .segmented button{color:#e5efe8;min-height:34px}
+.game-shell .segmented button[aria-pressed=true]{background:#d0e8b8;color:#233f30}
+.game-shell .world-tools kbd,.game-shell .world-bottom kbd{background:#e5efdc;color:#294434;border-color:#a8bc99;box-shadow:none;font-size:11px;min-width:22px}
+.game-shell .play-heading>div{display:none}
+.game-shell .play-heading>.button{position:fixed;left:26px;bottom:24px;z-index:40;margin:0;background:#16342de8;color:#e3efde;border:1px solid #86a58a70;font-size:11px;max-width:250px}
+.game-shell .world-bottom{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:35;max-width:calc(100% - 600px);width:max-content;border:1px solid #8aa99b50;background:#142d2be8;border-radius:10px;padding:10px 14px;gap:12px;justify-content:center}
+.game-shell .world-bottom>span,.game-shell .world-bottom button{color:#e0efdf;font-size:11px}
+.game-shell .world-bottom button{margin:0}
+.game-shell .explore-sidebar{display:block}
+.game-shell .current-mission{position:fixed;top:116px;left:26px;width:300px;z-index:30;padding:16px 18px;border:1px solid #91b49866;border-left:3px solid #c2dfa0;border-radius:0 12px 12px 0;background:linear-gradient(110deg,#152e2beb,#1e3b34d9);color:#f0f5e8;box-shadow:0 10px 40px #10272022}
+.game-shell .current-mission .eyebrow{color:#c5dfad;letter-spacing:1.5px;font-size:9px}
+.game-shell .current-mission h2{font-size:17px;margin:10px 0 8px;color:#f0f5e8;line-height:1.4}
+.game-shell .current-mission p{color:#d5e6d6;font-size:11px;line-height:1.7}
+.game-shell .mission-progress{margin:12px 0;gap:6px}
+.game-shell .mission-progress>span,.game-shell .mission-progress .seen{color:#c9e9b5;font-size:11px}
+.game-shell .current-mission>.button{font-size:11px;padding:9px;background:#d3e9b6;color:#253c2a;border-color:#d3e9b6}
+.game-shell .current-mission>.button:disabled{opacity:.5}
+.game-shell .current-mission>small{display:none}
+.game-shell .world-scale{top:auto;bottom:24px;left:auto;right:26px;background:#142d2be8;color:#d7e9d5;border-color:#8aa99b50;z-index:35}
+.game-shell .world-discovered{top:auto;bottom:95px;right:26px;background:#142d2be8;color:#d7e9d5;border-color:#8aa99b50;font-size:12px}
+.game-shell .world-discovered>span{font-size:11px}
+.game-shell .first-person-hint{top:94px;left:50%;font-size:10px;background:#172e2adb;color:#e1eddf;max-width:calc(100% - 700px);padding:6px 12px;border:1px solid #8aa99b40}
+.game-shell .movement-hud{bottom:92px;left:26px}
+.game-shell .movement-pad{grid-template-columns:repeat(3,36px);grid-template-rows:repeat(3,36px);gap:5px}
+.game-shell .movement-pad button{background:#172e2ae8;color:#d9edcd;border:1px solid #a6c69c80;box-shadow:none}
+.game-shell .movement-hud>span{color:#254c38;background:#edf4e5d9;border-radius:3px;padding:3px 6px;font-size:9px}
+.game-shell .world-stage .interaction-hud{left:50%;right:auto;transform:translateX(-50%);bottom:115px;max-width:calc(100% - 360px);width:330px}
+.game-shell .proximity-label{background:#152f29e8;color:#d0e4b9;font-size:9px;padding:8px;letter-spacing:1.2px}
+.game-shell .interact-button{background:#172f2cf0;border:1px solid #b7d39499;border-top-color:#5d7e58;box-shadow:0 10px 40px #132f3140;padding:16px}
+.game-shell .interact-button strong{font-size:14px;color:#f1f6e9}
+.game-shell .interact-button small{font-size:11px;color:#c5d8ba}
+.game-shell .no-nearby{background:#172e2aeb;color:#e7efe0;border-color:#9db68b66;font-size:12px}
+.game-shell .no-nearby small{color:#bed5b0;font-size:10px}
+.game-shell .collision-hint{bottom:245px}
+.game-crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;font:24px/1 monospace;text-shadow:0 1px 3px #142e2d;pointer-events:none;z-index:20;opacity:.8}
+.resume-pointer{position:absolute;z-index:35;left:50%;top:60%;transform:translate(-50%,-50%);border:1px solid #bfd6a6;border-radius:9px;padding:12px 18px;background:#173930ef;color:#eef6e8;font-size:13px}
+.game-shell .world-stage[data-pointer-locked=true],.game-shell .world-stage[data-pointer-locked=true] *{cursor:none!important}
+.game-shell .fallback-note{position:fixed;bottom:72px;right:20px;z-index:35;max-width:300px;padding:8px 12px;border-radius:8px;background:#f3f0df;font-size:10px}
+.game-shell .storage-notice{position:fixed;right:24px;top:112px;z-index:45;max-width:320px;margin:0;background:#fff2d9;color:#644c20}
+.game-shell .dialog{color:#294335;border:1px solid #9fb391;border-radius:18px;box-shadow:0 25px 120px #031e1dcc}
+.game-shell .dialog::backdrop{background:#0c242ab8;backdrop-filter:blur(6px)}
+.game-shell .dialog .play-journey{margin-bottom:18px}
+.game-menu-actions{display:grid;gap:12px}
+.game-shell .dialog .catalog-toggle{width:100%;margin:15px 0}
+.game-shell .dialog .object-catalog{margin-bottom:16px}
+.game-launch{height:100dvh;padding:10vh 9vw;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;background:radial-gradient(ellipse at 85% 30%,#66877366,transparent 55%),linear-gradient(125deg,#152e2e,#2d4940);position:relative;overflow:hidden}
+.game-launch:after{content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;background-image:linear-gradient(#cce5bd 1px,transparent 1px),linear-gradient(90deg,#cce5bd 1px,transparent 1px);background-size:70px 70px;transform:perspective(500px) rotateX(45deg) scale(2);transform-origin:bottom}
+.game-launch .eyebrow{color:#cadcb3;font-size:12px;letter-spacing:3px}
+.game-launch h1{font-size:clamp(55px,8vw,110px);letter-spacing:8px;color:#edf2df;margin:25px 0;line-height:1}
+.game-launch h1 span{display:block;font-size:clamp(16px,2vw,26px);letter-spacing:0;margin-top:25px;font-weight:400}
+.game-launch p{color:#cfdfc8;line-height:1.8;font-size:14px;max-width:440px;margin-bottom:24px}
+.game-launch .button{z-index:1;background:#d5e9b9;color:#223f30;border-color:#d5e9b9}
+.colleague-profile{display:grid;grid-template-columns:230px 1fr;gap:26px;align-items:start}
+.colleague-tag{display:block;padding:7px 10px;border:1px solid #a5c29a88;background:#172e2ae8;border-radius:7px;color:#edf6e5;font-size:11px;text-align:center;white-space:nowrap;pointer-events:none}
+.colleague-tag small{display:block;font-size:9px;color:#c5dcae;margin-top:4px}
+.colleague-portrait svg{width:100%;display:block;border-radius:14px}
+.colleague-portrait small{font-size:10px;line-height:1.6;display:block;margin-top:9px;color:#5a7151}
+.colleague-greeting{font-size:17px;line-height:1.7;margin:12px 0 20px;color:#2f543f}
+.colleague-profile h3{font-size:13px;margin-bottom:12px}
+.colleague-profile ul{padding-left:18px;font-size:12px;line-height:1.8}
+.colleague-profile li{margin-bottom:8px}
+.colleague-availability{margin-top:20px;padding:14px;background:#e9f0de;border-radius:9px;font-size:12px;line-height:1.7}
+.colleague-availability p{margin-top:6px}
+@media(max-width:1100px){.game-shell .world-topbar{top:16px;left:16px;right:16px}.game-shell .world-tools{gap:4px!important}.game-shell .world-topbar strong{font-size:17px}.game-shell .world-topbar>div:first-child{padding:12px}.game-shell .current-mission{left:16px;top:103px;width:250px}.game-shell .first-person-hint{top:83px;left:auto;right:16px;transform:none;max-width:calc(100% - 305px)}.game-shell .world-bottom{max-width:calc(100% - 300px);left:auto;right:16px;transform:none}.game-shell .world-scale{display:none}.game-shell .world-discovered{bottom:94px;right:16px}.game-shell .world-discovered>span{display:none}}
+@media(max-width:650px){.game-shell .world-topbar{top:10px;left:10px;right:10px;gap:5px;flex-wrap:wrap}.game-shell .world-topbar>div:first-child{padding:9px 12px}.game-shell .world-topbar strong{font-size:16px}.game-brand-sub{font-size:6px;margin-top:4px}.game-shell .world-tools{padding:5px;gap:4px!important}.game-tool{font-size:10px;min-height:30px;padding:5px 7px}.game-tool>span{display:none}.game-shell .world-tools .icon-button{min-width:30px;width:30px;min-height:30px;height:30px}.game-shell .segmented button{font-size:10px;min-height:28px;padding:3px 6px}.game-shell .current-mission{top:133px;left:10px;width:210px;padding:10px 12px}.game-shell .current-mission h2{font-size:13px;margin:6px 0}.game-shell .current-mission p,.game-shell .mission-progress{display:none}.game-shell .current-mission>.button{padding:7px;font-size:10px;margin-top:6px}.game-shell .first-person-hint{top:auto;bottom:256px;left:50%;right:auto;transform:translateX(-50%);max-width:94%;font-size:9px;white-space:normal}.game-shell .world-bottom{left:10px;right:10px;bottom:9px;max-width:none;width:auto;gap:7px;padding:7px;flex-wrap:wrap}.game-shell .world-bottom>span,.game-shell .world-bottom button{font-size:8px}.game-shell .world-bottom>span:nth-child(3),.game-shell .world-bottom>span:nth-child(4),.game-shell .world-bottom>span:nth-child(6){display:none}.game-shell .play-heading>.button{bottom:63px;left:10px;font-size:9px;padding:6px 9px;max-width:220px}.game-shell .world-discovered{bottom:65px;right:10px;padding:8px;font-size:10px}.game-shell .movement-hud{bottom:118px;left:10px}.game-shell .movement-pad{grid-template-columns:repeat(3,29px);grid-template-rows:repeat(3,31px);gap:3px}.game-shell .world-stage .interaction-hud{left:auto;right:10px;transform:none;bottom:125px;width:220px;max-width:calc(100% - 124px)}.game-shell .interact-button{padding:10px;gap:8px}.game-shell .interact-button strong{font-size:11px}.game-shell .interact-button small{font-size:9px}.game-shell .proximity-label{font-size:7px;letter-spacing:.4px}.game-shell .no-nearby{font-size:10px;padding:10px}.game-shell .collision-hint{bottom:296px;font-size:10px}.game-shell .storage-notice{top:238px;right:10px;max-width:calc(100% - 20px);font-size:10px}.colleague-profile{grid-template-columns:1fr;gap:15px}.colleague-portrait{max-width:175px;margin:auto}.colleague-greeting{font-size:15px}.game-shell .fallback-note{bottom:287px;left:10px;right:10px;max-width:none}.resume-pointer{font-size:11px;top:55%;width:230px}}
