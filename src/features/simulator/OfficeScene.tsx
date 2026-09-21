@@ -8,7 +8,7 @@ import {
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, OrbitControls } from "@react-three/drei";
-import { Group, Vector3, Mesh } from "three";
+import { Group, Vector3, Mesh, Raycaster } from "three";
 import { objects, walls } from "../../data/space";
 import { objectParts } from "../../lib/objectGeometry";
 import type {
@@ -22,6 +22,7 @@ import type { Point } from "../../types/domain";
 function PartMesh({ part }: { part: Part }) {
   return (
     <mesh
+      userData={{ cameraObstacle: part.solid !== false }}
       position={part.position}
       rotation={[0, part.yaw ?? 0, part.roll ?? 0]}
       scale={part.shape === 'sphere' ? part.size : undefined}
@@ -86,7 +87,7 @@ function Wheelchair({
     <PartMesh key={key} part={{ position, size, color }} />
   );
   return (
-    <group ref={group}>
+    <group ref={group} userData={{ player: true }}>
       {profile.mode === "wheelchair" ? (
         <>
           {[-1, 1].map((s, i) => (
@@ -297,19 +298,45 @@ function CameraRig({
     />
   );
 }
-function FirstPersonCamera({ pose, pitch, profile, reset }: {
+function FirstPersonCamera({ pose, pitch, profile, reset, thirdPerson }: {
   pose: MutableRefObject<Pose>;
   pitch: MutableRefObject<number>;
   profile: MobilityProfile;
   reset: number;
+  thirdPerson: boolean;
 }) {
-  const { camera } = useThree();
+  const { camera, scene } = useThree();
+  const ray = useRef(new Raycaster());
+  const target = useRef(new Vector3());
+  const offset = useRef(new Vector3());
   useEffect(() => { pitch.current = 0; }, [reset, pitch]);
   useFrame(() => {
     // Eye height is an illustrative seated offset, not a personal reach measurement.
     const eyeHeight = profile.mode === 'wheelchair' ? profile.seatHeightCm / 100 + .65 : 1.6;
-    camera.position.set(pose.current.x, eyeHeight, pose.current.z);
-    camera.rotation.set(pitch.current, pose.current.yaw, 0, 'YXZ');
+    target.current.set(pose.current.x, eyeHeight, pose.current.z);
+    if (!thirdPerson) {
+      camera.position.copy(target.current);
+      camera.rotation.set(pitch.current, pose.current.yaw, 0, 'YXZ');
+      return;
+    }
+    offset.current.set(Math.sin(pose.current.yaw) * Math.cos(pitch.current) * 3,
+      .8 - Math.sin(pitch.current) * 3, Math.cos(pose.current.yaw) * Math.cos(pitch.current) * 3);
+    const distance = offset.current.length();
+    ray.current.set(target.current, offset.current.normalize());
+    ray.current.far = distance;
+    scene.updateMatrixWorld(true);
+    const blockers: Mesh[] = [];
+    scene.traverse(node => {
+      if (!(node instanceof Mesh) || !node.userData.cameraObstacle) return;
+      let parent = node.parent;
+      while (parent) { if (parent.userData.player) return; parent = parent.parent; }
+      blockers.push(node);
+    });
+    const hit = ray.current.intersectObjects(blockers, false)[0];
+    const safeDistance = hit ? Math.max(.08, hit.distance - .18) : distance;
+    camera.position.copy(target.current).addScaledVector(offset.current, safeDistance);
+    camera.lookAt(target.current);
+    scene.traverse(node => { if (node.userData.player) node.visible = safeDistance > .65; });
   });
   return null;
 }
@@ -337,6 +364,7 @@ export interface SceneProps {
   destinationIds: string[];
   inspected: string[];
   firstPerson: boolean;
+  thirdPerson: boolean;
   lookPitch: MutableRefObject<number>;
   reset: number;
   reducedMotion: boolean;
@@ -347,11 +375,11 @@ export default function OfficeScene(p: SceneProps) {
   return (
     <SceneBoundary onError={p.onUnavailable}>
       <Canvas
-        key={p.firstPerson ? 'first-person' : 'overview'}
-        orthographic={!p.firstPerson}
+        key={p.firstPerson || p.thirdPerson ? 'player-camera' : 'overview'}
+        orthographic={!p.firstPerson && !p.thirdPerson}
         shadows
         dpr={[1, 1.5]}
-        camera={p.firstPerson
+        camera={p.firstPerson || p.thirdPerson
           ? { position: [p.pose.current.x, 1.13, p.pose.current.z], fov: 70, near: 0.04, far: 120 }
           : { position: [17, 23, 17], zoom: 25, near: 0.1, far: 120 }}
         gl={{ antialias: true, powerPreference: "low-power" }}
@@ -421,13 +449,13 @@ export default function OfficeScene(p: SceneProps) {
                 color: "#c6d3c3",
               }}
             />
-            <mesh position={[w.position[0], 1.78, w.position[2]]}>
+            <mesh position={[w.position[0], 1.78, w.position[2]]} userData={{ cameraObstacle: true }}>
               <boxGeometry args={[w.size[0], 1.64, w.size[2]]} />
               <meshStandardMaterial
                 color="#b0c4af"
-                transparent={!p.firstPerson}
-                opacity={p.firstPerson ? 1 : 0.085}
-                depthWrite={p.firstPerson}
+                transparent={!p.firstPerson && !p.thirdPerson}
+                opacity={p.firstPerson || p.thirdPerson ? 1 : 0.085}
+                depthWrite={p.firstPerson || p.thirdPerson}
               />
             </mesh>
           </group>
@@ -439,7 +467,7 @@ export default function OfficeScene(p: SceneProps) {
             rotation={[0, o.yaw, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              if (!p.firstPerson) p.onSelect(o.id);
+              if (!p.firstPerson && !p.thirdPerson) p.onSelect(o.id);
             }}
           >
             <ObjectModel object={o} open={p.openDoors.includes(o.id)} />
@@ -462,7 +490,7 @@ export default function OfficeScene(p: SceneProps) {
             )}
           </group>
         ))}
-        {!p.firstPerson && [
+        {!p.firstPerson && !p.thirdPerson && [
           [-6, -6.45, "KHU LÀM VIỆC"],
           [6.1, -6.45, "PHÒNG LOTUS"],
           [-5.6, 1.25, "PANTRY"],
@@ -479,7 +507,7 @@ export default function OfficeScene(p: SceneProps) {
           </Html>
         ))}
         {!p.firstPerson && <Wheelchair profile={p.profile} pose={p.pose} />}
-        {p.firstPerson ? <FirstPersonCamera pose={p.pose} pitch={p.lookPitch} profile={p.profile} reset={p.reset} /> : <CameraRig
+        {p.firstPerson || p.thirdPerson ? <FirstPersonCamera pose={p.pose} pitch={p.lookPitch} profile={p.profile} reset={p.reset} thirdPerson={p.thirdPerson} /> : <CameraRig
           pose={p.pose}
           cameraYaw={p.cameraYaw}
           follow={false}

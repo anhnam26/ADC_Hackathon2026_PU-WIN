@@ -45,6 +45,7 @@ export function useSimulation(
   onInteract: (id: string) => void,
   initial: Pose,
   firstPerson = false,
+  pausedByMenu = false,
 ) {
   const pose = useRef<Pose>({ ...initial });
   const cameraYaw = useRef(Math.PI / 4);
@@ -93,7 +94,7 @@ export function useSimulation(
       const dt = Math.min((now - previous) / 1000, 0.045);
       previous = now;
       const paused =
-        !!document.querySelector("dialog[open]") || document.hidden;
+        pausedByMenu || !!document.querySelector("dialog[open]") || document.hidden;
       if (paused) {
         pressed.current.clear();
         virtual.current.clear();
@@ -193,7 +194,7 @@ export function useSimulation(
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [profile, obstacles, openDoors, firstPerson]);
+  }, [profile, obstacles, openDoors, firstPerson, pausedByMenu]);
   useEffect(() => {
     if (!firstPerson) return;
     const element = stage.current;
@@ -214,6 +215,11 @@ export function useSimulation(
       lookPitch.current = Math.max(-1.1, Math.min(1.1, lookPitch.current - (e.clientY - drag.y) * .004));
       drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
     };
+    const lockedMove = (e: MouseEvent) => {
+      if (document.pointerLockElement !== element || pausedByMenu || document.hidden || document.querySelector('dialog[open]')) return;
+      pendingTurn.current = Math.max(-.3, Math.min(.3, pendingTurn.current - e.movementX * .003));
+      lookPitch.current = Math.max(-1.1, Math.min(1.1, lookPitch.current - e.movementY * .003));
+    };
     element?.addEventListener('pointerdown', down);
     element?.addEventListener('pointermove', move);
     element?.addEventListener('pointerup', release);
@@ -221,6 +227,8 @@ export function useSimulation(
     element?.addEventListener('lostpointercapture', release);
     window.addEventListener('blur', release);
     document.addEventListener('visibilitychange', release);
+    document.addEventListener('mousemove', lockedMove);
+    document.addEventListener('pointerlockchange', release);
     return () => {
       release();
       element?.removeEventListener('pointerdown', down);
@@ -230,8 +238,10 @@ export function useSimulation(
       element?.removeEventListener('lostpointercapture', release);
       window.removeEventListener('blur', release);
       document.removeEventListener('visibilitychange', release);
+      document.removeEventListener('mousemove', lockedMove);
+      document.removeEventListener('pointerlockchange', release);
     };
-  }, [firstPerson, stage]);
+  }, [firstPerson, stage, pausedByMenu]);
   useEffect(() => {
     const release = () => {
       pressed.current.clear();

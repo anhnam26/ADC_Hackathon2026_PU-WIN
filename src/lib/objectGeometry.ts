@@ -21,6 +21,20 @@ export function objectParts(o: WorldObject, open = false, doorAngle?: number): P
     solid,
     yaw,
   });
+  if (o.kind === 'colleague') {
+    const skin = o.colleague!.skin, hair = o.colleague!.hair;
+    return [
+      b(0, h * .59, 0, .34, h * .31, .26),
+      b(-.22, h * .57, 0, .1, h * .31, .2), b(.22, h * .57, 0, .1, h * .31, .2),
+      b(-.22, h * .39, 0, .09, .12, .15, skin), b(.22, h * .39, 0, .09, .12, .15, skin),
+      b(-.1, h * .23, 0, .14, h * .46, .23, '#334653'), b(.1, h * .23, 0, .14, h * .46, .23, '#334653'),
+      b(-.1, .05, -.04, .16, .1, .3, '#263438'), b(.1, .05, -.04, .16, .1, .3, '#263438'),
+      { ...b(0, h - .18, 0, .29, .34, .29, skin, false), shape: 'sphere' },
+      b(0, h - .045, .025, .28, .09, .25, hair, false),
+      b(-.06, h - .15, -.139, .022, .022, .01, '#28302c', false), b(.06, h - .15, -.139, .022, .022, .01, '#28302c', false),
+      b(.08, h * .63, -.138, .09, .12, .013, '#eceddf', false),
+    ];
+  }
   if (o.kind === "door") {
     const cw = o.clearWidth!, leafWidth = cw + .045, hinge = -leafWidth / 2,
       a = doorAngle ?? (open ? Math.PI / 2 : 0);

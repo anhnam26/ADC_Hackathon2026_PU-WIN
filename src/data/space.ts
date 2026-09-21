@@ -1,4 +1,5 @@
 import type { WorldObject, WorldWall, Pose } from "../types/simulator";
+import { colleagues } from './colleagues';
 
 // All spatial data is in METRES. Width=x, height=y, depth=z. Never scale individual assets to fit.
 export const WORLD = {
@@ -52,6 +53,7 @@ const chair = (
   controlHeight: 0.46,
 });
 export const objects: WorldObject[] = [
+  ...colleagues,
   obj({
     id: "entry-door",
     name: "Cửa vào & tay nắm",

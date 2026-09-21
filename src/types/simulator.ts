@@ -28,6 +28,7 @@ export const defaultMobility: MobilityProfile = {
   armrestHeightCm: 70,
 };
 export type ObjectKind =
+  | "colleague"
   | "door"
   | "desk"
   | "chair"
@@ -56,6 +57,15 @@ export interface WorldObject {
   underHeight?: number;
   underWidth?: number;
   controlHeight?: number;
+  colleague?: {
+    role: string;
+    team: string;
+    greeting: string;
+    helpsWith: string[];
+    available: string;
+    skin: string;
+    hair: string;
+  };
 }
 export interface Part {
   position: Point;

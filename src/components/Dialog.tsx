@@ -19,6 +19,7 @@ export default function Dialog({
   useEffect(() => {
     const dialog = ref.current!;
     const previous = document.activeElement as HTMLElement;
+    if (document.pointerLockElement) document.exitPointerLock();
     dialog.showModal();
     return () => {
       dialog.close();
