@@ -1,0 +1,559 @@
+DAY ZERO SIMULATOR — KẾ HOẠCH DEMO 3D TRÊN WEB
+Ngày lập: 21/09/2026
+Mục đích: Tài liệu triển khai demo, đủ để giao cho lập trình viên hoặc AI coding agent.
+
+1. KẾT QUẢ CẦN ĐẠT
+
+Xây dựng một website để nhân viên trải nghiệm trước ngày làm việc đầu tiên:
+  Chọn nhu cầu tiếp cận → khám phá văn phòng 3D → thực hiện lịch trình cá nhân
+  → ghi nhận điều cần xác minh/rào cản → tạo nhiệm vụ HR/Facilities
+  → xem phản hồi chuẩn bị trước ngày bắt đầu.
+
+Một lượt trải nghiệm đầy đủ dài khoảng 5–8 phút. Khi thuyết trình có thể dùng
+kịch bản rút gọn 3 phút ở mục 16.
+
+Giá trị phải thể hiện được: mỗi vấn đề gắn với một địa điểm, một hoạt động,
+một điều kiện tiếp cận và một người/bộ phận chịu trách nhiệm chuẩn bị.
+
+Đầu ra của giai đoạn triển khai:
+- Website chạy bằng npm run dev và bản build tĩnh có thể đưa lên web.
+- Một văn phòng 3D tương tác, 7 chặng trải nghiệm, ít nhất 10 điểm tương tác.
+- Giao diện nhân viên, tổng kết và bảng nhiệm vụ HR/Facilities.
+- Dữ liệu mẫu, nút đặt lại demo, hướng dẫn chạy và kịch bản trình diễn.
+
+2. GIẢ ĐỊNH VÀ PHẠM VI
+
+- Workspace hiện chỉ có các ảnh JPG, chưa có mã nguồn ứng dụng.
+- Chưa có mặt bằng, kích thước, lịch trình hoặc quy trình thật của doanh nghiệp.
+  Dùng doanh nghiệp hư cấu “Day Zero Office” và ghi rõ “Dữ liệu mô phỏng”.
+- Không mặc định các ảnh trong thư mục là ảnh văn phòng hay dùng làm texture.
+  Chỉ sử dụng sau khi xác định được nội dung, mục đích và quyền sử dụng.
+- Ngôn ngữ giao diện: tiếng Việt. Ưu tiên laptop, hỗ trợ xem trên điện thoại.
+- Một tòa nhà, một tầng làm việc, sảnh ở tầng trệt; chuyển tầng theo kịch bản.
+- Một nhân viên mẫu, một ngày làm việc, một phiên trải nghiệm đang hoạt động.
+- Bản đầu không cần đăng nhập, backend, tài khoản doanh nghiệp hay API AI.
+- Đổi vai “Nhân viên / HR & Facilities” chỉ để trình diễn trong cùng ứng dụng.
+  Đây không phải cơ chế xác thực hoặc phân quyền thật.
+- Dữ liệu lưu cục bộ theo trình duyệt. Dashboard chỉ thấy dữ liệu trên cùng
+  trình duyệt/origin; không tuyên bố đã gửi cho HR thật hoặc đồng bộ thiết bị.
+- Nếu buổi demo cần nhân viên và HR dùng hai máy riêng, phải thêm backend
+  theo mục 18 trước khi trình diễn khả năng đó.
+
+3. PHẠM VI ƯU TIÊN
+
+P0 — bắt buộc để hoàn thành demo:
+- Màn hình giới thiệu và chọn điều kiện tiếp cận muốn kiểm tra.
+- Văn phòng 3D dạng mô hình mở mái, góc nhìn chéo từ trên xuống.
+- Di chuyển theo tuyến định sẵn; bấm địa điểm để xem thông tin.
+- Timeline ngày đầu và trạng thái từng chặng.
+- Checklist điều kiện tiếp cận tại từng hoạt động.
+- Ghi nhận rào cản hoặc yêu cầu xác minh, sửa trước khi gửi tổng kết.
+- Chuyển phản hồi thành nhiệm vụ có bộ phận phụ trách và hạn chuẩn bị.
+- Dashboard cập nhật tiến độ; nhân viên xem được phản hồi tương ứng.
+- Lưu trạng thái khi tải lại, đặt lại dữ liệu mẫu, chế độ xem 2D/danh sách.
+
+P1 — làm sau khi P0 chạy xuyên suốt:
+- Minimap đồng bộ với vị trí hiện tại.
+- Đường đi thay thế không có bậc thang trong sơ đồ mẫu.
+- Hiệu ứng mở cửa/thang máy, âm thanh tùy chọn, xuất báo cáo JSON/CSV.
+- Lựa chọn “Xem nhanh 3 phút” dùng cùng dữ liệu và luồng xử lý P0.
+
+P2 — sau hackathon:
+- Nhiều văn phòng/nhân viên, tài khoản thật, thông báo và đồng bộ server.
+- Nhập mặt bằng, trình biên tập văn phòng, tích hợp lịch, video thật.
+- Đi bộ tự do kiểu game, VR, AI phân tích ảnh hoặc sinh mô hình 3D.
+
+Không đưa P2 vào đường găng của demo đầu tiên.
+
+4. TRẢI NGHIỆM VÀ CÁC MÀN HÌNH
+
+4.1. Màn hình bắt đầu
+- Tiêu đề: “Thử ngày đầu, chuẩn bị tốt hơn”.
+- Tóm tắt địa điểm, ngày bắt đầu, số chặng và thời lượng dự kiến.
+- Nút “Bắt đầu trải nghiệm”, “Tiếp tục”, “Xem nhiệm vụ chuẩn bị”.
+- Nhãn “Demo — dữ liệu mô phỏng” luôn nhận biết được.
+
+4.2. Chọn điều kiện muốn xác minh
+- Lối đi không có bậc thang.
+- Vị trí và thông tin nhà vệ sinh phù hợp.
+- Biển chỉ dẫn dễ nhận biết.
+- Phụ đề hoặc nội dung chữ khi họp.
+- Không gian ít tiếng ồn.
+- Thông tin liên hệ khi cần hỗ trợ.
+- “Tôi sẽ chọn theo từng hoạt động” để bắt đầu mà không cần chọn trước.
+- Cho phép chọn nhiều, đổi lại bất kỳ lúc nào; không yêu cầu khai chẩn đoán.
+- Lựa chọn dùng để gợi ý checklist, không tự tạo báo cáo hoặc kết luận rào cản.
+
+4.3. Màn hình mô phỏng chính
+Desktop:
+- Thanh trên: tên văn phòng, tiến độ, đổi chế độ 3D/2D, giảm chuyển động.
+- Cột trái khoảng 240 px: timeline 7 chặng, giờ và trạng thái.
+- Vùng giữa: bản đồ 3D, nhân vật, tuyến đường và điểm tương tác.
+- Cột phải khoảng 320 px: mô tả hoạt động, checklist, nút ghi nhận vấn đề.
+- Thanh dưới: “Quay lại”, “Đến địa điểm”, “Hoàn thành chặng”, “Tổng kết”.
+- Mỗi chặng hiển thị rõ ai có thể hỗ trợ và cần mang theo/chuẩn bị gì.
+
+Mobile:
+- Bản đồ nằm trên; timeline và nội dung chặng nằm dưới bằng tab/bottom sheet.
+- Có nút chọn địa điểm bằng danh sách, không bắt buộc thao tác kéo trên 3D.
+- Ưu tiên chế độ 2D nếu thiết bị không chạy 3D ổn định.
+
+4.4. Form ghi nhận vấn đề
+- Địa điểm và hoạt động tự điền từ ngữ cảnh.
+- Loại: “Cần xác minh” hoặc “Rào cản có thể xảy ra”.
+- Điều kiện liên quan; mô tả ngắn; hỗ trợ mong muốn.
+- Mức ảnh hưởng: cần biết thêm / có thể làm gián đoạn / có thể không thực hiện được.
+- Nút “Lưu vào tổng kết”; thông báo thành công và cập nhật dấu trên bản đồ.
+- Không yêu cầu tải ảnh trong P0.
+
+4.5. Tổng kết cho nhân viên
+- Các chặng đã xem, chặng bỏ qua và phản hồi đã ghi nhận.
+- Gom phản hồi theo địa điểm; cho phép sửa/xóa trước khi xác nhận.
+- Nút “Tạo nhiệm vụ chuẩn bị” và số nhiệm vụ dự kiến.
+- Sau khi tạo: hiện bộ phận phụ trách, hạn dự kiến, trạng thái và phản hồi.
+- Nếu không có phản hồi, hiện kết quả bình thường; không buộc tạo vấn đề.
+
+4.6. Dashboard HR/Facilities
+- Số nhiệm vụ cần xử lý, đang xử lý, chờ nhân viên xác nhận, đã hoàn tất.
+- Bảng: địa điểm, hoạt động, vấn đề, mức ưu tiên, bộ phận, hạn, trạng thái.
+- Bộ lọc theo bộ phận/trạng thái/mức ưu tiên.
+- Bấm nhiệm vụ để xem chi tiết, đổi người phụ trách và ghi phương án hỗ trợ.
+- Nút “Xem địa điểm” mở đúng chặng trên bản đồ.
+- Nhân viên quay lại xem phương án và xác nhận hoặc yêu cầu xem lại.
+
+5. KỊCH BẢN NGÀY LÀM VIỆC ĐẦU TIÊN
+
+Nhân vật mẫu: An — nhân viên mới, ngày bắt đầu do cấu hình demo quyết định.
+Ngày bắt đầu mặc định = ngày mở demo + 7 ngày để tránh hạn mẫu đã quá hạn.
+Giờ trên timeline là lịch giả lập, không yêu cầu người dùng chờ thời gian thật.
+
+Chặng 1 | 08:30 | Đến văn phòng
+- Đi từ điểm đón xe đến cửa chính; xem biển tên tòa nhà.
+- Điểm tương tác: điểm đón/trả, bậc thang, lối bên hông.
+- Thử: chọn tuyến thường hoặc tuyến không có bậc thang.
+- Vấn đề mẫu: “Chưa rõ lối bên hông có mở lúc 08:30 không”.
+
+Chặng 2 | 08:40 | Vào tòa nhà và nhận thẻ
+- Đến quầy lễ tân, xem hướng dẫn nhận thẻ và qua cửa kiểm soát.
+- Điểm tương tác: lễ tân, cổng thẻ, thang máy.
+- Thử: xem ai hỗ trợ nếu chưa có thẻ; chuyển tới tầng làm việc.
+- Vấn đề mẫu: “Cần xác minh cách đi qua cổng khi dùng xe lăn”.
+
+Chặng 3 | 09:00 | Tìm bàn làm việc
+- Đến bàn A12, xác định khu vực đồng nghiệp và nhà vệ sinh gần nhất.
+- Điểm tương tác: bàn A12, lối giữa các bàn, nhà vệ sinh.
+- Thử: mở thông tin bàn và xem tuyến từ bàn đến nhà vệ sinh.
+- Vấn đề mẫu: “Chưa có thông tin kích thước lối vào nhà vệ sinh”.
+
+Chặng 4 | 09:30 | Tham dự họp chào mừng
+- Đi tới phòng Lotus và xem hướng dẫn tham gia cuộc họp.
+- Điểm tương tác: cửa phòng, chỗ ngồi, màn hình họp.
+- Thử: chọn nhu cầu phụ đề/tài liệu chữ, xem trạng thái chuẩn bị.
+- Vấn đề mẫu: “Cần xác nhận phụ đề được bật trong buổi họp”.
+
+Chặng 5 | 12:00 | Ăn trưa
+- Đi tới pantry, xem quầy thức ăn, bàn và khu vực nước uống.
+- Thử: chọn nơi ngồi, xem tuyến đi, kiểm tra thông tin hỗ trợ.
+- Vấn đề mẫu: “Cần chỗ ngồi ít tiếng ồn vào giờ trưa”.
+
+Chặng 6 | 14:00 | Làm việc và nghỉ ngắn
+- Quay về bàn, thử đi tới phòng yên tĩnh và quay lại.
+- Thử: xem cách đặt hoặc sử dụng phòng nghỉ ngắn.
+- Vấn đề mẫu: “Chưa rõ phòng yên tĩnh có cần đăng ký trước không”.
+
+Chặng 7 | 17:00 | Ra về
+- Đi từ bàn qua thang máy, lễ tân đến điểm đón xe.
+- Thử: xem lối ra và liên hệ hỗ trợ cuối ngày.
+- Vấn đề mẫu: “Cần xác nhận lối không có bậc thang vẫn mở lúc ra về”.
+
+Mỗi chặng có các thao tác: đến địa điểm, đọc thông tin, chọn mục cần kiểm tra,
+ghi nhận vấn đề nếu có, hoàn thành hoặc bỏ qua có ghi trạng thái.
+“Hoàn thành chặng” chỉ nghĩa là đã trải nghiệm, không đồng nghĩa nơi đó đã phù hợp.
+
+6. THIẾT KẾ KHÔNG GIAN 3D
+
+Phong cách: low-poly sáng, mô hình mở mái, hình khối rõ, ít chi tiết trang trí.
+Màu đề xuất: nền sáng, teal cho đường đi, xanh cho vị trí hiện tại, cam cho việc
+cần xác minh, đỏ cho vấn đề ảnh hưởng lớn. Luôn kèm biểu tượng và chữ.
+
+Hai scene nhỏ:
+A. Ngoại thất và sảnh: vỉa hè, điểm đón, cửa chính có bậc thang, lối bên hông,
+   lễ tân, cổng thẻ, thang máy.
+B. Tầng làm việc: sảnh thang máy, cụm bàn, phòng Lotus, pantry, nhà vệ sinh,
+   phòng yên tĩnh, hành lang nối các khu vực.
+
+- Dùng hộp, mặt phẳng, hình trụ để dựng tường, bàn, ghế, cửa, cây trang trí.
+- Chưa cần Blender hoặc tài sản 3D mua ngoài để đạt P0.
+- Tường thấp hoặc ẩn tường phía trước camera để không che địa điểm.
+- Nhân vật là biểu tượng/capsule trung tính, không cần rig hoặc animation phức tạp.
+- Tỷ lệ nội bộ: 1 đơn vị = 1 m theo mặt bằng giả lập; không dùng để khẳng định
+  kích thước thật hay tiêu chuẩn tiếp cận của doanh nghiệp.
+- Tách dữ liệu tọa độ khỏi component để thay mặt bằng sau này.
+- Nhãn chính dùng HTML overlay để dễ đọc và tương tác bàn phím.
+- Không dùng góc nhìn/âm thanh mô phỏng khuyết tật; tập trung xác minh điều kiện.
+
+7. CƠ CHẾ DI CHUYỂN VÀ TƯƠNG TÁC
+
+P0 chọn di chuyển có hướng dẫn:
+- Người dùng chọn chặng hoặc bấm điểm tương tác để xem thông tin.
+- Bấm “Đến địa điểm” làm nhân vật đi theo mảng waypoint đã định nghĩa.
+- Điểm tương tác tự mở panel theo locationId; không phụ thuộc khoảng cách
+  nhân vật để người không điều khiển được 3D vẫn thao tác đầy đủ.
+- Camera chuyển nhẹ đến khu vực đích; chế độ giảm chuyển động chuyển tức thì.
+- Cho phép xoay có giới hạn và zoom, có nút “Đặt lại góc nhìn”.
+- Tắt điều khiển camera khi người dùng đang thao tác form/panel phủ lên canvas.
+- Chuyển scene bằng fade ngắn hoặc tức thì; không dựng thang máy vật lý.
+- Tuyến đi có sẵn chạy trong hành lang, không nội suy xuyên tường.
+- Chuyển chặng khi đang di chuyển phải hủy chuyển động cũ rồi chuyển đích mới.
+
+P1 dùng đồ thị các điểm nối nếu cần nhiều tuyến:
+- Node: ngã rẽ, cửa, thang máy, địa điểm.
+- Edge: khoảng cách, có bậc thang, đang mở/đóng, đã xác minh/chưa xác minh.
+- Lọc cạnh theo điều kiện đã biết rồi tìm đường ngắn nhất.
+- Tuyến có thông tin chưa xác minh phải ghi rõ; không gọi là “đảm bảo tiếp cận”.
+- Nếu không có tuyến phù hợp, hiện lý do và nút tạo yêu cầu hỗ trợ.
+
+8. CÔNG NGHỆ VÀ KIẾN TRÚC
+
+Đề xuất:
+- React + TypeScript + Vite: ứng dụng một trang và build tĩnh.
+- Three.js + @react-three/fiber: dựng scene và nối tương tác với React.
+- @react-three/drei: helper camera/controls/HTML overlay khi cần.
+- Zustand: trạng thái phiên, tiến độ, phản hồi, nhiệm vụ và lưu cục bộ.
+- CSS thông thường hoặc CSS Modules: layout, panel và responsive.
+- Icon SVG nội bộ hoặc một thư viện icon thống nhất; tránh thêm UI kit lớn.
+- Vitest cho logic nhiệm vụ; Playwright cho luồng xuyên suốt trọng yếu.
+
+Tương thích phải kiểm tra khi khởi tạo:
+- Tài liệu R3F nêu Fiber 9 đi cùng React 19, Fiber 8 đi cùng React 18 [1].
+- Chọn một bộ phiên bản tương thích, kiểm tra peer dependencies và lưu lockfile.
+- WebGLRenderer hiện dùng WebGL 2 [2]; phát hiện hỗ trợ và cung cấp fallback.
+- Không ép nâng lên mọi bản mới nhất nếu bộ phiên bản đã chọn chạy ổn định.
+
+Luồng dữ liệu:
+  Dữ liệu văn phòng + lịch mẫu
+       ↓
+  Store trạng thái chung
+       ├── Timeline + panel checklist
+       ├── Scene 3D / bản đồ 2D
+       ├── Phản hồi → bộ quy tắc tạo nhiệm vụ → Dashboard
+       └── Lưu localStorage có schemaVersion
+
+Nguyên tắc:
+- 3D là một cách hiển thị; nghiệp vụ nằm ngoài canvas.
+- Một nguồn trạng thái dùng chung cho 3D, 2D, tổng kết và dashboard.
+- Tách dữ liệu cấu hình, logic tạo nhiệm vụ và component hiển thị.
+- Không cần AI để phân loại nhiệm vụ trong demo; quy tắc xác định dễ kiểm chứng.
+- Asset, font và dữ liệu mẫu đóng gói cùng ứng dụng; hạn chế phụ thuộc CDN.
+
+9. MÔ HÌNH DỮ LIỆU
+
+Office:
+  id, name, dataSource (mock/verified), mapVersion, floors[], locations[], routes[]
+
+Location:
+  id, floorId, name, type, position[x,y,z], cameraTarget,
+  description, contact, accessibilityFacts[]
+
+AccessibilityFact:
+  id, category, label, value, verificationStatus (unknown/confirmed),
+  verifiedAt?, verifiedBy?, sourceNote?
+  Thiếu dữ liệu phải hiện “Chưa xác minh”, không mặc định là đáp ứng.
+
+JourneyStep:
+  id, order, time, title, locationId, routeId, instructions[], checklistIds[]
+
+Session:
+  id, employeeDisplayName, startDate, selectedNeeds[], currentStepId,
+  stepStatuses{}, checklistAnswers{}, issueIds[], submittedAt?, schemaVersion
+
+ChecklistAnswer:
+  stepId, checklistId, value (not_reviewed/looks_suitable/needs_verification/barrier)
+  “Có vẻ phù hợp” là đánh giá của người trải nghiệm, không sửa dữ liệu xác minh
+  của doanh nghiệp và không được coi là chứng nhận điều kiện tiếp cận.
+
+Issue:
+  id, sessionId, stepId, locationId, category, kind, impact,
+  description, requestedSupport, state (draft/submitted), createdAt, updatedAt
+
+PreparationTask:
+  id, issueIds[], title, locationId, ownerTeam (HR/Facilities), assignee?,
+  priority, dueDate, status, resolutionNote?, employeeResponse?, history[]
+
+Ví dụ nhiệm vụ:
+  title: “Xác nhận và chuẩn bị phụ đề cho buổi họp chào mừng”
+  locationId: meeting-lotus
+  ownerTeam: HR
+  priority: high
+  dueDate: ngày làm việc đầu tiên - 1 ngày
+  status: todo
+  issueIds: [issue-meeting-captions]
+
+10. QUY TẮC TẠO VÀ THEO DÕI NHIỆM VỤ
+
+Phân công mặc định:
+- Cửa, cổng, thang máy, lối đi, bàn ghế, nhà vệ sinh → Facilities.
+- Hướng dẫn nhận thẻ, lịch họp, phụ đề, tài liệu, người đón → HR.
+- Phòng yên tĩnh: thiết bị/không gian → Facilities; quy trình sử dụng → HR.
+- Vấn đề khác → HR tiếp nhận; người xử lý được đổi bộ phận thủ công.
+
+Ưu tiên:
+- Có thể không thực hiện được hoạt động → high.
+- Có thể làm gián đoạn → medium.
+- Cần biết thêm → normal.
+- Mặc định hạn = trước ngày bắt đầu 1 ngày theo múi giờ văn phòng.
+  Nếu hạn đã qua, giữ ngày và hiện “Quá hạn”; không âm thầm dời hạn.
+
+Luồng tạo:
+1. Checklist “Cần xác minh/Rào cản” mở form có nội dung gợi ý.
+2. Người dùng lưu thì mới tạo Issue, hủy form không tạo báo cáo.
+3. Tổng kết xác nhận một lần để tạo Task từ các Issue chưa có Task.
+4. Gửi lại không tạo trùng: tra liên kết issueId → taskId trước khi tạo.
+5. Không gộp tự động các vấn đề khác nhau chỉ vì cùng địa điểm.
+   Nếu cùng issue được cập nhật, giữ liên kết task và lịch sử thay đổi.
+6. Phản hồi đã gửi không xóa âm thầm; cho phép bổ sung hoặc yêu cầu xem lại.
+
+Vòng đời nhiệm vụ:
+  todo → in_progress → ready_for_review → done
+                            ↓
+                       in_progress nếu nhân viên yêu cầu xem lại
+
+- HR/Facilities cần nhập phương án trước khi chuyển ready_for_review.
+- Nhân viên xác nhận phương án thì chuyển done trong bản demo.
+- Hiển thị lịch sử: ai (vai demo), lúc nào, thay đổi gì.
+- Hoàn tất nhiệm vụ nghĩa là hoàn tất quy trình phản hồi demo; không tự xác nhận
+  điều kiện vật lý ngoài thực tế. Thông tin địa điểm cần được xác minh riêng.
+
+11. CẤU TRÚC MÃ NGUỒN ĐỀ XUẤT
+
+  public/assets/                 Tài sản nội bộ
+  src/app/App.tsx                Khung app, đổi màn hình, vai demo
+  src/data/office.ts             Địa điểm, tọa độ, tuyến đi
+  src/data/journey.ts            Lịch trình và checklist
+  src/data/demoSeed.ts           Dữ liệu mẫu, cấu hình ngày bắt đầu
+  src/types/domain.ts            Kiểu dữ liệu
+  src/store/useDemoStore.ts      State và các action nghiệp vụ
+  src/lib/persistence.ts         Đọc/ghi, version, kiểm tra dữ liệu lưu
+  src/lib/taskRules.ts           Phân công, hạn, ưu tiên, chống tạo trùng
+  src/lib/routes.ts              Waypoint và tìm tuyến nếu làm P1
+  src/features/onboarding/       Giới thiệu và nhu cầu tiếp cận
+  src/features/simulator/        Scene, camera, nhân vật, hotspot
+  src/features/journey/          Timeline, panel, checklist
+  src/features/issues/           Form và tổng kết
+  src/features/tasks/            Dashboard và chi tiết nhiệm vụ
+  src/components/               Dialog, button, status, fallback 2D
+  src/styles/                   Style chung và responsive
+  tests/                        Kiểm thử nghiệp vụ và luồng chính
+  README.md                     Cách cài, chạy, build và trình diễn
+
+12. KHẢ NĂNG TIẾP CẬN VÀ TÍNH ỔN ĐỊNH
+
+- Mọi thao tác chính đều có nút HTML tương ứng ngoài canvas.
+- Tab/Shift+Tab đi theo thứ tự hợp lý; Enter/Space kích hoạt; focus nhìn rõ.
+- Dialog có tiêu đề, nhãn trường, giữ focus phù hợp và trả focus khi đóng.
+- Có lựa chọn giảm chuyển động; mặc định theo thiết lập hệ điều hành.
+- Không tự phát âm thanh, không dùng chớp sáng, không ép điều khiển chuột.
+- Văn bản dễ đọc; biểu tượng trạng thái luôn kèm nhãn chữ.
+- Danh sách 2D dùng cùng checklist, phản hồi và tiến độ như 3D.
+- WebGL không hỗ trợ, lỗi khởi tạo, mất context hoặc asset lỗi: báo ngắn gọn,
+  cho chuyển 2D và giữ lại dữ liệu đã nhập.
+- Dữ liệu lưu lỗi/khác version: xử lý fallback, thông báo trước khi đặt lại.
+- localStorage bị chặn hoặc đầy: giữ phiên trong bộ nhớ và thông báo không lưu
+  được sau khi đóng trang; không chặn trải nghiệm.
+- Trạng thái rỗng, chưa chọn chặng, không có vấn đề, và tải lại đều có UI rõ ràng.
+
+13. HIỆU NĂNG VÀ TRIỂN KHAI
+
+Mục tiêu kỹ thuật để đo trên máy demo thực tế, không phải cam kết sẵn có:
+- Màn hình đầu xuất hiện trong khoảng 3 giây; 3D tương tác trong khoảng 5 giây
+  trên laptop demo và kết nối được kiểm thử.
+- Đạt ít nhất 30 FPS khi di chuyển, hướng tới 60 FPS trên laptop có GPU phù hợp.
+- Hạn chế bóng động và hiệu ứng hậu kỳ; dùng hình học/material tái sử dụng.
+- Chỉ tải scene/asset cần thiết; giới hạn pixel ratio và giảm chất lượng khi cần.
+- Không cập nhật store React liên tục mỗi frame; nội suy chuyển động bằng ref.
+- Khi đứng yên cân nhắc render theo nhu cầu; đảm bảo animation vẫn được cập nhật.
+- Giữ tài sản 3D nhỏ; bản P0 dùng primitive để tránh tải mô hình nặng.
+
+Đưa lên web:
+- Cài dependencies, chạy typecheck/test/build, kiểm tra bằng preview.
+- Dùng static hosting; chọn URL sau khi có bản build hoạt động.
+- Nếu dùng router, cấu hình fallback về index.html hoặc dùng hash routing.
+- Kiểm tra asset base path, tải lại trực tiếp, HTTPS và khả năng dùng WebGL.
+- Chuẩn bị chạy local để trình diễn khi mạng tại sự kiện không ổn định.
+- README ghi rõ lưu cục bộ, không đồng bộ HR thật và cách đặt lại demo.
+
+14. LỘ TRÌNH THỰC HIỆN
+
+Ước lượng cho 1 lập trình viên đã biết React và có kinh nghiệm 3D cơ bản:
+40–52 giờ làm tập trung cho P0. Đây là ước lượng, cần điều chỉnh sau bản scene đầu.
+Nếu mới làm Three.js, dự phòng thêm 1–2 ngày làm quen và xử lý tương tác.
+
+Giai đoạn 1 — Chốt dữ liệu và khung trải nghiệm | 4–5 giờ
+- Tạo project, chọn bộ phiên bản, định nghĩa model và seed data.
+- Phác layout desktop/mobile, 7 chặng, tọa độ và danh sách hotspot.
+- Hoàn thành khi timeline và panel chạy với dữ liệu mẫu chưa có 3D.
+
+Giai đoạn 2 — Scene và hành trình 3D | 10–13 giờ
+- Dựng sảnh và tầng văn phòng; đặt nhãn, camera và nhân vật.
+- Thêm waypoint, chuyển tầng, chọn hotspot và nút đặt lại góc nhìn.
+- Hoàn thành khi đi được toàn bộ 7 chặng, chọn điểm mở đúng panel.
+
+Giai đoạn 3 — Checklist, phản hồi và lưu phiên | 8–10 giờ
+- Chọn nhu cầu, checklist từng chặng, form issue, tổng kết.
+- Lưu/khôi phục dữ liệu, đặt lại demo, trạng thái rỗng.
+- Hoàn thành khi tải lại vẫn thấy tiến độ và phản hồi đã lưu.
+
+Giai đoạn 4 — Nhiệm vụ HR/Facilities | 7–9 giờ
+- Viết quy tắc tạo task, chống trùng, phân công, hạn và độ ưu tiên.
+- Dashboard, chi tiết, phản hồi phương án và xác nhận của nhân viên.
+- Hoàn thành khi issue từ 3D đi hết vòng đời đến done.
+
+Giai đoạn 5 — Hoàn thiện, kiểm thử và trình diễn | 11–15 giờ
+- Fallback 2D, bàn phím, giảm chuyển động, responsive và xử lý lỗi.
+- Kiểm thử nghiệp vụ, đo hiệu năng trên máy demo, tối ưu điểm nghẽn.
+- Build, đưa lên môi trường demo, README và tập kịch bản 3 phút.
+- Hoàn thành khi toàn bộ tiêu chí mục 15 đạt hoặc có giới hạn ghi nhận rõ.
+
+Thứ tự phụ thuộc: model → scene/timeline → issue → task → xác nhận → hoàn thiện.
+Nếu có nhiều người, có thể chia việc UI/3D/nghiệp vụ sau khi thống nhất model.
+
+Mốc kiểm tra quan trọng:
+- Khoảng 1/3 thời gian: scene và 7 chặng hoạt động.
+- Khoảng 2/3 thời gian: tạo được issue và task, đổi vai xem được kết quả.
+- Thời gian còn lại dành cho ổn định và trình diễn; chưa thêm P1 khi P0 còn lỗi.
+
+Phương án rút gọn nếu chỉ có 24 giờ:
+- Một scene văn phòng và khu cổng ghép trong cùng mô hình, nhân vật đơn giản.
+- Giữ đủ 7 chặng nhưng chỉ 3 điểm có checklist chi tiết: lối vào, bàn/WC, họp.
+- Dashboard dạng bảng, tuyến waypoint cố định, không có minimap/âm thanh.
+- Giữ luồng issue → task → phương án → xác nhận, lưu phiên và fallback danh sách.
+- Đây là demo rút gọn, không coi là đã đạt toàn bộ P0 ở trên.
+
+15. KIỂM THỬ VÀ TIÊU CHÍ NGHIỆM THU
+
+Kiểm thử tự động có giá trị:
+- Quy tắc phân loại Facilities/HR, mức ưu tiên và hạn quanh thời điểm đổi ngày.
+- Gửi tổng kết hai lần không sinh task trùng; issue khác nhau không bị gộp mất.
+- Chuyển trạng thái không bỏ qua yêu cầu nhập phương án và xác nhận.
+- Khôi phục dữ liệu hợp lệ; dữ liệu hỏng/khác version không làm app trắng màn hình.
+- Một E2E: bắt đầu → ghi 2 vấn đề → tạo task → HR phản hồi → nhân viên xác nhận.
+
+Kiểm tra thủ công:
+- Trải nghiệm 7 chặng, chuyển nhanh khi nhân vật đang di chuyển, trở lại chặng cũ.
+- Không tạo phản hồi vẫn hoàn thành trải nghiệm được.
+- Sửa nhu cầu không xóa issue đã có hoặc tự thêm issue mới.
+- Hoàn thành bằng bàn phím và chế độ danh sách khi tắt WebGL.
+- Tải lại sau khi lưu issue/task, đặt lại demo, màn hình hẹp, giảm chuyển động.
+- Chrome/Edge trên máy trình diễn; thử Safari/mobile nếu là thiết bị mục tiêu.
+- Kiểm tra không có lỗi console nghiêm trọng, layout che nút hoặc mất focus.
+
+Checklist bàn giao:
+[ ] npm run dev chạy theo README trên máy sạch đã cài runtime phù hợp.
+[ ] TypeScript kiểm tra được, test trọng yếu đạt, npm run build thành công.
+[ ] 7 chặng có địa điểm, hướng dẫn và checklist tương ứng.
+[ ] Ít nhất 10 điểm tương tác mở đúng thông tin.
+[ ] Phản hồi gắn đúng nhân viên mẫu, địa điểm và hoạt động.
+[ ] Task có bộ phận, ưu tiên, hạn và lịch sử cập nhật.
+[ ] Dashboard và màn hình nhân viên đọc cùng nguồn trạng thái.
+[ ] Không tạo trùng khi bấm gửi lại hoặc tải lại trang.
+[ ] Không khẳng định điều kiện chưa xác minh là đáp ứng.
+[ ] Hoàn thành được luồng khi 3D không khả dụng.
+[ ] Reset đưa về dữ liệu mẫu dự kiến, không còn task phiên trước.
+[ ] Demo 3 phút chạy liên tục, có bản local dự phòng và link web đã kiểm tra.
+
+16. KỊCH BẢN THUYẾT TRÌNH 3 PHÚT
+
+00:00–00:20 — Nêu tình huống
+“An bắt đầu đi làm tuần tới và muốn biết đường vào, nơi làm việc và cách tham
+gia cuộc họp. An có thể thử hành trình trước và báo điều cần chuẩn bị.”
+
+00:20–00:40 — Chọn điều kiện
+Chọn “Lối đi không có bậc thang” và “Phụ đề/nội dung chữ khi họp”.
+Mở mô hình văn phòng và chỉ timeline cá nhân.
+
+00:40–01:15 — Phát hiện tại lối vào
+Đến cửa chính, xem lối bên hông, ghi “Cần xác minh giờ mở lối bên hông”.
+Chỉ ra phản hồi đã gắn địa điểm và chặng đến văn phòng.
+
+01:15–01:40 — Chuẩn bị cuộc họp
+Chọn chặng họp, xem phòng Lotus, ghi yêu cầu phụ đề cho buổi chào mừng.
+
+01:40–02:15 — Chuyển thành việc chuẩn bị
+Mở tổng kết, tạo nhiệm vụ, đổi vai dashboard trong cùng trình duyệt.
+Cho thấy việc lối vào thuộc Facilities và việc phụ đề thuộc HR.
+
+02:15–02:45 — Khép kín vòng phản hồi
+HR ghi phương án “Đã chuẩn bị phụ đề và gửi tài liệu trước buổi họp”.
+Chuyển về nhân viên, xem phản hồi, xác nhận phương án.
+
+02:45–03:00 — Kết luận sản phẩm
+“Những điều chưa rõ trong ngày đầu trở thành công việc có người phụ trách
+trước khi nhân viên đến văn phòng.”
+
+Chỉ cập nhật văn bản/trạng thái trong demo; không nói đã thực sự sửa cơ sở
+vật chất hoặc gửi thông báo ra hệ thống bên ngoài.
+
+17. RỦI RO VÀ CÁCH GIỮ TIẾN ĐỘ
+
+- Chưa có mặt bằng thật: dùng map giả lập có nhãn; tách cấu hình để thay sau.
+- Mất thời gian tạo mô hình đẹp: dùng primitive, ưu tiên nhãn và đường đi rõ.
+- Điều khiển gây khó dùng: guided tour là mặc định, có danh sách địa điểm.
+- Máy yếu: giảm hiệu ứng/pixel ratio, ít object, chuyển 2D khi cần.
+- Scene đẹp nhưng không thể hiện giá trị: kiểm tra sớm luồng issue → task.
+- Demo không có dữ liệu để kể chuyện: seed địa điểm có thông tin chưa xác minh,
+  nhưng task được tạo qua thao tác thật; không âm thầm dựng kết quả giả.
+- Lẫn trạng thái trải nghiệm với mức sẵn sàng: tách tiến độ chặng và task mở;
+  không hiển thị “100% sẵn sàng” chỉ vì đã xem xong bản đồ.
+
+18. ĐƯỜNG NÂNG CẤP TỪ DEMO ĐẾN PILOT THỰC TẾ
+
+Bước 1 — Chuẩn hóa dữ liệu doanh nghiệp
+- Thu thập mặt bằng và quyền sử dụng, nhãn phòng, lối vào/ra, giờ hoạt động.
+- HR cung cấp lịch onboarding; Facilities xác minh các dữ kiện không gian.
+- Ghi nguồn, thời điểm và người xác minh; để unknown cho thông tin còn thiếu.
+- Không suy ra kích thước hoặc mức đáp ứng chỉ từ ảnh chụp.
+
+Bước 2 — Backend và tài khoản
+- Lưu office/journey/session/issue/task trong database.
+- Nhân viên chỉ xem dữ liệu của mình; HR/Facilities theo phạm vi phụ trách.
+- Thêm API, xác thực, lịch sử thao tác và đồng bộ thay đổi.
+- Khi cần demo hai thiết bị, đây là phần mở rộng tối thiểu phải làm trước.
+
+Bước 3 — Quy trình thật
+- Thống nhất bộ phận nhận việc, người xử lý, thời hạn và cách xác nhận.
+- Chỉ tích hợp email/calendar/ticket khi doanh nghiệp cho phép kết nối.
+- Chỉ lưu thông tin hỗ trợ cần thiết; cho phép kiểm soát người được xem.
+
+Bước 4 — Đánh giá với người dùng
+- Cho nhân viên mới có nhu cầu tiếp cận khác nhau thử trực tiếp.
+- Đo khả năng tìm địa điểm, hoàn thành chặng và gửi yêu cầu không cần trợ giúp.
+- Đo số vấn đề được xác minh/chuẩn bị trước ngày đầu và thời gian xử lý.
+- Lấy phản hồi định tính để điều chỉnh nội dung và điều khiển.
+
+19. CHỈ DẪN GIAO CHO AI CODING AGENT KHI BẮT ĐẦU XÂY DỰNG
+
+“Đọc DAY_ZERO_SIMULATOR_PLAN.txt và triển khai P0 theo thứ tự mục 14.
+Bắt đầu từ React + TypeScript + Vite, kiểm tra tương thích dependencies,
+tạo data model và seed data trước khi dựng scene bằng React Three Fiber.
+Dùng hình khối đơn giản, 2 scene, waypoint cố định và giao diện tiếng Việt.
+Hoàn thiện một luồng từ ghi nhận vấn đề đến HR/Facilities phản hồi và nhân viên
+xác nhận trước khi bổ sung hiệu ứng. Dữ liệu lưu cục bộ, hiển thị rõ chế độ demo.
+Mọi chức năng chính phải có cách dùng ngoài canvas. Chạy kiểm tra theo mục 15,
+viết README và báo rõ chức năng đã hoàn thành cùng giới hạn còn lại.”
+
+20. NGUỒN THAM KHẢO KỸ THUẬT
+
+Đã đối chiếu tài liệu chính thức khi lập kế hoạch; kiểm tra lại phiên bản lúc cài.
+[1] React Three Fiber — Introduction, quan hệ phiên bản React/Fiber:
+    https://r3f.docs.pmnd.rs/getting-started/introduction
+[2] Three.js — WebGLRenderer, yêu cầu WebGL 2:
+    https://threejs.org/docs/pages/WebGLRenderer.html
+[3] React Three Fiber — Your first scene:
+    https://r3f.docs.pmnd.rs/getting-started/your-first-scene
+[4] React Three Fiber — Canvas:
+    https://r3f.docs.pmnd.rs/api/canvas
+[5] Drei — Controls introduction:
+    https://drei.docs.pmnd.rs/controls/introduction
+
+Các con số về thời gian, hiệu năng và phạm vi là đề xuất lập kế hoạch cho demo,
+không phải kết quả đo của một ứng dụng đã được xây dựng.
