@@ -25,18 +25,19 @@ Trang trắng hoặc báo thiếu thư viện: dừng server của dự án bằ
 
 | Điều khiển | Hành động |
 | --- | --- |
-| W / ↑ | Di chuyển lên phía trên màn hình |
-| S / ↓ | Di chuyển xuống phía dưới màn hình |
-| A / ← | Di chuyển sang trái màn hình |
-| D / → | Di chuyển sang phải màn hình |
+| W / ↑ | Tiến về phía trước theo hướng nhìn |
+| S / ↓ | Lùi lại, giữ hướng nhìn |
+| A / ← | Di chuyển ngang sang trái |
+| D / → | Di chuyển ngang sang phải |
 | Q / E | Xoay xe tại chỗ trái / phải |
 | Giữ Shift | Di chuyển chậm để căn qua cửa |
 | F | Tương tác đồ vật ở gần, trong khoảng 1,35 m từ tâm nhân vật đến bề mặt |
 | Escape | Đóng bảng thông tin hoặc thu gọn bản đồ |
-| Kéo chuột / cuộn | Xoay / phóng to góc nhìn |
-| Nút tâm ngắm | Chuyển giữa toàn cảnh và camera theo nhân vật |
+| Giữ chuột trái và kéo / vuốt trên cảnh 3D | Quay hướng xe, nhìn lên/xuống |
+| Nút tâm ngắm | Chuyển giữa góc nhìn thứ nhất và toàn cảnh |
+| Đặt lại góc nhìn | Nhìn ngang trở lại; giữ vị trí và hướng xe |
 
-WASD được tính theo hướng camera. Khi đổi hướng, xe xoay dần; có thể lùi mà không bắt buộc quay đầu trong cửa hẹp. Đây là điều khiển khám phá bằng dấu chiếm chỗ hình chữ nhật, không mô phỏng cơ học bánh xe hoặc sức đẩy.
+Mặc định mở **góc nhìn thứ nhất**. Camera đặt tại tâm xe, cao bằng mặt ngồi + 65 cm (giả định minh họa, không phải số đo cơ thể cá nhân); nhân vật đi bộ dùng tầm mắt 1,60 m. Không có rung/lắc đầu hoặc zoom khi di chuyển. Kéo ngang hoặc Q/E quay cả xe và camera, vẫn xét va chạm khi xoay; kéo dọc nhìn lên/xuống. WASD tính theo hướng nhìn, A/D đi ngang và S lùi không tự quay camera. Đây là điều khiển khám phá bằng dấu chiếm chỗ hình chữ nhật, không mô phỏng cơ học bánh xe hoặc sức đẩy. Trong toàn cảnh/2D, WASD vẫn di chuyển theo màn hình như trước. Cuộn chuột chỉ phóng to ở toàn cảnh.
 
 Nút mũi tên trên màn hình dùng được bằng chạm/chuột, hoặc giữ Enter/Space khi nút có focus. Bàn phím không điều khiển xe khi đang nhập liệu, mở dialog hoặc rời khỏi vùng trò chơi. Không có chế độ nhân vật tự đi đến đích. Chọn chặng chỉ thay đổi mục tiêu, không dịch chuyển nhân vật. **Về lối vào** là nút đặt lại vị trí có chủ ý khi cần bắt đầu lại.
 
@@ -49,8 +50,8 @@ Nút mũi tên trên màn hình dùng được bằng chạm/chuột, hoặc gi�
 - Cửa phải mở trước khi đi qua. Quá trình kiểm tra mở/đóng xét toàn bộ cung quét để tránh cánh cửa xuyên người.
 - Các cửa thông thủy 126, 84, 85 và 76 cm để thử các tình huống khác nhau. Xe 70 cm có thể đi thẳng qua cửa 76 cm; xe 85 cm sẽ không lọt.
 - Hình minh họa đồ vật, mô hình 3D và dữ liệu va chạm dùng chung `objectParts()`. Hình chi tiết phóng to để đọc; vật trong văn phòng luôn giữ tỷ lệ mét.
-- Phần trên tường được làm trong suốt để người dùng quan sát nhân vật, nhưng kích thước mặt bằng và va chạm không thay đổi.
-- Camera toàn cảnh giữ góc chéo như bản đầu, có chế độ bám nhân vật để nhìn rõ xe và vật dụng.
+- Góc nhìn thứ nhất có tường kín và ẩn mô hình cơ thể để tránh che camera. Trong toàn cảnh, phần trên tường trong suốt để quan sát nhân vật; va chạm giữ nguyên.
+- Có thể chuyển giữa góc nhìn thứ nhất và toàn cảnh góc chéo mà không đổi vị trí/hướng xe. Nhấn F hoặc nút tương tác để mở thông tin; kéo nhìn không tự mở đồ vật.
 - Khi WebGL không khả dụng/mất context, chuyển sang bản đồ 2D với cùng vị trí, điều khiển, kích thước, cửa và va chạm.
 
 ## Thông tin và nhiệm vụ chuẩn bị

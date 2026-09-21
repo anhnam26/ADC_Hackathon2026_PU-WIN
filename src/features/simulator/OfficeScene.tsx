@@ -297,6 +297,22 @@ function CameraRig({
     />
   );
 }
+function FirstPersonCamera({ pose, pitch, profile, reset }: {
+  pose: MutableRefObject<Pose>;
+  pitch: MutableRefObject<number>;
+  profile: MobilityProfile;
+  reset: number;
+}) {
+  const { camera } = useThree();
+  useEffect(() => { pitch.current = 0; }, [reset, pitch]);
+  useFrame(() => {
+    // Eye height is an illustrative seated offset, not a personal reach measurement.
+    const eyeHeight = profile.mode === 'wheelchair' ? profile.seatHeightCm / 100 + .65 : 1.6;
+    camera.position.set(pose.current.x, eyeHeight, pose.current.z);
+    camera.rotation.set(pitch.current, pose.current.yaw, 0, 'YXZ');
+  });
+  return null;
+}
 class SceneBoundary extends Component<
   { children: ReactNode; onError: () => void },
   { failed: boolean }
@@ -320,7 +336,8 @@ export interface SceneProps {
   nearest: string | null;
   destinationIds: string[];
   inspected: string[];
-  follow: boolean;
+  firstPerson: boolean;
+  lookPitch: MutableRefObject<number>;
   reset: number;
   reducedMotion: boolean;
   onUnavailable: () => void;
@@ -330,10 +347,13 @@ export default function OfficeScene(p: SceneProps) {
   return (
     <SceneBoundary onError={p.onUnavailable}>
       <Canvas
-        orthographic
+        key={p.firstPerson ? 'first-person' : 'overview'}
+        orthographic={!p.firstPerson}
         shadows
         dpr={[1, 1.5]}
-        camera={{ position: [17, 23, 17], zoom: 25, near: 0.1, far: 120 }}
+        camera={p.firstPerson
+          ? { position: [p.pose.current.x, 1.13, p.pose.current.z], fov: 70, near: 0.04, far: 120 }
+          : { position: [17, 23, 17], zoom: 25, near: 0.1, far: 120 }}
         gl={{ antialias: true, powerPreference: "low-power" }}
         onCreated={({ gl }) => gl.setClearColor("#edf1e7")}
       >
@@ -405,9 +425,9 @@ export default function OfficeScene(p: SceneProps) {
               <boxGeometry args={[w.size[0], 1.64, w.size[2]]} />
               <meshStandardMaterial
                 color="#b0c4af"
-                transparent
-                opacity={0.085}
-                depthWrite={false}
+                transparent={!p.firstPerson}
+                opacity={p.firstPerson ? 1 : 0.085}
+                depthWrite={p.firstPerson}
               />
             </mesh>
           </group>
@@ -419,7 +439,7 @@ export default function OfficeScene(p: SceneProps) {
             rotation={[0, o.yaw, 0]}
             onClick={(e) => {
               e.stopPropagation();
-              p.onSelect(o.id);
+              if (!p.firstPerson) p.onSelect(o.id);
             }}
           >
             <ObjectModel object={o} open={p.openDoors.includes(o.id)} />
@@ -442,7 +462,7 @@ export default function OfficeScene(p: SceneProps) {
             )}
           </group>
         ))}
-        {[
+        {!p.firstPerson && [
           [-6, -6.45, "KHU LÀM VIỆC"],
           [6.1, -6.45, "PHÒNG LOTUS"],
           [-5.6, 1.25, "PANTRY"],
@@ -458,15 +478,15 @@ export default function OfficeScene(p: SceneProps) {
             <span className="room-label">{name}</span>
           </Html>
         ))}
-        <Wheelchair profile={p.profile} pose={p.pose} />
-        <CameraRig
+        {!p.firstPerson && <Wheelchair profile={p.profile} pose={p.pose} />}
+        {p.firstPerson ? <FirstPersonCamera pose={p.pose} pitch={p.lookPitch} profile={p.profile} reset={p.reset} /> : <CameraRig
           pose={p.pose}
           cameraYaw={p.cameraYaw}
-          follow={p.follow}
+          follow={false}
           reset={p.reset}
           reducedMotion={p.reducedMotion}
           onLost={p.onUnavailable}
-        />
+        />}
       </Canvas>
     </SceneBoundary>
   );

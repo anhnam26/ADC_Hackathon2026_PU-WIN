@@ -152,7 +152,7 @@ export default function Welcome({ onClose }: { onClose: () => void }) {
             <kbd>W</kbd>
             <kbd>A</kbd>
             <kbd>S</kbd>
-            <kbd>D</kbd> Di chuyển chủ động
+            <kbd>D</kbd> Di chuyển theo hướng nhìn
           </span>
           <span>
             <kbd>F</kbd> Tương tác khi ở gần
@@ -162,6 +162,7 @@ export default function Welcome({ onClose }: { onClose: () => void }) {
             <kbd>E</kbd> Xoay tại chỗ
           </span>
         </div>
+        <p className="profile-disclaimer">Góc nhìn thứ nhất · Giữ chuột trái và kéo hoặc vuốt trên cảnh để nhìn quanh. Q/E xoay xe khi dùng bàn phím.</p>
         <p className="profile-disclaimer">
           Văn phòng mẫu · 1 đơn vị = 1 mét. So sánh hình học giúp phát hiện điều
           cần xác minh, không xác nhận khả năng tiếp cận ở công ty thật.

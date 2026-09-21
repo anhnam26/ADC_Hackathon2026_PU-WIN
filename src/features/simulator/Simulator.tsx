@@ -73,7 +73,7 @@ export default function Simulator({
     webglAvailable() ? "3d" : "2d",
   );
   const [failed, setFailed] = useState(mode === "2d");
-  const [follow, setFollow] = useState(false),
+  const [firstPerson, setFirstPerson] = useState(true),
     [reset, setReset] = useState(0),
     [full, setFull] = useState(false);
   const [catalog, setCatalog] = useState(false);
@@ -90,6 +90,7 @@ export default function Simulator({
     stage,
     handleInteract,
     session.playerPose,
+    mode === '3d' && firstPerson,
   );
   const nearestId = sim.view.nearby.includes(chosen ?? "")
     ? chosen
@@ -204,7 +205,7 @@ export default function Simulator({
     return null;
   };
   const controls: { key: Control; label: string; icon: React.ReactNode }[] = [
-    { key: "forward", label: "Tiến lên màn hình", icon: <ArrowUp size={19} /> },
+    { key: "forward", label: mode === '3d' && firstPerson ? "Tiến về phía trước" : "Tiến lên màn hình", icon: <ArrowUp size={19} /> },
     {
       key: "left",
       label: "Di chuyển sang trái",
@@ -212,7 +213,7 @@ export default function Simulator({
     },
     {
       key: "backward",
-      label: "Lùi xuống màn hình",
+      label: mode === '3d' && firstPerson ? "Lùi lại" : "Lùi xuống màn hình",
       icon: <ArrowDown size={19} />,
     },
     {
@@ -280,9 +281,11 @@ export default function Simulator({
               </div>
               <button
                 className="icon-button"
-                aria-label={follow ? "Xem toàn văn phòng" : "Theo nhân vật"}
-                onClick={() => setFollow((v) => !v)}
-                aria-pressed={follow}
+                aria-label={firstPerson ? "Xem toàn văn phòng" : "Góc nhìn thứ nhất"}
+                title={firstPerson ? "Xem toàn văn phòng" : "Góc nhìn thứ nhất"}
+                disabled={mode !== '3d'}
+                onClick={() => setFirstPerson((v) => !v)}
+                aria-pressed={firstPerson}
               >
                 <Crosshair size={18} />
               </button>
@@ -312,6 +315,7 @@ export default function Simulator({
             data-x={sim.view.pose.x.toFixed(3)}
             data-z={sim.view.pose.z.toFixed(3)}
             data-yaw={sim.view.pose.yaw.toFixed(3)}
+            data-camera={mode === '2d' ? 'map' : firstPerson ? 'first-person' : 'overview'}
             onPointerDown={(e) => {
               if (!(e.target as HTMLElement).closest("button,select"))
                 focusGame();
@@ -334,7 +338,8 @@ export default function Simulator({
                   nearest={nearestId}
                   destinationIds={objectiveIds}
                   inspected={session.inspectedIds}
-                  follow={follow}
+                  firstPerson={firstPerson}
+                  lookPitch={sim.lookPitch}
                   reset={reset}
                   reducedMotion={session.reducedMotion}
                   onUnavailable={unavailable}
@@ -362,6 +367,7 @@ export default function Simulator({
               {session.inspectedIds.length}/{objects.length}
               <span> đồ vật đã tìm hiểu</span>
             </div>
+            {mode === '3d' && firstPerson && <div className="first-person-hint">Góc nhìn thứ nhất · Kéo chuột / vuốt để nhìn · Q/E xoay xe</div>}
             <div className="movement-hud">
               <div className="movement-pad">
                 {controls.map((c) => (
@@ -462,7 +468,7 @@ export default function Simulator({
               <kbd>W</kbd>
               <kbd>A</kbd>
               <kbd>S</kbd>
-              <kbd>D</kbd> Di chuyển theo màn hình
+              <kbd>D</kbd> {mode === '3d' && firstPerson ? 'Di chuyển theo hướng nhìn' : 'Di chuyển theo màn hình'}
             </span>
             <span>
               <kbd>F</kbd> Tương tác

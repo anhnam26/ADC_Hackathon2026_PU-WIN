@@ -79,13 +79,48 @@ test('object-specific report keeps its measurements through the HR workflow and 
   await expect(page.locator('tbody')).toContainText('Đã hoàn tất');
 });
 
-test('3D scene loads; two camera modes, wheelchair and object illustration render', async ({ page }) => {
+test('first-person movement, drag look, overview and F interaction work without moving the player on camera switches', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await start(page, false);
-  await expect(page.locator('canvas')).toBeVisible(); await expect(page.locator('.player-tag')).toBeVisible();
+  const stage = page.getByTestId('game-stage');
+  await expect(page.locator('canvas')).toBeVisible();
+  await expect(stage).toHaveAttribute('data-camera', 'first-person');
+  await expect(page.locator('.player-tag')).toHaveCount(0);
+  await page.screenshot({ path: 'test-results/simulator-first-person.png', fullPage: true });
+  const before = await z(page);
+  await holdUntil(page, 's', async () => await z(page) > before + .15);
+  await expect(stage).toHaveAttribute('data-yaw', '0.000');
+  await holdUntil(page, 'w', async () => await z(page) < before + .03);
+  await stage.focus(); await page.keyboard.press('f');
+  await expect(page.locator('.object-illustration')).toBeVisible();
+  await page.getByRole('button', { name: 'Mở cửa', exact: true }).click();
+  await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
+  await holdUntil(page, 'w', async () => await z(page) < 6.15);
+  const canvas = page.locator('canvas');
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 90, box.y + box.height / 2 + 30, { steps: 15 });
+  await expect.poll(async () => Number(await stage.getAttribute('data-yaw'))).toBeLessThan(-.1);
+  await page.mouse.up();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  // Keyboard steering remains available without a mouse.
+  const yaw = Number(await stage.getAttribute('data-yaw'));
+  await holdUntil(page, 'q', async () => Number(await stage.getAttribute('data-yaw')) > yaw + .15);
+  await page.waitForTimeout(150);
+  const stopped = await z(page);
+  await page.getByRole('button', { name: 'Xem toàn văn phòng', exact: true }).click();
+  await expect(page.locator('.player-tag')).toBeVisible();
+  expect(await z(page)).toBeCloseTo(stopped, 2);
   await page.screenshot({ path: 'test-results/simulator-overview.png', fullPage: true });
-  await page.getByRole('button', { name: 'Theo nhân vật', exact: true }).click();
-  await page.screenshot({ path: 'test-results/simulator-closeup.png', fullPage: true });
+  await page.getByRole('button', { name: 'Góc nhìn thứ nhất', exact: true }).click();
+  await expect(stage).toHaveAttribute('data-camera', 'first-person');
+  await expect(page.locator('.player-tag')).toHaveCount(0);
+  expect(await z(page)).toBeCloseTo(stopped, 2);
+  await page.screenshot({ path: 'test-results/simulator-first-person-inside.png', fullPage: true });
+  await page.getByRole('button', { name: 'Về lối vào', exact: true }).click();
+  await holdUntil(page, 'w', async () => await z(page) < 7.9);
+  await expect(page.locator('.interact-button')).toBeVisible();
   await page.getByTestId('game-stage').focus(); await page.keyboard.press('f');
   await expect(page.locator('.object-illustration')).toBeVisible();
   await page.screenshot({ path: 'test-results/simulator-object.png', fullPage: true });

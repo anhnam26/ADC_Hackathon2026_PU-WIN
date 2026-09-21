@@ -44,9 +44,12 @@ export function useSimulation(
   stage: RefObject<HTMLDivElement | null>,
   onInteract: (id: string) => void,
   initial: Pose,
+  firstPerson = false,
 ) {
   const pose = useRef<Pose>({ ...initial });
   const cameraYaw = useRef(Math.PI / 4);
+  const lookPitch = useRef(0);
+  const pendingTurn = useRef(0);
   const pressed = useRef(new Set<string>());
   const virtual = useRef(new Set<Control>());
   const [view, setView] = useState({
@@ -65,7 +68,15 @@ export function useSimulation(
     pose.current = { ...SPAWN };
     pressed.current.clear();
     virtual.current.clear();
+    pendingTurn.current = 0;
+    lookPitch.current = 0;
   }, []);
+  useEffect(() => {
+    pendingTurn.current = 0;
+    pressed.current.clear();
+    virtual.current.clear();
+    if (firstPerson) cameraYaw.current = pose.current.yaw;
+  }, [firstPerson]);
   useEffect(() => {
     // A wider chair must never spawn intersecting furniture after changing its dimensions.
     if (savedProfile.current !== JSON.stringify(profile)) {
@@ -86,6 +97,7 @@ export function useSimulation(
       if (paused) {
         pressed.current.clear();
         virtual.current.clear();
+        pendingTurn.current = 0;
       }
       const controls = new Set(
         [...pressed.current]
@@ -94,7 +106,8 @@ export function useSimulation(
       );
       let blocked = "",
         moving = false;
-      if (!paused && controls.size) {
+      if (firstPerson) cameraYaw.current = pose.current.yaw;
+      if (!paused && (controls.size || pendingTurn.current)) {
         let x = Number(controls.has("right")) - Number(controls.has("left"));
         let z =
           Number(controls.has("backward")) - Number(controls.has("forward"));
@@ -117,7 +130,9 @@ export function useSimulation(
             Number(controls.has("turnRight"))) *
           dt *
           1.5;
-        if (length && !turn) {
+        if (firstPerson) turn += pendingTurn.current;
+        pendingTurn.current = 0;
+        if (!firstPerson && length && !turn) {
           let wanted = Math.atan2(-worldX, -worldZ);
           let difference = Math.atan2(
             Math.sin(wanted - pose.current.yaw),
@@ -178,7 +193,45 @@ export function useSimulation(
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [profile, obstacles, openDoors]);
+  }, [profile, obstacles, openDoors, firstPerson]);
+  useEffect(() => {
+    if (!firstPerson) return;
+    const element = stage.current;
+    let drag: { id: number; x: number; y: number } | null = null;
+    const release = () => {
+      drag = null;
+      pendingTurn.current = 0;
+    };
+    const down = (e: PointerEvent) => {
+      if (!(e.target instanceof HTMLCanvasElement) || e.button !== 0 || document.querySelector('dialog[open]')) return;
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      e.target.setPointerCapture(e.pointerId);
+    };
+    const move = (e: PointerEvent) => {
+      if (!drag || drag.id !== e.pointerId) return;
+      if (document.querySelector('dialog[open]') || document.hidden || !element?.contains(document.activeElement)) { release(); return; }
+      pendingTurn.current = Math.max(-.3, Math.min(.3, pendingTurn.current - (e.clientX - drag.x) * .004));
+      lookPitch.current = Math.max(-1.1, Math.min(1.1, lookPitch.current - (e.clientY - drag.y) * .004));
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    };
+    element?.addEventListener('pointerdown', down);
+    element?.addEventListener('pointermove', move);
+    element?.addEventListener('pointerup', release);
+    element?.addEventListener('pointercancel', release);
+    element?.addEventListener('lostpointercapture', release);
+    window.addEventListener('blur', release);
+    document.addEventListener('visibilitychange', release);
+    return () => {
+      release();
+      element?.removeEventListener('pointerdown', down);
+      element?.removeEventListener('pointermove', move);
+      element?.removeEventListener('pointerup', release);
+      element?.removeEventListener('pointercancel', release);
+      element?.removeEventListener('lostpointercapture', release);
+      window.removeEventListener('blur', release);
+      document.removeEventListener('visibilitychange', release);
+    };
+  }, [firstPerson, stage]);
   useEffect(() => {
     const release = () => {
       pressed.current.clear();
@@ -234,6 +287,7 @@ export function useSimulation(
   return {
     pose,
     cameraYaw,
+    lookPitch,
     view,
     obstacles,
     setControl,

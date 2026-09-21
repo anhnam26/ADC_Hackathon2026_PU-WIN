@@ -360,7 +360,7 @@ export default function App() {
               <section>
                 <h3>01 · Làm quen không gian</h3>
                 <p>
-                  Nhập kích thước xe lăn trong hồ sơ nhân vật. Bấm vào không gian và dùng WASD hoặc phím mũi tên để tự di chuyển. Q/E xoay tại chỗ, giữ Shift để đi chậm.
+                  Nhập kích thước xe lăn trong hồ sơ nhân vật. Góc nhìn thứ nhất đặt bạn ở tầm mắt người ngồi xe. Bấm vào không gian và dùng WASD hoặc phím mũi tên để di chuyển theo hướng nhìn. Giữ chuột trái và kéo hoặc vuốt để nhìn quanh. Q/E xoay xe, giữ Shift để đi chậm. Nút tâm ngắm chuyển sang toàn cảnh.
                 </p>
               </section>
             </div>
