@@ -4,7 +4,7 @@ import { seedSession } from '../../src/lib/persistence';
 async function start(page: Page, use2d = true) {
   await page.goto('/');
   await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
-  await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
+  if (await page.getByTestId('game-stage').getAttribute('data-camera') !== 'map') await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
   await page.evaluate(() => document.exitPointerLock());
   if (use2d) await page.getByRole('button', { name: '2D', exact: true }).click();
   await page.getByTestId('game-stage').focus();

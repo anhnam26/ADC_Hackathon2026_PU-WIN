@@ -51,7 +51,7 @@ export default function Map2D({
       ))}
       {route.length > 1 && <polyline data-testid="floor-route" points={route.map(p => `${p.x},${p.z}`).join(' ')} fill="none" stroke="#c99a16" strokeWidth=".12" />}
       {sceneObjects.map((o) => (
-        <g key={o.id} onClick={() => onSelect(o.id)} cursor="pointer">
+        <g key={o.id} data-object-id={o.id} data-x={o.position[0].toFixed(3)} data-z={o.position[2].toFixed(3)} onClick={() => onSelect(o.id)} cursor="pointer">
           {objectObstacles(o, openDoors.includes(o.id)).map((b, i) => (
             <rect
               key={i}
