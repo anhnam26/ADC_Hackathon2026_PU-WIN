@@ -13,6 +13,21 @@ npm run dev
 
 Mở **http://127.0.0.1:5173/**. Giữ terminal chạy server mở. Nếu cổng bận, dùng địa chỉ Vite in trong terminal. Nếu đang xem bản cũ, nhấn **Ctrl + Shift + R**.
 
+Đăng nhập trước khi trải nghiệm. Hai tài khoản được tạo khi chạy server lần đầu:
+
+| Vai trò | Email | Mật khẩu demo |
+| --- | --- | --- |
+| Nhân viên | employee@dayzero.local | DayZero2026! |
+| Quản lý | manager@dayzero.local | DayZero2026! |
+
+Quản lý vào trang **/admin** để xem bản đồ ghi chú. Nhân viên vào màn thiết lập xe. Nút **Đăng xuất** nằm trong Menu khi chơi và trên thanh đầu trang khi quản trị. Vai trò tài khoản được kiểm tra tại server; bộ chọn vai ở luồng nhiệm vụ cũ chỉ mô phỏng nhiệm vụ cục bộ, không cấp quyền quản trị ghi chú.
+
+API chạy cùng Vite khi dùng `npm run dev` hoặc `npm run preview`, không cần mở server thứ hai. Ghi chú/tài khoản lưu trong `data/dayzero.json` (không đưa vào Git); phiên đăng nhập dùng cookie HttpOnly, hết hạn sau 8 giờ hoặc khi server khởi động lại. Mật khẩu được băm bằng scrypt với salt riêng. Chạy **một tiến trình server** cho mỗi file dữ liệu. Sao lưu file này để giữ ghi chú; không chỉnh file khi server đang chạy.
+
+Để thay mật khẩu tài khoản mẫu trước lần chạy đầu, đặt biến môi trường `DAYZERO_EMPLOYEE_PASSWORD` và `DAYZERO_MANAGER_PASSWORD`. Biến này chỉ áp dụng khi chưa tồn tại file dữ liệu. `DAYZERO_DATA_FILE` chọn file dữ liệu khác; `DAYZERO_SECURE_COOKIE=1` dành cho server đặt sau HTTPS. Đây là tài khoản mẫu phục vụ demo; chưa có tự đăng ký, quên mật khẩu hoặc SSO.
+
+Để hai máy cùng xem một dữ liệu trong mạng nội bộ, chạy `npm run dev -- --host 0.0.0.0` rồi truy cập địa chỉ IP máy chạy server với cổng Vite. Cả hai cần dùng cùng server; localhost trên hai máy là hai nơi khác nhau.
+
 Trang trắng hoặc báo thiếu thư viện: dừng server của dự án bằng `Ctrl + C`, chạy `npm ci` rồi `npm run dev -- --force`. Không chạy `npm ci` trong khi Vite còn chạy trên Windows; esbuild có thể khóa file và khiến quá trình cài đặt dừng với `EPERM`.
 
 ## Bắt đầu trải nghiệm
@@ -36,7 +51,7 @@ Trang trắng hoặc báo thiếu thư viện: dừng server của dự án bằ
 | J | Mở nhật ký, lịch trình và danh mục đối tượng |
 | N | Chọn điểm đến; hiện vạch đường hoặc tự đi |
 | P | Bắt đầu / dừng tự đi tới điểm đã chọn |
-| H | Bật / tắt giọng hướng dẫn theo ngôn ngữ đã chọn |
+| B | Ghi chú bất cập và nguyện vọng tại vị trí hiện tại; xem ghi chú đã gửi |
 | Enter | Khóa lại chuột sau Esc hoặc khi trình duyệt chặn khóa tự động |
 | Escape | Đóng bảng thông tin hoặc trả chuột cho trình duyệt; có thể thoát toàn màn hình tùy trình duyệt |
 | Di chuột / vuốt trên cảnh 3D | Quay hướng xe, nhìn lên/xuống; kéo chuột là phương án dự phòng khi không khóa được |
@@ -71,7 +86,18 @@ Nhấn **N**, chọn đồ vật/đồng nghiệp rồi chọn **Hiện đườn
 
 Chọn **Tiếng Việt / English** ở màn thiết lập hoặc thanh công cụ trong map (nhấn Esc để hiện chuột). Lựa chọn được lưu khi tải lại trang. Giao diện, hướng dẫn, phụ đề, tên phòng và thông tin đối tượng đổi theo ngôn ngữ; tên riêng và nội dung người dùng nhập được giữ nguyên.
 
-Giọng hướng dẫn dùng Web Speech API, chọn giọng `vi-VN` hoặc `en-US` theo ngôn ngữ. Đọc mục tiêu, bắt đầu/chờ/dừng/đến nơi; **phụ đề luôn ở phía dưới màn hình**, kể cả khi tắt tiếng bằng H. Có nút **Nghe lại**. Không dùng microphone. Chất lượng giọng phụ thuộc giọng cài trên máy; thiếu giọng hoặc lỗi phát sẽ hiện thông báo, phụ đề và đường vàng vẫn hoạt động. Hủy hàng đợi cũ khi đổi ngôn ngữ/chỉ dẫn, tắt giọng hoặc rời trang.
+Đã bỏ phát âm thanh, giọng hướng dẫn và phím H. **Phụ đề và vạch chỉ đường vẫn hoạt động**, đổi theo Tiếng Việt / English. Tốc độ xe lăn tăng từ 1,15 lên **1,8 m/s**, đi bộ **2,2 m/s**; tự đi dùng cùng tốc độ. Giữ Shift để đi chậm **0,45 m/s**, căn xe qua cửa. Kiểm tra va chạm vẫn chia thành bước nhỏ để tránh xuyên vật cản.
+
+## Ghi chú vị trí và quản trị
+
+1. Trong map, nhấn **B** hoặc nút **B · Ghi chú vị trí** ở bảng dẫn đường. Không cần đứng gần đồ vật; dùng được ngoài sân, trong phòng, hành lang, tầng 2 và cabin.
+2. Dấu xanh lấy vị trí thực tại lúc mở bảng, gồm tầng, X/Z và cao độ Y. Có thể bấm bản đồ để chỉnh vị trí, hoặc focus bản đồ rồi dùng phím mũi tên (mỗi bước 25 cm). Bản đồ giữ tỷ lệ mét của simulator.
+3. Nhập **Bất cập bạn gặp** và **Nguyện vọng thay đổi**, tối đa 2.000 ký tự mỗi mục; bấm **Gửi ghi chú cho quản lý**. Server gắn người gửi và thời gian từ tài khoản đăng nhập. Lỗi gửi giữ nội dung để thử lại.
+4. Tab **Ghi chú của tôi** hiển thị dấu, nội dung, trạng thái và phản hồi. Nhấn **Tải lại** để nhận đánh giá mới.
+5. Quản lý đăng nhập vào **/admin**: chọn tầng, lọc trạng thái, tìm theo người gửi/nội dung. Bấm dấu đánh số trên bản đồ hoặc mục trong danh sách để xem bất cập và nguyện vọng tại đúng tọa độ.
+6. Nhập **Đánh giá và phương án**, chọn **Đang xem xét / Chấp thuận / Chưa chấp thuận / Đã xử lý** rồi lưu. Trang tự tải ghi chú mỗi 15 giây, có nút tải lại. Nếu quản lý khác đã sửa, cần nạp đánh giá mới để tránh ghi đè.
+
+Ghi chú mới được lưu chung trên server, nhân viên chỉ đọc được ghi chú của chính mình, quản lý xem tất cả. Việc đặt lại trải nghiệm trên trình duyệt không xóa ghi chú đã gửi. Hồ sơ xe, tiến độ, thư đồng nghiệp và luồng nhiệm vụ cũ vẫn lưu trên trình duyệt này; chúng chưa đồng bộ theo tài khoản.
 
 ## Gặp đồng nghiệp
 
@@ -121,6 +147,7 @@ Lưu cục bộ: hồ sơ xe, vị trí/hướng nhân vật, cửa đã mở, �
 ```sh
 npm run typecheck
 npm test
+npm run test:api
 npx playwright install chromium
 npm run test:e2e
 npm run test:production
@@ -137,7 +164,7 @@ npm run build
 npm run preview
 ```
 
-Bản preview ở **http://127.0.0.1:4173/**. Có thể đưa `dist/` lên static hosting; không cần backend hay API key.
+Bản preview ở **http://127.0.0.1:4173/**, có API đăng nhập và ghi chú. Chỉ đưa `dist/` lên static hosting sẽ thiếu API; bản này cần chạy Node/Vite hoặc triển khai API tương ứng. Không cần API key.
 
 ## Cấu trúc dữ liệu không gian
 
@@ -149,7 +176,10 @@ Bản preview ở **http://127.0.0.1:4173/**. Có thể đưa `dist/` lên stati
 - `src/data/colleagues.ts`: 7 hồ sơ nhân vật mẫu, tuyến đi lại, màu mô hình và thông tin hỗ trợ.
 - `src/lib/navigation.ts`: tìm đường có hướng xe, đi chéo và rút gọn các đoạn an toàn.
 - `src/lib/npcMotion.ts`: cập nhật người đi bộ, nhường xe và kiểm tra vật cản.
-- `src/features/simulator/useVoiceGuide.ts`: giọng Việt/Anh, phụ đề, hủy hàng đợi và thông báo lỗi.
+- `src/features/simulator/useTextGuide.ts`: phụ đề hướng dẫn Việt/Anh, không phát âm thanh.
+- `src/features/auth/`: đăng nhập, phiên tài khoản và điều hướng theo vai trò.
+- `src/features/notes/`: ghi chú vị trí, bản đồ 2D và đánh giá của quản lý.
+- `server/api.mjs`: xác thực, phân quyền, lưu ghi chú và cập nhật đánh giá.
 - `src/lib/i18n.ts`, `src/data/objectEnglish.ts`: bản dịch giao diện và hướng dẫn đồ vật; hình học dùng chung.
 - `src/features/simulator/ColleagueInspector.tsx`: hồ sơ đồng nghiệp và chân dung minh họa cục bộ.
 - `src/features/simulator/useGameDisplay.ts`: đồng bộ Fullscreen / Pointer Lock, xử lý lỗi trình duyệt.
@@ -170,7 +200,7 @@ Khi thêm vật dụng thật: nhập số đo mét, vị trí, kiểu hình h�
 - Va chạm là hình học phẳng có hướng quay. Chưa mô phỏng lực đẩy, độ dốc, ma sát, tay/chân thò ra, cử động cơ thể hoặc chuyển người. Mặt bàn/bồn rửa chặn theo hình chiếu bảo thủ; chưa cho đưa đầu gối vào dưới.
 - Độ cao xe, ghế và tay vịn có trong hình và so sánh. Chưa có mô hình tầm với cá nhân; không kết luận khả năng sử dụng máy nước/tay nắm chỉ từ chiều cao.
 - Người dùng đi bộ có thể khám phá cùng không gian nhưng chức năng chính vẫn dành cho người dùng xe lăn.
-- Không có đăng nhập, backend, email, đồng bộ máy khác hoặc gửi task tới HR thật. Đổi vai chỉ trình diễn trong cùng trình duyệt/origin.
+- Đã có đăng nhập và API lưu ghi chú chung cho các máy truy cập cùng server. Chưa có email, SSO, tự đăng ký hoặc đồng bộ tiến độ/luồng nhiệm vụ cũ. Dữ liệu file phục vụ một server demo; chưa phải hệ thống cơ sở dữ liệu nhiều tiến trình.
 - Hoàn thành chặng nghĩa là đã tìm hiểu, không chứng nhận môi trường đáp ứng nhu cầu. Xe đi lọt ô cửa không tự chứng minh có thể sử dụng cả phòng.
 - Chưa đo hiệu năng trên mọi máy; 2D là lựa chọn giữ đầy đủ logic trên thiết bị không chạy 3D ổn định.
 
