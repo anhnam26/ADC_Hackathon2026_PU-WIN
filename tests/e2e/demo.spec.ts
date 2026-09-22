@@ -110,7 +110,7 @@ test('first-person movement, drag look, overview and F interaction work without 
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width / 2 + 90, box.y + box.height / 2 + 30, { steps: 15 });
-  await expect.poll(async () => Number(await stage.getAttribute('data-yaw'))).toBeLessThan(-.1);
+  await expect.poll(async () => Number(await stage.getAttribute('data-look-yaw'))).toBeLessThan(-.1);
   await page.mouse.up();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // Keyboard steering remains available without a mouse.
@@ -142,7 +142,7 @@ test('mobile touch controls move the player in 2D without WebGL', async ({ page 
   await start(page);
   await expect(page.getByRole('button', { name: '3D', exact: true })).toBeDisabled();
   const before = await z(page);
-  const button = page.getByRole('button', { name: "Move up on screen", exact: true });
+  const button = page.getByRole('button', { name: "Drive forward", exact: true });
   await button.dispatchEvent('pointerdown', { pointerId: 1 });
   await expect.poll(() => z(page)).toBeLessThan(before - .1);
   await button.dispatchEvent('pointerup', { pointerId: 1 });

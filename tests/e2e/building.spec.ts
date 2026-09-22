@@ -27,8 +27,8 @@ test('cross-floor autowalk routes via lift, resumes upstairs, persists and retur
   const board=async()=>{
     await page.getByRole('button',{name:"Call lift / Open doors",exact:true}).click();
     await expect(stage).toHaveAttribute('data-lift-phase','open',{timeout:20000});
-    await stage.focus();await page.keyboard.down('a');
-    try{await expect.poll(async()=>Number(await stage.getAttribute('data-x')),{intervals:[60]}).toBeLessThan(-9.85);}finally{await page.keyboard.up('a');}
+    await stage.focus();await page.keyboard.down('w');
+    try{await expect.poll(async()=>Number(await stage.getAttribute('data-x')),{intervals:[60]}).toBeLessThan(-9.85);}finally{await page.keyboard.up('w');}
     await page.waitForTimeout(150);await page.keyboard.press('f');
   };
   await page.evaluate(()=>document.exitPointerLock());await page.getByRole('button',{name:'2D',exact:true}).click();await stage.focus();
@@ -40,8 +40,8 @@ test('cross-floor autowalk routes via lift, resumes upstairs, persists and retur
   await page.getByRole('button',{name:"Go to Floor 2",exact:true}).click();
   await expect(stage).toHaveAttribute('data-floor','2',{timeout:20000});
   await expect(stage).toHaveAttribute('data-lift-phase','open');
-  await stage.focus();await page.keyboard.down('d');
-  try{await expect.poll(async()=>Number(await stage.getAttribute('data-x')),{intervals:[60]}).toBeGreaterThan(-7.6);}finally{await page.keyboard.up('d');}
+  await stage.focus();await page.keyboard.down('s');
+  try{await expect.poll(async()=>Number(await stage.getAttribute('data-x')),{intervals:[60]}).toBeGreaterThan(-7.6);}finally{await page.keyboard.up('s');}
   await expect(page.locator('.subtitle-bar')).toContainText("Arrived at Desk B21",{timeout:30000});
   await page.evaluate(()=>document.exitPointerLock());await page.getByRole('button',{name:'3D',exact:true}).click();await page.getByRole('button',{name:"Office overview",exact:true}).click();
   await expect(page.locator('.room-label').filter({hasText:"SKY MEETING ROOM"})).toBeVisible();

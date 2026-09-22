@@ -12,7 +12,7 @@ test('floor guidance, automatic door opening, arrival and manual override remain
   const stage = page.getByTestId('game-stage');
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
   await page.mouse.move(650, 460);
-  await expect.poll(async () => Math.abs(Number(await stage.getAttribute('data-yaw')))).toBeGreaterThan(.01);
+  await expect.poll(async () => Math.abs(Number(await stage.getAttribute('data-look-yaw')))).toBeGreaterThan(.01);
   await page.keyboard.press('n');
   await expect(page.getByRole('dialog')).toContainText('Where would you like to go');
   await page.getByRole('combobox', { name: "Destination", exact: true }).selectOption('reception-counter');

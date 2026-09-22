@@ -46,7 +46,7 @@ export function createBuildingObjects(base:WorldObject[]):WorldObject[]{
     copy('plant','f2-plant-sky','Sky room planter',10.8,5.5,2),
     copy('quiet-sofa','f2-lounge-sofa','Lounge sofa',-4,-17,2),
     copy('lunch-table','f2-lounge-table','Lounge table',-2,-18.7,2),
-    copy('chair-a13','f2-lounge-chair','Lounge chair',-3.6,-18.7,2),
+    copy('chair-A13','f2-lounge-chair','Lounge chair',-3.6,-18.7,2),
   ];
   for(const floor of [1,2] as const){
     const targetFloor=floor===1?2:1;

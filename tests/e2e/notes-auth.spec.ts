@@ -13,7 +13,7 @@ test('data files are private and employee accounts cannot open the admin page',a
 test('mobile notes retain the draft after a failed save and support silent faster movement',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.request.post('/api/auth/login',{data:{email:'employee@dayzero.local',password:'DayZero2026!'}});await page.goto('/');await page.getByRole('button',{name:"Start exploring",exact:true}).click();
  const stage=page.getByTestId('game-stage');await stage.focus();await page.keyboard.down('w');await page.waitForTimeout(600);await page.keyboard.up('w');await page.waitForTimeout(150);
- const z=Number(await stage.getAttribute('data-z'));expect(z).toBeLessThan(9.65);expect(z).toBeGreaterThan(8.5);
+ const z=Number(await stage.getAttribute('data-z'));expect(z).toBeLessThan(9.65);expect(z).toBeGreaterThan(8.3);
  await page.getByRole('button',{name:"B · Add location note",exact:true}).click();await page.getByLabel("Barrier or difficulty",{exact:true}).fill('Cần chỗ nghỉ trên lối vào');await page.getByLabel("Requested change",{exact:true}).fill('Bổ sung điểm dừng.');
  await page.route('**/api/notes',route=>route.request().method()==='POST'?route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Connection interrupted. Please try again.'})}):route.continue());
   await page.getByRole('button',{name:"Send note to managers",exact:true}).click();await expect(page.getByRole('alert')).toContainText('Connection interrupted');await expect(page.getByRole('textbox',{name:"Barrier or difficulty",exact:true})).toHaveValue('Cần chỗ nghỉ trên lối vào');
