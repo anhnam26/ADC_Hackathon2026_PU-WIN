@@ -1,6 +1,7 @@
 import {mkdirSync,readFileSync,writeFileSync,renameSync,existsSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {randomBytes,randomUUID,scryptSync,timingSafeEqual,createHash} from 'node:crypto';
+import {collisionRoute} from './collisions.mjs';
 
 const hash=value=>createHash('sha256').update(value).digest('hex');
 const passwordHash=(password,salt)=>scryptSync(password,salt,64).toString('hex');
@@ -18,6 +19,8 @@ export function createApi({file=process.env.DAYZERO_DATA_FILE||resolve('data/day
   // A malformed data file must fail startup rather than silently erase shared notes.
   let db=JSON.parse(readFileSync(file,'utf8'));
   if(!Array.isArray(db.users)||!Array.isArray(db.notes))throw new Error('Invalid Day Zero data file');
+  db.collisionRuns??=[];db.collisions??=[];
+  if(!Array.isArray(db.collisionRuns)||!Array.isArray(db.collisions))throw new Error('Invalid collision history');
   const sessions=new Map(),attempts=new Map();
   const commit=next=>{save(next);db=next;};
   return async function api(req,res,next){
@@ -45,6 +48,7 @@ export function createApi({file=process.env.DAYZERO_DATA_FILE||resolve('data/day
       }
       if(url.pathname==='/api/auth/logout'&&req.method==='POST'){if(cookie)sessions.delete(hash(cookie));setCookie('',0);return reply(200,{ok:true});}
       if(!user)return reply(401,{error:"Your session has expired. Please sign in again."});
+      if(await collisionRoute({req,url,user:{...user,name:displayName(user.name)},getDb:()=>db,commit,body,reply}))return;
       if(url.pathname==='/api/notes'&&req.method==='GET')return reply(200,{notes:db.notes.filter(n=>user.role==='manager'||n.authorId===user.id).map(publicNote)});
       if(url.pathname==='/api/notes'&&req.method==='POST'){
         const input=await body(),p=input.position;

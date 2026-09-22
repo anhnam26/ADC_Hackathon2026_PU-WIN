@@ -19,20 +19,22 @@ export function blockingAt(pose: Pose, profile: MobilityProfile, obstacles: Obst
   if (pose.x - halfX < WORLD.minX || pose.x + halfX > WORLD.maxX || pose.z - halfZ < WORLD.minZ || pose.z + halfZ > WORLD.maxZ) return { ...body, id: 'boundary', name: 'Ranh giới văn phòng' };
   return obstacles.find(o => overlaps(body, o));
 }
-export function moveWithCollisions(pose: Pose, dx: number, dz: number, yawChange: number, profile: MobilityProfile, obstacles: Obstacle[]): { pose: Pose; blocked?: Obstacle } {
+export interface CollisionContact {obstacle:Obstacle;pose:Pose;action:'rotation'|'translation'}
+export function moveWithCollisions(pose: Pose, dx: number, dz: number, yawChange: number, profile: MobilityProfile, obstacles: Obstacle[]): { pose: Pose; blocked?: Obstacle;contacts:CollisionContact[] } {
   let next = { ...pose }; let blocked: Obstacle | undefined;
+  const contacts=new Map<string,CollisionContact>();
   // Substeps prevent tunnelling through 14 cm walls, even after a long frame.
   const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / .025), Math.ceil(Math.abs(yawChange) / .035));
   for (let i = 0; i < steps; i++) {
     const turned = { ...next, yaw: next.yaw + yawChange / steps };
     const turnHit = blockingAt(turned, profile, obstacles);
-    if (turnHit) blocked = turnHit; else next = turned;
+    if (turnHit) {blocked = turnHit;if(yawChange&&!contacts.has(turnHit.id))contacts.set(turnHit.id,{obstacle:turnHit,pose:turned,action:'rotation'});} else next = turned;
     const moved = { ...next, x: next.x + dx / steps, z: next.z + dz / steps };
     const hit = blockingAt(moved, profile, obstacles);
-    if (hit) { blocked = hit; break; } else next = moved;
+    if (hit) { blocked = hit;if((dx||dz)&&!contacts.has(hit.id))contacts.set(hit.id,{obstacle:hit,pose:moved,action:'translation'});break; } else next = moved;
   }
   next.yaw = Math.atan2(Math.sin(next.yaw), Math.cos(next.yaw));
-  return { pose: next, blocked };
+  return { pose: next, blocked,contacts:[...contacts.values()] };
 }
 export function distanceToObstacle(pose: Pose, box: Obstacle): number {
   const dx = pose.x - box.x, dz = pose.z - box.z;

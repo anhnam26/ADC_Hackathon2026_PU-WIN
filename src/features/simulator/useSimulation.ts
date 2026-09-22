@@ -19,6 +19,9 @@ import {
   doorCanToggle,
 } from "../../lib/physics";
 import type { MobilityProfile, Pose } from "../../types/simulator";
+import {CollisionEpisodes} from '../../lib/collisionEpisodes';
+import type {CollisionContact} from '../../lib/physics';
+import type {CollisionEvent} from '../../types/collisions';
 
 export type Control =
   | "forward"
@@ -51,7 +54,10 @@ export function useSimulation(
   firstPerson = false,
   pausedByMenu = false,
   onOpenDoor?: (id: string) => void,
+  onCollision?: (event:CollisionEvent)=>void,
 ) {
+  const collisionEpisodes=useRef(new CollisionEpisodes());
+  const collisionCallback=useRef(onCollision);collisionCallback.current=onCollision;
   const [floor,setFloor]=useState<1|2>(initial.floor ?? 1);
   const pendingDestination=useRef<{id:string;automatic:boolean}|null>(null);
   const pose = useRef<Pose>({ ...initial,y:floorY(initial.floor ?? 1) });
@@ -84,6 +90,7 @@ export function useSimulation(
   const preferred = useRef<string | null>(null);
   const savedProfile = useRef(JSON.stringify(profile));
   const returnToEntry = useCallback(() => {
+    collisionEpisodes.current.reset();
     pose.current = { ...SPAWN };
     setFloor(1);pendingDestination.current=null;
     elevator.current=createLift(1);
@@ -147,6 +154,8 @@ export function useSimulation(
       }
       let blocked = "",
         moving = false;
+      const contacts:CollisionContact[]=[];
+      let movement:'manual'|'auto'='manual';
       if (firstPerson) cameraYaw.current = pose.current.yaw;
       if (navigation.current.auto && !controls.size) pendingTurn.current = 0;
       if (!paused && (controls.size || pendingTurn.current)) {
@@ -206,6 +215,7 @@ export function useSimulation(
           ) > 0.0001;
         pose.current = result.pose;
         blocked = result.blocked?.name ?? "";
+        contacts.push(...result.contacts);
       }
       const nav = navigation.current;
       if (!paused && nav.auto && nav.route.length) {
@@ -226,6 +236,7 @@ export function useSimulation(
             const step = Math.abs(difference) < .025 ? Math.min(distance, dt * (profile.mode==='walking'?2.2:1.8)) : 0;
             const result = moveWithCollisions(pose.current, distance ? dx / distance * step : 0, distance ? dz / distance * step : 0, turn, profile, obstacles);
             pose.current = result.pose;
+            contacts.push(...result.contacts);movement='auto';
             if (result.blocked) { nav.status = `Đang chờ: ${result.blocked.name}. Nhấn WASD để tự điều khiển.`; blocked = result.blocked.name; }
             else { nav.status = `Đang tự đi đến ${target.name}. WASD hoặc P để dừng.`; moving = step > 0; }
             if (Math.hypot(next.x - pose.current.x, next.z - pose.current.z) < .001 && Math.abs(difference) < .025) nav.index++;
@@ -234,6 +245,9 @@ export function useSimulation(
       } else if (!paused && nav.route.length && !nav.auto) {
         // Hide completed sections when the user follows the floor route manually.
         while (nav.index < nav.route.length - 1 && Math.hypot(nav.route[nav.index].x - pose.current.x, nav.route[nav.index].z - pose.current.z) < .4) nav.index++;
+      }
+      if(!paused&&!riding){
+        for(const event of collisionEpisodes.current.sample(contacts,pose.current,profile,now,movement))collisionCallback.current?.(event);
       }
       if (now - lastPublish > 90) {
         lastPublish = now;

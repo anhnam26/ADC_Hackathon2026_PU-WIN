@@ -64,6 +64,8 @@ export default function Simulator({
   notify,
   target,
   onMenu,
+  onCollision,
+  collisionStatus,
 }: {
   onIssue: (context: IssueContext) => void;
   onSummary: () => void;
@@ -71,6 +73,8 @@ export default function Simulator({
   notify: (s: string) => void;
   target: string | null;
   onMenu: () => void;
+  onCollision:(event:import('../../types/collisions').CollisionEvent)=>void;
+  collisionStatus:string;
 }) {
   const { t, language } = useLocale();
   const {
@@ -119,6 +123,7 @@ export default function Simulator({
     immersive,
     false,
     autoOpenDoor,
+    onCollision,
   );
   const nearestId = sim.view.nearby.includes(chosen ?? "")
     ? chosen

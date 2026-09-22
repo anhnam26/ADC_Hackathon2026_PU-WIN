@@ -29,6 +29,7 @@ import Summary from "../features/issues/Summary";
 import Tasks from "../features/tasks/Tasks";
 import Dialog from "../components/Dialog";
 import {useAccount} from '../features/auth/AccountContext';
+import {useCollisionHistory} from '../features/simulator/useCollisionHistory';
 
 type Page = "journey" | "summary" | "tasks";
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
   const [role, setRole] = useState<"employee" | "hr">("employee");
   const [welcome, setWelcome] = useState(true);
   const [entered, setEntered] = useState(false);
+  const collisions=useCollisionHistory(entered,user.id,session.mobility);
   const [issueContext, setIssueContext] = useState<IssueContext | null>(null);
   const [settings, setSettings] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
@@ -228,6 +230,8 @@ export default function App() {
               onPreferences={() => setWelcome(true)}
               notify={notify}
               onMenu={() => setGameMenu(true)}
+              onCollision={collisions.record}
+              collisionStatus={collisions.status}
             />
           )}
           {page === "summary" && (
