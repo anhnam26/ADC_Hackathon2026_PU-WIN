@@ -813,3 +813,16 @@ Phần này thay thế hướng dẫn âm thanh và giới hạn không backend 
   va chạm theo xe trước khi spawn; không có đường thì báo lỗi, không bỏ chặng.
 - Tiến độ đã lưu được nạp lại; review nạp lại chờ người dùng tiếp tục.
   Mất kết nối hiển thị lỗi đồng bộ, không tự coi chặng chưa lưu là đã xong.
+
+32. NPC NHƯỜNG ĐƯỜNG KHI XE TỰ DI CHUYỂN
+
+- Va chạm với đồng nghiệp trong auto-walk/review kích hoạt tìm chỗ tránh.
+  NPC bước sang bên ở tốc độ 1,15 m/s và giữ khoảng trống trên tuyến xe.
+- Kiểm tra đường di chuyển và vị trí đứng bằng hình học thật của NPC,
+  tránh tường, đồ vật, cửa thang máy, đồng nghiệp khác và xe; không teleport.
+- Xe giữ tuyến đường và tự tiếp tục khi NPC đã tránh đủ xa. Nếu không có
+  chỗ tránh hợp lệ, chờ và thử lại; không cho đi xuyên vật cản.
+- Xe đi qua và cách hơn 3,2 m: NPC tuần tra tiếp tục hành trình; NPC đứng
+  cố định trở lại vị trí cũ khi đường về trống. Mở dialog/rời tab tạm dừng.
+- Tự lái tới gần NPC vẫn cho dừng để trò chuyện; không đẩy NPC ra xa khi
+  chính NPC đó là đích tương tác của tuyến đường.

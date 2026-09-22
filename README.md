@@ -95,6 +95,8 @@ Toàn màn hình dùng Fullscreen API; map chiếm 100% chiều rộng/cao, khô
 
 ## Dẫn đường trong map
 
+Khi xe tự đi hoặc review nhiệm vụ bị một đồng nghiệp chắn lại, NPC sẽ tìm chỗ trống bên cạnh, bước sang đó và chờ xe đi qua. Xe giữ tuyến đường và tự tiếp tục khi đủ khoảng trống. NPC kiểm tra tường, đồ vật, cửa thang máy, người khác và xe trước khi tránh; nếu không có chỗ an toàn thì cả hai tiếp tục chờ. Sau khi xe đi xa, NPC đang tuần tra tiếp tục đi lại; đồng nghiệp đứng cố định trở về vị trí trước đó. Khi người dùng tự lái tới trò chuyện, hành vi dừng gần người dùng vẫn được giữ.
+
 Nhấn **N**, chọn đồ vật/đồng nghiệp rồi chọn **Hiện đường đi** hoặc **Tự đi đến đây**. Đường vàng xuất hiện trực tiếp trên sàn 3D và bản đồ 2D, có khoảng cách còn lại. **P** bật/dừng tự đi tới điểm đã chọn; WASD/mũi tên/Q/E hoặc F cũng dừng tự đi để trả quyền điều khiển. Mở dialog/rời tab tạm dừng di chuyển.
 
 Đường được tìm bằng A* trên lưới 25 cm, có trạng thái hướng xe và 8 hướng di chuyển. Các đoạn được nối thẳng khi đủ chỗ, kể cả đường chéo, thay cho zigzag theo trục. Xe xoay theo hướng đoạn đường rồi tiến; camera thứ nhất/thứ ba cùng bám hướng xe, chuyển động chuột ngang không bẻ hướng trong lúc tự đi. Mọi đoạn đi và xoay đều kiểm tra vùng chiếm chỗ xe; đây vẫn là hỗ trợ khám phá, chưa mô phỏng động học xe lăn thật. Đường dự tính trạng thái cửa mở; tự đi chỉ mở cửa khi đến gần và cung quét không vướng xe/người. Đến trong tầm F thì dừng. Nếu gặp vật cản động, xe chờ; có thể tự điều khiển hoặc chọn đường lại. Xe quá rộng/không đủ chỗ căn hướng sẽ báo chưa tìm được đường, không đi xuyên khung. Đường đến đồng nghiệp đi lại lấy vị trí lúc chọn; nếu họ đã rời vị trí, chọn dẫn đường lại.

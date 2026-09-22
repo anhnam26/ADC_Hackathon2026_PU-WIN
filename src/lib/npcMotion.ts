@@ -2,8 +2,9 @@ import { objectObstacles } from './objectGeometry';
 import { bodyAt, overlaps, moveWithCollisions } from './physics';
 import { defaultMobility, type MobilityProfile, type Obstacle, type Pose, type WorldObject } from '../types/simulator';
 
-export function advanceColleagues(scene: WorldObject[], waypoint: Map<string, number>, dt: number, player: Pose, profile: MobilityProfile, staticObstacles: Obstacle[], paused: boolean) {
+export function advanceColleagues(scene: WorldObject[], waypoint: Map<string, number>, dt: number, player: Pose, profile: MobilityProfile, staticObstacles: Obstacle[], paused: boolean, yielding = new Set<string>()) {
   for (const person of scene.filter(o => o.patrol)) {
+    if(yielding.has(person.id))continue;
     person.walking = false;
     if (paused || Math.hypot(person.position[0] - player.x, person.position[2] - player.z) < 1.9) continue;
     const index = waypoint.get(person.id) ?? 1;

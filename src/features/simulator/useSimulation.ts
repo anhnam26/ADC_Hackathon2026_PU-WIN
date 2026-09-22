@@ -10,6 +10,7 @@ import { objects, objectsOnFloor, SPAWN } from "../../data/space";
 import { objectObstacles, worldObstacles } from "../../lib/objectGeometry";
 import { planRoute, routePassesDoor, routeTargetReached } from '../../lib/navigation';
 import { advanceColleagues } from '../../lib/npcMotion';
+import {advanceNpcYields,requestNpcYield,type NpcYields} from '../../lib/npcYield';
 import { createLift, advanceLift, floorY, insideCabin, liftBusy, liftDoorObstacles, requestLift } from '../../lib/elevator';
 import {
   blockingAt,
@@ -75,6 +76,7 @@ export function useSimulation(
   const virtual = useRef(new Set<Control>());
   const sceneObjects = useRef(objects.map(o => ({ ...o, position: [...o.position] as typeof o.position })));
   const npcWaypoints = useRef(new Map<string, number>());
+  const npcYields=useRef<NpcYields>(new Map());
   const navigation = useRef({ route: [] as Pose[], index: 0, auto: false, targetId: '', status: 'Chọn một điểm đến để bắt đầu dẫn đường.' });
   const doorCallback = useRef(onOpenDoor); doorCallback.current = onOpenDoor;
   const [view, setView] = useState({
@@ -135,9 +137,11 @@ export function useSimulation(
       if(!paused && advanceLift(elevator.current,elapsed,pose.current,profile)){
         setFloor(elevator.current.floor);navigation.current.status=`Đã đến tầng ${elevator.current.floor}. Chờ cửa mở rồi điều khiển xe ra ngoài.`;
       }
-      advanceColleagues(currentObjects, npcWaypoints.current, dt, pose.current, profile, staticObstacles, paused);
       const liftObject=currentObjects.find(o=>o.kind==='elevator')!;
-      const obstacles = [...staticObstacles,...objectObstacles(liftObject,true),...liftDoorObstacles(elevator.current,floor), ...currentObjects.filter(o => o.colleague).flatMap(o => objectObstacles(o))];
+      const fixedObstacles=[...staticObstacles,...objectObstacles(liftObject,true),...liftDoorObstacles(elevator.current,floor)];
+      const yielding=advanceNpcYields(currentObjects,npcYields.current,dt,pose.current,profile,fixedObstacles,paused,navigation.current.auto||!!pendingDestination.current?.automatic);
+      advanceColleagues(currentObjects, npcWaypoints.current, dt, pose.current, profile, fixedObstacles, paused,yielding);
+      const obstacles = [...fixedObstacles, ...currentObjects.filter(o => o.colleague).flatMap(o => objectObstacles(o))];
       obstacleRef.current = obstacles;
       if (paused) {
         pressed.current.clear();
@@ -275,6 +279,15 @@ export function useSimulation(
       } else if (!paused && !transferring && nav.route.length && !nav.auto) {
         // Hide completed sections when the user follows the floor route manually.
         while (nav.index < nav.route.length - 1 && Math.hypot(nav.route[nav.index].x - pose.current.x, nav.route[nav.index].z - pose.current.z) < .4) nav.index++;
+      }
+      if(!paused&&movement==='auto'){
+        for(const contact of contacts){
+          const person=currentObjects.find(o=>o.id===contact.obstacle.id&&o.colleague);
+          if(person&&person.id!==nav.targetId){
+            requestNpcYield(npcYields.current,person,pose.current,profile,nav.route[nav.index]);
+            nav.status=`${person.name} is making room. Auto-walk will continue when the route is clear.`;
+          }
+        }
       }
       if(!paused&&!riding){
         for(const event of collisionEpisodes.current.sample(contacts,pose.current,profile,now,movement))collisionCallback.current?.(event);
