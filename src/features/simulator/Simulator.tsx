@@ -530,7 +530,7 @@ export default function Simulator({
               <kbd>W</kbd>
               <kbd>A</kbd>
               <kbd>S</kbd>
-              <kbd>D</kbd> {immersive ? t("Di chuyển") : t("Theo màn hình")}
+              <kbd>D</kbd> {session.mobility.mode==='wheelchair'?'W/S drive · A/D turn':immersive ? t("Di chuyển") : t("Theo màn hình")}
             </span>
             <span>
               <kbd>F</kbd>{t("Tương tác")}</span>

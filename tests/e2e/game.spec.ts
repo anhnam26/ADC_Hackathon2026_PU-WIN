@@ -56,7 +56,7 @@ test('native fullscreen fills viewport, locks pointer, releases it for interacti
   expect(full.width).toBe(full.screenWidth); expect(full.height).toBe(full.screenHeight);
   await expect(stage).toHaveAttribute('data-pointer-locked', 'true');
   await page.mouse.move(650, 450);
-  await expect.poll(async () => Math.abs(Number(await stage.getAttribute('data-yaw')))).toBeGreaterThan(.02);
+  await expect.poll(async () => Math.abs(Number(await stage.getAttribute('data-look-yaw')))).toBeGreaterThan(.02);
   await page.keyboard.press('v'); await expect(stage).toHaveAttribute('data-camera', 'third-person');
   await page.keyboard.press('f'); await expect(page.getByRole('dialog')).toBeVisible();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(false);

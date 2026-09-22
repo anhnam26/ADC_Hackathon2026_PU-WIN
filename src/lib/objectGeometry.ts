@@ -33,11 +33,12 @@ export function objectParts(o: WorldObject, open = false, doorAngle?: number): P
     ...Array.from({length:9},(_,i)=>b(-.65,(i+1)*1.6/18,1.8-(i+.5)*2.2/9,1.1,(i+1)*1.6/9,2.2/9,i%2?'#b3b6a6':'#ccd0bd')),
     b(0,.8,-1.1,2.4,1.6,1.4,'#b4c2b4'),
     ...Array.from({length:9},(_,i)=>b(.65,(1.6+(i+1)*1.6/9)/2,-.4+(i+.5)*2.2/9,1.1,1.6+(i+1)*1.6/9,2.2/9,i%2?'#b3b6a6':'#ccd0bd')),
-    ...[-1.18,0,1.18].flatMap(x=>Array.from({length:9},(_,i)=>{
+    ...[-1.17,0,1.17].flatMap(x=>Array.from({length:9},(_,i)=>{
       const upper=x>0,z=x>0?-.4+(i+.5)*2.2/9:1.8-(i+.5)*2.2/9;
       const y=(upper?1.6:0)+(i+1)*1.6/9;
       return b(x,y+.48,z,.045,.96,.045,'#597c74');
     })),
+    ...[-1.17,0,1.17].flatMap(x=>Array.from({length:9},(_,i)=>b(x,(x>0?1.6:0)+(i+1)*1.6/9+.96,x>0?-.4+(i+.5)*2.2/9:1.8-(i+.5)*2.2/9,.06,.07,2.2/9,'#597c74',false))),
     b(0,2.56,-1.76,2.4,.07,.065,'#597c74',false),
   ];
   if (o.kind === 'colleague') {

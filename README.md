@@ -55,10 +55,10 @@ Lịch sử đã đồng bộ lưu cùng tài khoản/notes trong `data/dayzero.
 
 | Điều khiển | Hành động |
 | --- | --- |
-| W / ↑ | Tiến về phía trước theo hướng nhìn |
-| S / ↓ | Lùi lại, giữ hướng nhìn |
-| A / ← | Di chuyển ngang sang trái |
-| D / → | Di chuyển ngang sang phải |
+| W / ↑ | Xe lăn tiến theo hướng đầu xe, độc lập với hướng nhìn |
+| S / ↓ | Xe lăn lùi theo trục xe |
+| A / ← | Xe lăn quay trái tại chỗ |
+| D / → | Xe lăn quay phải tại chỗ |
 | Q / E | Xoay xe tại chỗ trái / phải |
 | Giữ Shift | Di chuyển chậm để căn qua cửa |
 | F | Tương tác đồ vật ở gần, trong khoảng 1,35 m từ tâm nhân vật đến bề mặt |
@@ -69,13 +69,13 @@ Lịch sử đã đồng bộ lưu cùng tài khoản/notes trong `data/dayzero.
 | B | Ghi chú bất cập và nguyện vọng tại vị trí hiện tại; xem ghi chú đã gửi |
 | Enter | Khóa lại chuột sau Esc hoặc khi trình duyệt chặn khóa tự động |
 | Escape | Đóng bảng thông tin hoặc trả chuột cho trình duyệt; có thể thoát toàn màn hình tùy trình duyệt |
-| Di chuột / vuốt trên cảnh 3D | Quay hướng xe, nhìn lên/xuống; kéo chuột là phương án dự phòng khi không khóa được |
+| Di chuột / vuốt trên cảnh 3D | Nhìn quanh độc lập, không xoay xe lăn; kéo chuột là phương án dự phòng khi không khóa được |
 | Nút tâm ngắm | Chuyển giữa góc nhìn thứ nhất và toàn cảnh |
 | Đặt lại góc nhìn | Nhìn ngang trở lại; giữ vị trí và hướng xe |
 | Nút Toàn màn hình | Dùng toàn màn hình trình duyệt, khóa và ẩn chuột trên máy dùng chuột |
 | Di chuột khi đã khóa | Nhìn quanh mà không cần giữ nút chuột |
 
-Mặc định mở **góc nhìn thứ nhất**. Camera đặt tại tâm xe, cao bằng mặt ngồi + 65 cm (giả định minh họa, không phải số đo cơ thể cá nhân); nhân vật đi bộ dùng tầm mắt 1,60 m. Không có rung/lắc đầu hoặc zoom khi di chuyển. Di chuột ngang hoặc Q/E quay cả xe và camera, vẫn xét va chạm khi xoay; di chuột dọc nhìn lên/xuống. WASD tính theo hướng nhìn, A/D đi ngang và S lùi không tự quay camera. Đây là điều khiển khám phá bằng dấu chiếm chỗ hình chữ nhật, không mô phỏng cơ học bánh xe hoặc sức đẩy. Trong toàn cảnh/2D, WASD vẫn di chuyển theo màn hình như trước. Cuộn chuột chỉ phóng to ở toàn cảnh.
+Mặc định mở **góc nhìn thứ nhất**. Camera đặt tại tâm xe, cao bằng mặt ngồi + 65 cm (giả định minh họa, không phải số đo cơ thể cá nhân); nhân vật đi bộ dùng tầm mắt 1,60 m. Không có rung/lắc đầu hoặc zoom khi di chuyển. Với xe lăn, chuột chỉ thay đổi hướng nhìn, W/S tiến/lùi theo hướng xe, A/D hoặc Q/E quay tại chỗ. Khi quay, xe dừng dịch chuyển; không trượt ngang hoặc đi chéo bằng W+A. Trong toàn cảnh/2D, xe vẫn đi theo trục xe. **Reset view** đưa hướng nhìn về phía trước xe. Mô hình giữ kiểm tra va chạm khi xoay/di chuyển; chưa mô phỏng lực đẩy từng bánh. Điều khiển người đi bộ vẫn theo hướng nhìn như trước.
 
 **Góc nhìn thứ ba** bám sau xe, thấy được nhân vật và kích thước xe. Camera thu gần nếu tường hoặc đồ vật chắn đường nhìn; không đổi vị trí xe khi nhấn V. Cả hai góc nhìn dùng chung WASD/F, va chạm và hướng xe. V không hoạt động khi nhập liệu hoặc mở dialog.
 
@@ -84,13 +84,13 @@ Toàn màn hình dùng Fullscreen API; map chiếm 100% chiều rộng/cao, khô
 ## Tòa nhà hai tầng
 
 - Phiên mới xuất phát **ngoài tòa nhà**, trên sân trước cửa chính. Có mặt tiền hai tầng, lối lát và đường phía trước. Nhấn W để tiến lại gần cửa; F chỉ xuất hiện khi đủ gần. Phiên đã chơi tiếp tục giữ vị trí/tầng đã lưu; dùng **Về lối vào** để trở về điểm xuất phát mới.
-- **Tầng 1:** mặt bằng trong nhà 24 × 27 m, sân ngoài sâu 7 m. Giữ khu làm việc, Lotus, pantry và nhà vệ sinh; thêm **phòng nhân sự, đào tạo, nghỉ ngơi** ở cánh phía sau, cửa thông thủy 140 cm.
-- **Tầng 2:** khu làm việc B21/B22, phòng họp Sky, máy in và sảnh nghỉ. HUD, vật cản, bản đồ 2D/3D và tương tác đều theo tầng hiện tại.
+- **Tầng 1:** mặt bằng trong nhà 24 × 27 m, sân ngoài sâu 7 m. Hai phòng nhân sự/nghỉ ngơi rộng 8 × 7 m, tăng 1 m về phía hành lang; cửa thông thủy 140 cm dời về x = ±5,6 m, z = −13 m để tránh thang máy/thang bộ. Phòng đào tạo giữ ở giữa.
+- **Tầng 2:** khu làm việc B21/B22, phòng họp Sky, máy in và sảnh nghỉ; thêm bốn chậu cây, sofa/bàn/ghế ở góc nghỉ, tranh tường, 15 cụm đèn trần cùng đèn thả và dải sáng hành lang. Nội thất dưới sàn có va chạm và hồ sơ tương tác.
 - **Thang máy** ở đầu trái hành lang phía sau; **thang bộ** ở đầu phải. Nhấn **N** để tìm và tự đi đến. Thang máy có ô cửa 140 cm, cabin hữu dụng 190 × 220 cm.
 - **Đi thang máy:** tới gần nhấn **F → Gọi thang / Mở cửa**, chờ cửa trượt mở, dùng **WASD** đưa toàn bộ xe vào cabin. Nhấn **F → Đi đến Tầng 1/2**. Cửa đóng, cabin nâng/hạ cả người chơi qua 3,2 m; chờ cửa mở hoàn toàn rồi lái ra. Có thể lùi bằng S nếu vẫn nhìn vào phía trong cabin.
 - Hai tầng cùng tồn tại trong một cảnh 3D ở cao độ 0 và 3,2 m; camera theo cabin liên tục, không tải lại map khi đến tầng. Cửa tầng không có cabin luôn đóng. Trong hành trình, tạm khóa di chuyển ngang để giữ người trong cabin; vẫn nhìn quanh và đổi góc nhìn bằng V.
 - Nhà có **mái, trần giữa tầng và đèn trong các phòng, hành lang, cabin**. Sàn tầng 2 chừa lỗ thang máy và thang bộ. Chế độ toàn cảnh ẩn mái/tầng khác để xem mặt bằng.
-- Xe lăn đi bằng thang máy. Tại thang bộ có nút dẫn đường tới thang máy; chế độ đi bộ có thể dùng cả hai. **Thang bộ vẫn chuyển tầng qua bảng tương tác**, chưa mô phỏng bước chân trên từng bậc.
+- Xe lăn đi bằng thang máy. Thang bộ gồm hai vế rộng 110 cm, 18 bậc và chiếu nghỉ sâu 140 cm, quay đầu để lối ra tầng trên hướng về hành lang thay vì tường ngoài. Sàn tầng 2 chừa ô thang tương ứng. **Thang bộ vẫn chuyển tầng qua bảng tương tác**, chưa mô phỏng bước chân trên từng bậc.
 - Chọn đích khác tầng trong **N** sẽ dẫn tới thang máy trước. Tự vào cabin, chọn tầng và lái ra; khi buông phím, đường đi tiếp tục tới đích ban đầu. Vị trí và tầng được lưu. Nếu tải lại giữa hành trình, phiên trở về tầng đã lưu với cabin mở để có thể tiếp tục, không xuất hiện lơ lửng giữa giếng thang.
 
 ## Dẫn đường trong map
@@ -101,7 +101,7 @@ Nhấn **N**, chọn đồ vật/đồng nghiệp rồi chọn **Hiện đườn
 
 Giao diện, hướng dẫn, phụ đề, tên phòng, số đo, thông báo lỗi và quản trị dùng **English**. Phiên cũ lưu tiếng Việt tự chuyển sang tiếng Anh khi mở lại, giữ nguyên số đo, tiến độ, tên riêng và nội dung người dùng tự nhập. Nhãn **English** thay cho bộ chọn ngôn ngữ.
 
-Đã bỏ phát âm thanh, giọng hướng dẫn và phím H. **Phụ đề tiếng Anh và vạch chỉ đường vẫn hoạt động**. Tốc độ xe lăn tăng từ 1,15 lên **1,8 m/s**, đi bộ **2,2 m/s**; tự đi dùng cùng tốc độ. Giữ Shift để đi chậm **0,45 m/s**, căn xe qua cửa. Kiểm tra va chạm vẫn chia thành bước nhỏ để tránh xuyên vật cản.
+Đã bỏ phát âm thanh, giọng hướng dẫn và phím H. **Phụ đề tiếng Anh và vạch chỉ đường vẫn hoạt động**. Xe lăn tiến/tự đi **2,8 m/s**, lùi **1,8 m/s** để demo nhanh hơn; người đi bộ **2,2 m/s**. Giữ Shift để đi chậm **0,45 m/s** và quay chậm khi căn qua cửa. Đây là tốc độ phục vụ demo. Kiểm tra va chạm vẫn chia thành bước nhỏ để tránh xuyên vật cản.
 
 ## Ghi chú vị trí và quản trị
 
