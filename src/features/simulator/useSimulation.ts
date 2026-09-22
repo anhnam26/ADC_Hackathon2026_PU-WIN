@@ -374,6 +374,7 @@ export function useSimulation(
       if (e.code === "KeyF" && !e.repeat) {
         if(elevator.current.rider)return;
         navigation.current.auto = false;
+        if(pendingDestination.current)pendingDestination.current.automatic=false;
         e.preventDefault();
         const id = preferred.current;
         if (id && nearby.current.includes(id)) interact.current(id);
@@ -410,6 +411,7 @@ export function useSimulation(
   const triggerInteraction = (id?: string) => {
     if(elevator.current.rider)return;
     navigation.current.auto = false;
+    if(pendingDestination.current)pendingDestination.current.automatic=false;
     const candidate = id ?? preferred.current;
     if (candidate && nearby.current.includes(candidate))
       interact.current(candidate);

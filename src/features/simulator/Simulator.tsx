@@ -44,6 +44,8 @@ import { useTextGuide } from './useTextGuide';
 import NotesDialog from '../notes/NotesDialog';
 import type {Pose} from '../../types/simulator';
 import { routeLength } from '../../lib/navigation';
+import {useMissions} from '../tasks/useMissions';
+import MissionHUD from '../tasks/MissionHUD';
 import type { IssueContext } from "../issues/IssueForm";
 
 const OfficeScene = lazy(() => import("./OfficeScene"));
@@ -125,6 +127,7 @@ export default function Simulator({
     autoOpenDoor,
     onCollision,
   );
+  const quest=useMissions(sim);
   const nearestId = sim.view.nearby.includes(chosen ?? "")
     ? chosen
     : (sim.view.nearby[0] ?? null);
@@ -141,6 +144,7 @@ export default function Simulator({
   useEffect(() => { if (sim.view.navigationStatus !== 'Chọn một điểm đến để bắt đầu dẫn đường.') guide.show(sim.view.navigationStatus); }, [sim.view.navigationStatus, guide.show]);
   const openNote=()=>{sim.stopNavigation();setNotePose({...sim.pose.current});};
   const navigateToSelected = (automatic: boolean) => {
+    if(quest.manual&&automatic){notify('Drive manually to complete this mission. Automatic review starts after the final checkpoint.');return;}
     setChosen(destination);
     sim.navigate(destination, automatic);
     setNavigationOpen(false);
@@ -179,12 +183,13 @@ export default function Simulator({
       }
       if (e.code === 'KeyJ') { e.preventDefault(); setJournal(true); }
       if (e.code === 'KeyN') { e.preventDefault(); setNavigationOpen(true); }
-      if (e.code === 'KeyP') { e.preventDefault(); if (sim.view.auto) sim.stopNavigation(); else { setChosen(destination); sim.navigate(destination, true); } }
+      if (e.code === 'KeyP') { e.preventDefault(); if(quest.manual){notify('This is your manual mission. Follow the yellow route.');}else if(quest.attempt?.phase==='review'){if(sim.view.auto)quest.pause();else quest.guide();}else if (sim.view.auto) sim.stopNavigation(); else { setChosen(destination); sim.navigate(destination, true); } }
+      if(quest.attempt?.phase==='review'&&['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))quest.pause();
       if (e.code === 'KeyB') {e.preventDefault();openNote();}
     };
     window.addEventListener('keydown', hotkey);
     return () => window.removeEventListener('keydown', hotkey);
-  }, [mode, destination, sim]);
+  }, [mode, destination, sim,quest]);
   const unavailable = useCallback(() => {
     setFailed(true);
     setMode("2d");
@@ -424,6 +429,7 @@ export default function Simulator({
                 cameraYaw={sim.cameraYaw}
               />
             )}
+            <MissionHUD quest={quest} auto={sim.view.auto} focus={focusGame}/>
             <div className="world-scale">
               <Ruler size={14} />
               <span>{t("TỶ LỆ THỐNG NHẤT")}<strong>{t("1 ô lưới = 1 m")}</strong>
@@ -448,6 +454,7 @@ export default function Simulator({
                       e.preventDefault();
                       e.currentTarget.setPointerCapture(e.pointerId);
                       focusGame();
+                      if(quest.attempt?.phase==='review')quest.pause();
                       sim.setControl(c.key, true);
                     }}
                     onPointerUp={() => sim.setControl(c.key, false)}
@@ -456,6 +463,7 @@ export default function Simulator({
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
+                        if(quest.attempt?.phase==='review')quest.pause();
                         sim.setControl(c.key, true);
                       }
                     }}
@@ -548,12 +556,13 @@ export default function Simulator({
                 focusGame();
                 notify(t("Đã trở về điểm bắt đầu."));
               }}
+              disabled={quest.active}
             >
               <RotateCcw size={13} />{t("Về lối vào")}</button>
           </footer>
           <section className="navigation-hud" aria-label={t("Hướng dẫn khám phá")}>
             <p className="lift-hud" data-testid="lift-status">{t('THANG MÁY')} · {t(`lift-phase-${sim.view.elevator.phase}`)} · {sim.view.elevator.y.toFixed(1)} m</p>
-            <div className="navigation-actions"><button onClick={() => setNavigationOpen(true)}>{t("N · Chọn điểm đến")}</button><button onClick={() => sim.view.auto ? sim.stopNavigation() : navigateToSelected(true)}>{sim.view.auto ? t("P · Dừng tự đi") : t("P · Tự đi")}</button><button className="note-tool" onClick={openNote}>{language==='vi'?'B · Ghi chú vị trí':'B · Add location note'}</button></div>
+            <div className="navigation-actions"><button onClick={() => setNavigationOpen(true)}>{t("N · Chọn điểm đến")}</button><button disabled={quest.manual} onClick={() => quest.attempt?.phase==='review'?(sim.view.auto?quest.pause():quest.guide()):sim.view.auto ? sim.stopNavigation() : navigateToSelected(true)}>{sim.view.auto ? t("P · Dừng tự đi") : t("P · Tự đi")}</button><button className="note-tool" onClick={openNote}>{language==='vi'?'B · Ghi chú vị trí':'B · Add location note'}</button></div>
             {sim.view.route.length > 0 && <small>{t("Vạch vàng trên sàn · Còn khoảng")} {routeLength([sim.view.pose, ...sim.view.route]).toFixed(1)} m</small>}
           </section>
           <div className="subtitle-bar" role="status" aria-live="polite"><span>{language === 'vi' ? 'HƯỚNG DẪN' : 'GUIDE'}</span><p className="guide-caption">{guide.caption}</p></div>
@@ -650,11 +659,11 @@ export default function Simulator({
       {notePose&&<NotesDialog pose={notePose} onClose={()=>{setNotePose(null);requestAnimationFrame(focusGame);}}/>}
       {navigationOpen && <Dialog title={t("Bạn muốn đến đâu?")} subtitle={t("Đi theo vạch vàng hoặc để nhân vật tự đi. WASD/P dừng tự đi bất cứ lúc nào.")} onClose={() => setNavigationOpen(false)}>
         <label className="destination-field">{t("Điểm đến")}<select aria-label={t("Điểm đến")} value={destination} onChange={e => setDestination(e.target.value)}>{objects.map(o => <option key={o.id} value={o.id}>{floorLabel(o.floor ?? 1,language)} · {t(o.name)}</option>)}</select></label>
-        <p>{language==='vi'?'Điểm đến khác tầng: tới thang máy, F gọi thang, tự lái vào cabin rồi F chọn tầng. Sau khi cửa mở ở tầng đến, lái ra sảnh để tiếp tục đường đi.':'For another floor: reach the lift, press F to call it, drive into the cabin and press F to choose the floor. Exit into the lobby after arrival to continue your route.'}</p>
+        <p>Manual guidance: follow the route to the lift, press F to call it, drive inside, then press F to select the destination floor. Reverse into the lobby after arrival and follow the next route. Auto-walk handles the full lift transfer for you.</p>
         <div className="dialog-actions"><button className="button secondary" onClick={() => navigateToSelected(false)}>{t("Hiện đường đi")}</button><button className="button primary" onClick={() => navigateToSelected(true)}>{t("Tự đi đến đây")}</button></div>
         <p className="profile-disclaimer">{t("Đường tính theo kích thước xe, giữ xe thẳng khi qua cửa. Tự đi mở cửa khi đủ khoảng trống và chờ nếu gặp vật cản. Không phải chứng nhận lối đi thực tế.")}</p>
       </Dialog>}
-      {activeObject?.connection ? <FloorConnection key={activeObject.id} object={activeObject} profile={session.mobility} lift={sim.view.elevator} inCabin={insideCabin(sim.view.pose,session.mobility)} onCall={sim.callElevator} onClose={closeInspector} onReport={report} onLift={()=>{setInspected(null);setDestination(`lift-${sim.floor}`);sim.navigate(`lift-${sim.floor}`,true);focusGame();}} onTravel={()=>{const error=sim.changeFloor(activeObject.id);if(!error){savePose({...sim.pose.current,y:floorY(sim.floor)});setInspected(null);setChosen(null);requestAnimationFrame(()=>{focusGame();display.lock();});}return error;}} /> : activeObject?.kind === 'colleague' ? <ColleagueInspector key={activeObject.id} person={activeObject} onClose={closeInspector} /> : activeObject && (
+      {activeObject?.connection ? <FloorConnection key={activeObject.id} object={activeObject} profile={session.mobility} lift={sim.view.elevator} inCabin={insideCabin(sim.view.pose,session.mobility)} onCall={sim.callElevator} onClose={closeInspector} onReport={report} onLift={()=>{setInspected(null);setDestination(`lift-${sim.floor}`);if(quest.manual)quest.guide();else sim.navigate(`lift-${sim.floor}`,true);focusGame();}} onTravel={()=>{const error=sim.changeFloor(activeObject.id);if(!error){savePose({...sim.pose.current,y:floorY(sim.floor)});setInspected(null);setChosen(null);requestAnimationFrame(()=>{focusGame();display.lock();});}return error;}} /> : activeObject?.kind === 'colleague' ? <ColleagueInspector key={activeObject.id} person={activeObject} onClose={closeInspector} /> : activeObject && (
         <ObjectInspector
           key={activeObject.id}
           object={activeObject}

@@ -21,7 +21,7 @@ test('fresh session starts outside the two-storey facade and shows new ground-fl
   await expect(page.locator('.room-label').filter({hasText:"TRAINING ROOM"})).toBeVisible();
   await page.screenshot({path:'test-results/building-floor1.png'});
 });
-test('cross-floor autowalk routes via lift, resumes upstairs, persists and returns downstairs',async({page})=>{
+test('manual cross-floor guidance uses the lift, resumes upstairs, persists and returns downstairs',async({page})=>{
   test.setTimeout(120000);
   await enter(page,'lift');const stage=page.getByTestId('game-stage');
   const board=async()=>{
@@ -32,8 +32,8 @@ test('cross-floor autowalk routes via lift, resumes upstairs, persists and retur
     await page.waitForTimeout(150);await page.keyboard.press('f');
   };
   await page.evaluate(()=>document.exitPointerLock());await page.getByRole('button',{name:'2D',exact:true}).click();await stage.focus();
-  await page.keyboard.press('n');await page.getByRole('combobox',{name:"Destination",exact:true}).selectOption('desk-b21');await page.getByRole('button',{name:"Auto-walk here",exact:true}).click();
-  await expect(page.locator('.subtitle-bar')).toContainText("Arrived at Lift", {timeout:10000});
+  await page.keyboard.press('n');await page.getByRole('combobox',{name:"Destination",exact:true}).selectOption('desk-b21');await page.getByRole('button',{name:"Show route",exact:true}).click();
+  await expect(page.locator('.subtitle-bar')).toContainText("Press F to call", {timeout:10000});
   await stage.focus();await page.keyboard.press('f');
   await expect(page.getByRole('dialog')).toContainText("190 × 220");
   await board();
@@ -42,7 +42,8 @@ test('cross-floor autowalk routes via lift, resumes upstairs, persists and retur
   await expect(stage).toHaveAttribute('data-lift-phase','open');
   await stage.focus();await page.keyboard.down('s');
   try{await expect.poll(async()=>Number(await stage.getAttribute('data-x')),{intervals:[60]}).toBeGreaterThan(-7.6);}finally{await page.keyboard.up('s');}
-  await expect(page.locator('.subtitle-bar')).toContainText("Arrived at Desk B21",{timeout:30000});
+  await expect(page.locator('.subtitle-bar')).toContainText("Follow the route to Desk B21");
+  await page.keyboard.press('p');await expect(page.locator('.subtitle-bar')).toContainText("Arrived at Desk B21",{timeout:30000});
   await page.evaluate(()=>document.exitPointerLock());await page.getByRole('button',{name:'3D',exact:true}).click();await page.getByRole('button',{name:"Office overview",exact:true}).click();
   await expect(page.locator('.room-label').filter({hasText:"SKY MEETING ROOM"})).toBeVisible();
   await page.screenshot({path:'test-results/building-floor2.png'});

@@ -42,7 +42,7 @@ export function advanceTransfer(transfer:Transfer,pose:Pose,profile:MobilityProf
   if(transfer.phase==='exit'){
     result.status='Lift transfer · Doors open. Reverse into the lobby, then follow the route to your destination.';
     result.route=[{...pose,x:-7.45,z:LIFT.z}];
-    if(pose.x>-8.05){result.done=true;return result;}
+    if(pose.x>-7.65){result.done=true;return result;}
     if(transfer.automatic)drive(-7.45,LIFT.z,true);
   }
   return result;
