@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import { seedSession } from '../../src/lib/persistence';
 
 async function start(page: Page, use2d = true) {

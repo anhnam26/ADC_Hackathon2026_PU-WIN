@@ -18,6 +18,8 @@ try {
   if (!ready) throw new Error('Preview server did not start.');
   browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const login=await page.request.post(`${url}/api/auth/login`,{data:{email:'employee@dayzero.local',password:process.env.DAYZERO_EMPLOYEE_PASSWORD||'DayZero2026!'}});
+  expect(login.ok()).toBe(true);
   const failures = [];
   page.on('pageerror', error => failures.push(error.message));
   page.on('response', response => { if (response.status() >= 400) failures.push(`${response.status()}: ${response.url()}`); });

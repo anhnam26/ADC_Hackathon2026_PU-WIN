@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { seedSession } from '../../src/lib/persistence';
 
-test('floor guidance, automatic door opening, arrival, manual override and voice controls', async ({ page }) => {
+test('floor guidance, automatic door opening, arrival and manual override remain silent', async ({ page }) => {
   await page.addInitScript(() => {
     const events: string[] = []; Object.assign(window, { voiceEvents: events });
     window.speechSynthesis.speak = utterance => { events.push(utterance.text); };
@@ -34,10 +34,9 @@ test('floor guidance, automatic door opening, arrival, manual override and voice
   await expect(stage).toHaveAttribute('data-autowalk', 'false');
   await expect(page.locator('.guide-caption')).toContainText('Đã dừng tự đi');
   await page.keyboard.press('h');
-  await expect(page.getByRole('button', { name: 'H · Bật giọng', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /giọng|Nghe lại/ })).toHaveCount(0);
   const spoken = await page.evaluate(() => (window as unknown as { voiceEvents: string[] }).voiceEvents);
-  expect(spoken.some(text => text.includes('Quầy lễ tân'))).toBe(true);
-  expect(spoken.at(-1)).toBe('cancel');
+  expect(spoken).toEqual([]);
   await page.evaluate(() => document.exitPointerLock());
   await page.getByRole('button', { name: '2D', exact: true }).click();
   await expect(page.getByTestId('floor-route')).toBeVisible();

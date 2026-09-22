@@ -159,7 +159,7 @@ export default function Welcome({ onClose, onConfirm, entering = false }: { onCl
             <kbd>E</kbd>{t("Xoay tại chỗ")}</span>
           <span><kbd>V</kbd>{t("Góc nhìn thứ nhất / thứ ba")}</span>
         </div>
-        <p className="profile-disclaimer">{t("Vào map sẽ ẩn chuột: di chuột để nhìn quanh, không cần giữ nút. Esc hiện chuột, Enter tiếp tục. N chọn điểm đến, P tự đi/dừng, H bật/tắt giọng hướng dẫn. Trên điện thoại, vuốt để nhìn.")}</p>
+        <p className="profile-disclaimer">{t("Vào map sẽ ẩn chuột: di chuột để nhìn quanh, không cần giữ nút. Esc hiện chuột, Enter tiếp tục. N chọn điểm đến, P tự đi/dừng, B ghi chú vị trí. Trên điện thoại, vuốt để nhìn.")}</p>
         <p className="profile-disclaimer">{t("Văn phòng mẫu · 1 đơn vị = 1 mét. So sánh hình học giúp phát hiện điều cần xác minh, không xác nhận khả năng tiếp cận ở công ty thật.")}</p>
         {error && (
           <p className="error" role="alert">

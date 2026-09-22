@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import AxeBuilder from '@axe-core/playwright';
 
 test('game and object information are accessible by keyboard; storage failures do not block use', async ({ page }) => {

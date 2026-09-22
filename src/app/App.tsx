@@ -28,9 +28,11 @@ import IssueForm, { type IssueContext } from "../features/issues/IssueForm";
 import Summary from "../features/issues/Summary";
 import Tasks from "../features/tasks/Tasks";
 import Dialog from "../components/Dialog";
+import {useAccount} from '../features/auth/AccountContext';
 
 type Page = "journey" | "summary" | "tasks";
 export default function App() {
+  const {user,logout,openAdmin}=useAccount();
   const { t, language } = useLocale();
   const { session, notice, reset, setReducedMotion, selectStep } =
     useDemoStore();
@@ -171,6 +173,7 @@ export default function App() {
             </strong>
           </div>
           <div className="topbar-actions">
+            <div className="account-actions"><span>{user.name}</span>{user.role==='manager'&&<button className="button secondary" onClick={openAdmin}>{language==='vi'?'Trang quản trị':'Admin dashboard'}</button>}<button className="button secondary" onClick={logout}>{language==='vi'?'Đăng xuất':'Sign out'}</button></div>
             <span className="demo-label">
               <span />
               DEMO
@@ -197,7 +200,7 @@ export default function App() {
           <div className="welcome-bar">
             <div>
               <span className="sun-icon">{t("✳")}</span>
-              <span>{t("Chào")} {role === "hr" ? t("đội ngũ chuẩn bị") : "An"},{" "}
+              <span>{t("Chào")} {role === "hr" ? t("đội ngũ chuẩn bị") : user.name},{" "}
                 {role === "hr"
                   ? t("cùng tạo một khởi đầu tốt đẹp.")
                   : t("ngày đầu của bạn bắt đầu từ đây.")}
@@ -269,6 +272,9 @@ export default function App() {
       }} onClose={() => setWelcome(false)} />}
       {gameMenu && <Dialog title={t("Tạm dừng")} subtitle={t("DAY ZERO · Không gian của bạn, nhịp đi của bạn.")} onClose={() => setGameMenu(false)}>
         <div className="game-menu-actions">
+          <p>{user.name} · {user.email}</p>
+          {user.role==='manager'&&<button className="button secondary" onClick={openAdmin}>{language==='vi'?'Trang quản trị':'Admin dashboard'}</button>}
+          <button className="button secondary" onClick={logout}>{language==='vi'?'Đăng xuất':'Sign out'}</button>
           <button className="button primary" onClick={() => setGameMenu(false)}>{t("Trở lại trò chơi")}</button>
           <button className="button secondary" onClick={() => { setGameMenu(false); goTo('summary'); }}>{t("Tổng kết trải nghiệm")}</button>
           <button className="button secondary" onClick={() => { setGameMenu(false); goTo('tasks'); }}>{t("Nhiệm vụ chuẩn bị")}</button>
@@ -366,7 +372,7 @@ export default function App() {
               <Map size={23} />
               <section>
                 <h3>{t("01 · Làm quen không gian")}</h3>
-                <p>{t("Nhập kích thước xe rồi vào map. Di chuột để nhìn quanh, WASD di chuyển, V đổi góc nhìn, Esc hiện chuột và Enter chơi tiếp. Nhấn N để chọn điểm đến, theo vạch vàng hoặc bật tự đi. P/WASD dừng tự đi. H bật/tắt giọng hướng dẫn, có phụ đề và nút nghe lại.")}</p>
+                <p>{language==='vi'?'Nhập kích thước xe rồi vào map. WASD di chuyển, Shift đi chậm, V đổi góc nhìn, N chọn điểm đến, P dừng tự đi. B ghi chú bất kỳ vị trí nào; hướng dẫn hiển thị bằng phụ đề, không phát âm thanh.':'Set your wheelchair dimensions and enter. WASD moves, Shift slows down, V changes the view, N selects a destination and P stops auto-walk. B adds a note anywhere. Guidance is text-only.'}</p>
               </section>
             </div>
             <div>

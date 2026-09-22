@@ -166,8 +166,8 @@ export function useSimulation(
         const speed = controls.has("slow")
           ? 0.45
           : profile.mode === "walking"
-            ? 1.5
-            : 1.15;
+            ? 2.2
+            : 1.8;
         let turn =
           (Number(controls.has("turnLeft")) -
             Number(controls.has("turnRight"))) *
@@ -223,7 +223,7 @@ export function useSimulation(
             const dx = next.x - pose.current.x, dz = next.z - pose.current.z, distance = Math.hypot(dx, dz);
             const difference = Math.atan2(Math.sin(next.yaw - pose.current.yaw), Math.cos(next.yaw - pose.current.yaw));
             const turn = Math.max(-dt * 1.5, Math.min(dt * 1.5, difference));
-            const step = Math.abs(difference) < .025 ? Math.min(distance, dt * 1.15) : 0;
+            const step = Math.abs(difference) < .025 ? Math.min(distance, dt * (profile.mode==='walking'?2.2:1.8)) : 0;
             const result = moveWithCollisions(pose.current, distance ? dx / distance * step : 0, distance ? dz / distance * step : 0, turn, profile, obstacles);
             pose.current = result.pose;
             if (result.blocked) { nav.status = `Đang chờ: ${result.blocked.name}. Nhấn WASD để tự điều khiển.`; blocked = result.blocked.name; }

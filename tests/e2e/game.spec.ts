@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { seedSession } from '../../src/lib/persistence';
 
 test('setup precedes map; V toggles first and third person without teleporting or responding inside forms', async ({ page }) => {

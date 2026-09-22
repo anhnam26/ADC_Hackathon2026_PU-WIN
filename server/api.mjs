@@ -27,7 +27,7 @@ export function createApi({file=process.env.DAYZERO_DATA_FILE||resolve('data/day
       for(const [id,a] of attempts)if(a.until<now)attempts.delete(id);
       const cookie=req.headers.cookie?.split(';').map(v=>v.trim()).find(v=>v.startsWith('dayzero_auth='))?.slice(13);
       const auth=cookie&&sessions.get(hash(cookie)),user=auth&&db.users.find(u=>u.id===auth.userId);
-      const body=async()=>{let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>16000)throw Object.assign(new Error('Nội dung quá dài.'),{status:413});}try{return JSON.parse(raw||'{}');}catch{throw Object.assign(new Error('JSON không hợp lệ.'),{status:400});}};
+      const body=async()=>{let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>16000)throw Object.assign(new Error('Nội dung quá dài.'),{status:413});}try{const input=JSON.parse(raw||'{}');if(!input||Array.isArray(input)||typeof input!=='object')throw new Error();return input;}catch{throw Object.assign(new Error('JSON không hợp lệ.'),{status:400});}};
       const setCookie=(value,maxAge)=>res.setHeader('Set-Cookie',`dayzero_auth=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${req.socket.encrypted||process.env.DAYZERO_SECURE_COOKIE==='1'?'; Secure':''}`);
       if(url.pathname==='/api/auth/me'&&req.method==='GET')return reply(200,{user:user?publicUser(user):null});
       if(url.pathname==='/api/auth/login'&&req.method==='POST'){

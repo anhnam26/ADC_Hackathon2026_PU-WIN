@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { seedSession } from '../../src/lib/persistence';
 import {objects} from '../../src/data/space';
 
@@ -17,7 +17,7 @@ test('language switches setup, captions and journal; messages are local, isolate
   await expect.poll(()=>page.evaluate(()=>!!document.pointerLockElement)).toBe(true);
   await page.evaluate(()=>document.exitPointerLock());
   await expect(page.locator('.subtitle-bar')).toContainText('entrance');
-  await expect.poll(()=>page.evaluate(()=>(window as unknown as {spoken:string[]}).spoken.includes('en-US'))).toBe(true);
+  expect(await page.evaluate(()=>(window as unknown as {spoken:string[]}).spoken)).toEqual([]);
   const subtitle=(await page.locator('.subtitle-bar').boundingBox())!;
   expect(subtitle.y).toBeGreaterThan(page.viewportSize()!.height*.65);
   expect(subtitle.y+subtitle.height).toBeLessThan(page.viewportSize()!.height);

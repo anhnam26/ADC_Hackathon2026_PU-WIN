@@ -40,7 +40,9 @@ import { insideCabin, floorY } from '../../lib/elevator';
 import ColleagueInspector from './ColleagueInspector';
 import Dialog from '../../components/Dialog';
 import { useGameDisplay } from './useGameDisplay';
-import { useVoiceGuide } from './useVoiceGuide';
+import { useTextGuide } from './useTextGuide';
+import NotesDialog from '../notes/NotesDialog';
+import type {Pose} from '../../types/simulator';
 import { routeLength } from '../../lib/navigation';
 import type { IssueContext } from "../issues/IssueForm";
 
@@ -92,7 +94,8 @@ export default function Simulator({
   const [journal, setJournal] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [destination, setDestination] = useState('reception-counter');
-  const voice = useVoiceGuide();
+  const guide = useTextGuide();
+  const [notePose,setNotePose]=useState<Pose|null>(null);
   const immersive = mode === '3d' && cameraMode !== 'overview';
   const display = useGameDisplay(stage, immersive, notify);
   const [catalog, setCatalog] = useState<'schedule' | 'objects' | 'colleagues'>('schedule');
@@ -129,8 +132,9 @@ export default function Simulator({
   const seen = objective.ids.filter((id) =>
     session.inspectedIds.includes(id),
   ).length;
-  useEffect(() => { voice.speak(`${t(objective.label)}. ${t(objective.hint)} ${t('Nhấn N để chọn điểm đến và dẫn đường.')}`); }, [objective, voice.speak, language]);
-  useEffect(() => { if (sim.view.navigationStatus !== 'Chọn một điểm đến để bắt đầu dẫn đường.') voice.speak(sim.view.navigationStatus); }, [sim.view.navigationStatus, voice.speak]);
+  useEffect(() => { guide.show(`${t(objective.label)}. ${t(objective.hint)} ${t('Nhấn N để chọn điểm đến và dẫn đường.')}`); }, [objective, guide.show, language]);
+  useEffect(() => { if (sim.view.navigationStatus !== 'Chọn một điểm đến để bắt đầu dẫn đường.') guide.show(sim.view.navigationStatus); }, [sim.view.navigationStatus, guide.show]);
+  const openNote=()=>{sim.stopNavigation();setNotePose({...sim.pose.current});};
   const navigateToSelected = (automatic: boolean) => {
     setChosen(destination);
     sim.navigate(destination, automatic);
@@ -171,11 +175,11 @@ export default function Simulator({
       if (e.code === 'KeyJ') { e.preventDefault(); setJournal(true); }
       if (e.code === 'KeyN') { e.preventDefault(); setNavigationOpen(true); }
       if (e.code === 'KeyP') { e.preventDefault(); if (sim.view.auto) sim.stopNavigation(); else { setChosen(destination); sim.navigate(destination, true); } }
-      if (e.code === 'KeyH') { e.preventDefault(); voice.toggle(); }
+      if (e.code === 'KeyB') {e.preventDefault();openNote();}
     };
     window.addEventListener('keydown', hotkey);
     return () => window.removeEventListener('keydown', hotkey);
-  }, [mode, destination, sim, voice]);
+  }, [mode, destination, sim]);
   const unavailable = useCallback(() => {
     setFailed(true);
     setMode("2d");
@@ -541,11 +545,10 @@ export default function Simulator({
           </footer>
           <section className="navigation-hud" aria-label={t("Hướng dẫn khám phá")}>
             <p className="lift-hud" data-testid="lift-status">{t('THANG MÁY')} · {t(`lift-phase-${sim.view.elevator.phase}`)} · {sim.view.elevator.y.toFixed(1)} m</p>
-            <div className="navigation-actions"><button onClick={() => setNavigationOpen(true)}>{t("N · Chọn điểm đến")}</button><button onClick={() => sim.view.auto ? sim.stopNavigation() : navigateToSelected(true)}>{sim.view.auto ? t("P · Dừng tự đi") : t("P · Tự đi")}</button><button onClick={voice.toggle} aria-pressed={voice.enabled}>{voice.enabled ? t("H · Tắt giọng") : t("H · Bật giọng")}</button><button onClick={voice.replay}>{t("Nghe lại")}</button></div>
+            <div className="navigation-actions"><button onClick={() => setNavigationOpen(true)}>{t("N · Chọn điểm đến")}</button><button onClick={() => sim.view.auto ? sim.stopNavigation() : navigateToSelected(true)}>{sim.view.auto ? t("P · Dừng tự đi") : t("P · Tự đi")}</button><button className="note-tool" onClick={openNote}>{language==='vi'?'B · Ghi chú vị trí':'B · Add location note'}</button></div>
             {sim.view.route.length > 0 && <small>{t("Vạch vàng trên sàn · Còn khoảng")} {routeLength([sim.view.pose, ...sim.view.route]).toFixed(1)} m</small>}
-            {voice.voiceNote && <details><summary>{t("Giọng đọc")}</summary><small>{voice.voiceNote}</small></details>}
           </section>
-          <div className="subtitle-bar" role="status" aria-live="polite"><span>{language === 'vi' ? 'HƯỚNG DẪN' : 'GUIDE'}</span><p className="guide-caption">{voice.caption}</p></div>
+          <div className="subtitle-bar" role="status" aria-live="polite"><span>{language === 'vi' ? 'HƯỚNG DẪN' : 'GUIDE'}</span><p className="guide-caption">{guide.caption}</p></div>
         </section>
         <aside className="explore-sidebar">
           <section className="current-mission">
@@ -636,6 +639,7 @@ export default function Simulator({
           </Dialog>}
         </aside>
       </div>
+      {notePose&&<NotesDialog pose={notePose} onClose={()=>{setNotePose(null);requestAnimationFrame(focusGame);}}/>}
       {navigationOpen && <Dialog title={t("Bạn muốn đến đâu?")} subtitle={t("Đi theo vạch vàng hoặc để nhân vật tự đi. WASD/P dừng tự đi bất cứ lúc nào.")} onClose={() => setNavigationOpen(false)}>
         <label className="destination-field">{t("Điểm đến")}<select aria-label={t("Điểm đến")} value={destination} onChange={e => setDestination(e.target.value)}>{objects.map(o => <option key={o.id} value={o.id}>{floorLabel(o.floor ?? 1,language)} · {t(o.name)}</option>)}</select></label>
         <p>{language==='vi'?'Điểm đến khác tầng: tới thang máy, F gọi thang, tự lái vào cabin rồi F chọn tầng. Sau khi cửa mở ở tầng đến, lái ra sảnh để tiếp tục đường đi.':'For another floor: reach the lift, press F to call it, drive into the cabin and press F to choose the floor. Exit into the lobby after arrival to continue your route.'}</p>

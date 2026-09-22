@@ -5,11 +5,13 @@ import type {Pose} from '../../types/simulator';
 import {floorY} from '../../lib/elevator';
 import {useLocale} from '../../lib/i18n';
 import SpatialMap,{noteStatus} from './SpatialMap';
+import {useAccount} from '../auth/AccountContext';
 
 export default function NotesDialog({pose,onClose}:{pose:Pose;onClose:()=>void}){
  const {language}=useLocale(),vi=language==='vi';
+ const {user}=useAccount();
  const [notes,setNotes]=useState<SpatialNote[]>([]),[tab,setTab]=useState<'new'|'mine'>('new'),[selected,setSelected]=useState<SpatialNote|null>(null),[position,setPosition]=useState({floor:pose.floor??1,x:pose.x,z:pose.z,y:pose.y??floorY(pose.floor??1)}),[concern,setConcern]=useState(''),[request,setRequest]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[loading,setLoading]=useState(true);
- const refresh=()=>{setLoading(true);setError('');api<{notes:SpatialNote[]}>('/notes').then(r=>{setNotes(r.notes);setSelected(current=>r.notes.find(n=>n.id===current?.id)??null);}).catch(e=>setError(e.message)).finally(()=>setLoading(false));};
+ const refresh=()=>{setLoading(true);setError('');api<{notes:SpatialNote[]}>('/notes').then(r=>{setNotes(r.notes.filter(n=>n.authorId===user.id));setSelected(current=>r.notes.find(n=>n.id===current?.id&&n.authorId===user.id)??null);}).catch(e=>setError(e.message)).finally(()=>setLoading(false));};
  useEffect(refresh,[]);
  async function submit(e:FormEvent){e.preventDefault();if(busy)return;setBusy(true);setError('');try{const {note}=await api<{note:SpatialNote}>('/notes',{method:'POST',body:JSON.stringify({position,concern,request})});setNotes(list=>[note,...list]);setSelected(note);setConcern('');setRequest('');setTab('mine');}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  return <Dialog wide title={vi?'Ghi chú không gian':'Space notes'} subtitle={vi?'Ghi lại bất cập và thay đổi bạn mong muốn tại bất kỳ vị trí nào.':'Mark a barrier and the change you need at any location.'} onClose={()=>{if(!busy)onClose();}}>

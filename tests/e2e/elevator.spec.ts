@@ -1,4 +1,4 @@
-import {test,expect,type Page} from '@playwright/test';
+import {test,expect,type Page} from './fixtures';
 import {seedSession} from '../../src/lib/persistence';
 
 async function hold(page:Page,key:string,check:()=>Promise<boolean>){await page.getByTestId('game-stage').focus();await page.keyboard.down(key);try{await expect.poll(check,{timeout:15000,intervals:[80]}).toBe(true);}finally{await page.keyboard.up(key);}}
