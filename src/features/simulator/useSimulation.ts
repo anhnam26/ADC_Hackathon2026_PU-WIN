@@ -23,6 +23,7 @@ import {CollisionEpisodes} from '../../lib/collisionEpisodes';
 import type {CollisionContact} from '../../lib/physics';
 import type {CollisionEvent} from '../../types/collisions';
 import {wheelchairDrive,WHEELCHAIR_SPEED} from '../../lib/wheelchairDrive';
+import {advanceTransfer,type Transfer} from '../../lib/crossFloor';
 
 export type Control =
   | "forward"
@@ -60,7 +61,7 @@ export function useSimulation(
   const collisionEpisodes=useRef(new CollisionEpisodes());
   const collisionCallback=useRef(onCollision);collisionCallback.current=onCollision;
   const [floor,setFloor]=useState<1|2>(initial.floor ?? 1);
-  const pendingDestination=useRef<{id:string;automatic:boolean}|null>(null);
+  const pendingDestination=useRef<Transfer|null>(null);
   const pose = useRef<Pose>({ ...initial,y:floorY(initial.floor ?? 1) });
   const elevator=useRef(createLift(initial.floor ?? 1));
   const liftInitialized=useRef(false);
@@ -148,13 +149,7 @@ export function useSimulation(
           .concat([...virtual.current]),
       );
       const riding=elevator.current.rider && liftBusy(elevator.current);
-      if(riding){controls.clear();pressed.current.clear();virtual.current.clear();navigation.current.auto=false;}
-      // Resume a cross-floor route only after the user has driven out through the open door.
-      const pending=pendingDestination.current;
-      if(pending && !paused && !controls.size && !liftBusy(elevator.current) && pose.current.x>-8.1){
-        const target=sceneObjects.current.find(o=>o.id===pending.id);
-        if(target && (target.floor ?? 1)===floor){const route=planRoute(pose.current,target,profile,sceneObjects.current);navigation.current={route:route ?? [],index:1,auto:!!route&&pending.automatic,targetId:target.id,status:`Đang tự đi đến ${target.name}.`};pendingDestination.current=null;}
-      }
+      if(riding){controls.clear();pressed.current.clear();virtual.current.clear();if(!pendingDestination.current?.automatic)navigation.current.auto=false;}
       let blocked = "",
         moving = false;
       const contacts:CollisionContact[]=[];
@@ -226,7 +221,24 @@ export function useSimulation(
         contacts.push(...result.contacts);
       }
       const nav = navigation.current;
-      if (!paused && nav.auto && nav.route.length) {
+      let transferring=false;
+      const pending=pendingDestination.current;
+      if(pending&&!paused){
+        const target=sceneObjects.current.find(o=>o.id===pending.id)!;
+        const transfer=advanceTransfer(pending,pose.current,profile,elevator.current,target,liftObject,obstacles,openDoors,dt);
+        transferring=transfer.handled;
+        if(transfer.handled){
+          pose.current=transfer.pose;contacts.push(...transfer.contacts);movement=pending.automatic?'auto':'manual';moving=transfer.moving||moving;
+          nav.route=transfer.route;nav.index=0;nav.auto=pending.automatic;nav.status=transfer.status;
+        }
+        if(transfer.done){
+          const route=planRoute(pose.current,target,profile,sceneObjects.current);
+          nav.route=route??[];nav.index=1;nav.auto=!!route&&pending.automatic;nav.targetId=target.id;
+          nav.status=route?`Follow the route to ${target.name}.`:'No clear route found. Move to a wider space and retry.';
+          pendingDestination.current=null;
+        }
+      }
+      if (!paused && !transferring && nav.auto && nav.route.length) {
         const target = sceneObjects.current.find(o => o.id === nav.targetId)!;
         if (routeTargetReached(pose.current, target, obstacles, openDoors)) {
           // Arrive facing the lift door so W can board without sideways steering.
@@ -259,7 +271,7 @@ export function useSimulation(
             if (Math.hypot(next.x - pose.current.x, next.z - pose.current.z) < .001 && Math.abs(difference) < .025) nav.index++;
           }
         }
-      } else if (!paused && nav.route.length && !nav.auto) {
+      } else if (!paused && !transferring && nav.route.length && !nav.auto) {
         // Hide completed sections when the user follows the floor route manually.
         while (nav.index < nav.route.length - 1 && Math.hypot(nav.route[nav.index].x - pose.current.x, nav.route[nav.index].z - pose.current.z) < .4) nav.index++;
       }
@@ -403,11 +415,15 @@ export function useSimulation(
       interact.current(candidate);
   };
   const navigate = (id: string, automatic: boolean) => {
-    if(elevator.current.rider || insideCabin(pose.current,profile))return false;
     let target = sceneObjects.current.find(o => o.id === id);
     pendingDestination.current=null;
     const destination=objects.find(o=>o.id===id);
-    if(destination && (destination.floor ?? 1)!==floor){pendingDestination.current={id,automatic};target=sceneObjects.current.find(o=>o.id===`lift-${floor}`);}
+    const actualFloor=pose.current.floor??1;
+    if(destination&&((destination.floor??1)!==actualFloor||insideCabin(pose.current,profile)||elevator.current.rider)){
+      pendingDestination.current={id,automatic,phase:elevator.current.rider?'ride':insideCabin(pose.current,profile)?((destination.floor??1)===actualFloor?'exit':'board'):'approach'};
+      target=sceneObjects.current.find(o=>o.id===`lift-${actualFloor}`);
+      if(pendingDestination.current.phase!=='approach'){navigation.current={route:[],index:0,auto:automatic,targetId:target!.id,status:'Lift transfer in progress.'};return true;}
+    }
     if (!target) return;
     const route = planRoute(pose.current, target, profile, sceneObjects.current);
     navigation.current = { route: route ?? [], index: 1, auto: automatic && !!route, targetId: target.id,
@@ -435,6 +451,15 @@ export function useSimulation(
     return null;
   };
   const stopNavigation = () => { navigation.current.auto = false; if(pendingDestination.current)pendingDestination.current.automatic=false; navigation.current.status = 'Đã dừng tự đi. Bạn có thể tiếp tục theo vạch trên sàn.'; };
+  const spawnAt=(next:Pose)=>{
+    const spawn={...next,floor:next.floor??1,y:floorY(next.floor??1)};
+    if(blockingAt(spawn,profile,worldObstacles(openDoors,sceneObjects.current,spawn.floor)))return false;
+    collisionEpisodes.current.reset();pose.current=spawn;setFloor(spawn.floor);elevator.current=createLift(spawn.floor);
+    pressed.current.clear();virtual.current.clear();pendingTurn.current=0;lookYaw.current=0;lookPitch.current=0;
+    pendingDestination.current=null;nearby.current=[];preferred.current=null;
+    navigation.current={route:[],index:0,auto:false,targetId:'',status:'Mission starting point.'};
+    setView(v=>({...v,pose:spawn,route:[],auto:false,nearby:[],elevator:{...elevator.current}}));return true;
+  };
   return {
     pose,
     cameraYaw,
@@ -442,7 +467,8 @@ export function useSimulation(
     lookYaw,
     view,
     obstacles: obstacleRef.current,
-    navigate, stopNavigation,
+    navigate, stopNavigation, spawnAt,
+    reached:(id:string)=>{const target=sceneObjects.current.find(o=>o.id===id);return !!target&&(pose.current.floor??1)===(target.floor??1)&&!elevator.current.rider&&routeTargetReached(pose.current,target,obstacleRef.current,openDoors);},
     setControl,
     chooseNearby,
     triggerInteraction,
