@@ -51,7 +51,19 @@ Mặc định mở **góc nhìn thứ nhất**. Camera đặt tại tâm xe, cao
 
 Toàn màn hình dùng Fullscreen API; map chiếm 100% chiều rộng/cao, không có viền trang hay sidebar. Pointer Lock tự kích hoạt từ thao tác vào map, ẩn con trỏ và nhận chuyển động chuột liên tục ngay cả khi chưa toàn màn hình. Mở hồ sơ/Menu/Nhật ký sẽ trả chuột để thao tác; bấm nút đóng/tiếp tục trong bảng sẽ thử khóa lại. Esc trả chuột và không tự khóa lại ngoài ý muốn; Enter tiếp tục chơi. Nếu trình duyệt chặn API, hiện thông báo và vẫn dùng map phủ trang, kéo chuột hoặc cảm ứng. Trên màn hình cảm ứng không yêu cầu khóa chuột. Trình tự gọi API và yêu cầu tương tác người dùng tham chiếu [Pointer Lock 2.0](https://www.w3.org/TR/pointerlock-2/).
 
-## Dẫn đường và giọng nói
+## Tòa nhà hai tầng
+
+- Phiên mới xuất phát **ngoài tòa nhà**, trên sân trước cửa chính. Có mặt tiền hai tầng, lối lát và đường phía trước. Nhấn W để tiến lại gần cửa; F chỉ xuất hiện khi đủ gần. Phiên đã chơi tiếp tục giữ vị trí/tầng đã lưu; dùng **Về lối vào** để trở về điểm xuất phát mới.
+- **Tầng 1:** mặt bằng trong nhà 24 × 27 m, sân ngoài sâu 7 m. Giữ khu làm việc, Lotus, pantry và nhà vệ sinh; thêm **phòng nhân sự, đào tạo, nghỉ ngơi** ở cánh phía sau, cửa thông thủy 140 cm.
+- **Tầng 2:** khu làm việc B21/B22, phòng họp Sky, máy in và sảnh nghỉ. HUD, vật cản, bản đồ 2D/3D và tương tác đều theo tầng hiện tại.
+- **Thang máy** ở đầu trái hành lang phía sau; **thang bộ** ở đầu phải. Nhấn **N** để tìm và tự đi đến. Thang máy có ô cửa 140 cm, cabin hữu dụng 190 × 220 cm.
+- **Đi thang máy:** tới gần nhấn **F → Gọi thang / Mở cửa**, chờ cửa trượt mở, dùng **WASD** đưa toàn bộ xe vào cabin. Nhấn **F → Đi đến Tầng 1/2**. Cửa đóng, cabin nâng/hạ cả người chơi qua 3,2 m; chờ cửa mở hoàn toàn rồi lái ra. Có thể lùi bằng S nếu vẫn nhìn vào phía trong cabin.
+- Hai tầng cùng tồn tại trong một cảnh 3D ở cao độ 0 và 3,2 m; camera theo cabin liên tục, không tải lại map khi đến tầng. Cửa tầng không có cabin luôn đóng. Trong hành trình, tạm khóa di chuyển ngang để giữ người trong cabin; vẫn nhìn quanh và đổi góc nhìn bằng V.
+- Nhà có **mái, trần giữa tầng và đèn trong các phòng, hành lang, cabin**. Sàn tầng 2 chừa lỗ thang máy và thang bộ. Chế độ toàn cảnh ẩn mái/tầng khác để xem mặt bằng.
+- Xe lăn đi bằng thang máy. Tại thang bộ có nút dẫn đường tới thang máy; chế độ đi bộ có thể dùng cả hai. **Thang bộ vẫn chuyển tầng qua bảng tương tác**, chưa mô phỏng bước chân trên từng bậc.
+- Chọn đích khác tầng trong **N** sẽ dẫn tới thang máy trước. Tự vào cabin, chọn tầng và lái ra; khi buông phím, đường đi tiếp tục tới đích ban đầu. Vị trí và tầng được lưu. Nếu tải lại giữa hành trình, phiên trở về tầng đã lưu với cabin mở để có thể tiếp tục, không xuất hiện lơ lửng giữa giếng thang.
+
+## Dẫn đường trong map
 
 Nhấn **N**, chọn đồ vật/đồng nghiệp rồi chọn **Hiện đường đi** hoặc **Tự đi đến đây**. Đường vàng xuất hiện trực tiếp trên sàn 3D và bản đồ 2D, có khoảng cách còn lại. **P** bật/dừng tự đi tới điểm đã chọn; WASD/mũi tên/Q/E hoặc F cũng dừng tự đi để trả quyền điều khiển. Mở dialog/rời tab tạm dừng di chuyển.
 
@@ -63,7 +75,7 @@ Giọng hướng dẫn dùng Web Speech API, chọn giọng `vi-VN` hoặc `en-U
 
 ## Gặp đồng nghiệp
 
-**J → Nhật ký** có ba mục riêng: **Lịch trình**, **Đồ vật** (22 đối tượng) và **Đồng nghiệp** (7 người). Chọn người ở xa không mở hồ sơ từ xa; cần đến trong tầm tương tác.
+**J → Nhật ký** có ba mục riêng: **Lịch trình**, **Đồ vật** (43 đối tượng) và **Đồng nghiệp** (7 người). Mỗi đối tượng ghi tầng tương ứng. Chọn người ở xa không mở hồ sơ từ xa; cần đến trong tầm tương tác.
 
 Trong hồ sơ đồng nghiệp, chọn **Gửi thư**, nhập lời nhắn (1–1500 ký tự) rồi **Gửi lời nhắn**. Lịch sử riêng theo từng người và được lưu cùng phiên trên trình duyệt. **Chưa gửi email hoặc chuyển tin tới người thật**; muốn gửi thật cần bổ sung backend. Xuất báo cáo chứa cả lời nhắn; đặt lại demo xóa chúng.
 
@@ -73,9 +85,9 @@ Nút mũi tên trên màn hình dùng được bằng chạm/chuột, hoặc gi�
 
 ## Không gian và tỷ lệ
 
-- Một mặt bằng liên tục rộng **24 m × 20,5 m** gồm sảnh ngoài, mở rộng từ 18 m × 16,5 m. Các phòng, hành lang và khoảng trống rộng hơn; bàn ghế và xe giữ nguyên kích thước mét.
+- Tòa nhà hai tầng, mỗi tầng rộng **24 × 27 m**, sân trước sâu 7 m. Các phòng, hành lang và khoảng trống rộng hơn; bàn ghế và xe giữ nguyên kích thước mét.
 - **1 đơn vị 3D = 1 mét**. Ô lưới là 1 m. Cùng một hệ tỷ lệ cho xe, cửa, bàn, ghế và dụng cụ.
-- 22 đồ vật có thông tin sử dụng và 7 đồng nghiệp có hồ sơ, tổng cộng 29 điểm khám phá. Khung cửa, tường, bàn ghế, máy nước, máy in, đồ dùng và người có va chạm.
+- 43 đồ vật/lối nối tầng và 7 đồng nghiệp có hồ sơ, tổng cộng 50 điểm khám phá. Khung cửa, tường, bàn ghế, máy nước, máy in, đồ dùng và người có va chạm.
 - Xe thay đổi chiều rộng/dài thực theo số đo nhập; không chỉ đổi nhãn. Hướng quay của xe được xét trong kiểm tra va chạm.
 - Cửa phải mở trước khi đi qua. Quá trình kiểm tra mở/đóng xét toàn bộ cung quét để tránh cánh cửa xuyên người.
 - Cửa tăng rộng 20 cm: lối vào **146 cm**, khu làm việc **104 cm**, Lotus **105 cm**, nhà vệ sinh **96 cm**. Khung/tường và bảng thông tin cùng cập nhật. Xe rộng 105 cm bị chặn ở cửa 96 cm. Mỗi cửa có biển tên phòng ở cả hai phía phía trên khung.
@@ -130,6 +142,10 @@ Bản preview ở **http://127.0.0.1:4173/**. Có thể đưa `dist/` lên stati
 ## Cấu trúc dữ liệu không gian
 
 - `src/data/space.ts`: mặt bằng mét, đồ vật, số đo, hướng dẫn, vị trí xuất phát và mục tiêu. Các đoạn tường cạnh cửa sinh từ cùng số đo thông thủy.
+- `src/data/building.ts`: các phòng mới, dữ liệu tầng hai, sảnh đến, thang máy và thang bộ.
+- `src/features/simulator/FloorConnection.tsx`: tương tác chuyển tầng và lối thay thế cho xe lăn.
+- `src/lib/elevator.ts`: trạng thái gọi thang, đóng/mở cửa, nâng/hạ và va chạm cửa tầng.
+- `src/features/simulator/BuildingShell.tsx`: sàn chừa giếng thang, mái, đèn, cửa tầng và cabin chuyển động.
 - `src/data/colleagues.ts`: 7 hồ sơ nhân vật mẫu, tuyến đi lại, màu mô hình và thông tin hỗ trợ.
 - `src/lib/navigation.ts`: tìm đường có hướng xe, đi chéo và rút gọn các đoạn an toàn.
 - `src/lib/npcMotion.ts`: cập nhật người đi bộ, nhường xe và kiểm tra vật cản.

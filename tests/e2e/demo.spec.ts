@@ -8,6 +8,9 @@ async function start(page: Page, use2d = true) {
   await page.evaluate(() => document.exitPointerLock());
   if (use2d) await page.getByRole('button', { name: '2D', exact: true }).click();
   await page.getByTestId('game-stage').focus();
+  await page.keyboard.down('w');
+  await expect.poll(async()=>Number(await page.getByTestId('game-stage').getAttribute('data-z')), {intervals:[50]}).toBeLessThan(8.3);
+  await page.keyboard.up('w');
   await expect(page.locator('.interact-button')).toBeVisible();
 }
 async function z(page: Page) { return Number(await page.getByTestId('game-stage').getAttribute('data-z')); }

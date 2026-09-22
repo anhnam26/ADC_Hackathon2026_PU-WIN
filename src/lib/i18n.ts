@@ -49,6 +49,7 @@ const en: Record<string, string> = {
   'Chưa phát được giọng nói. Bấm Nghe lại hoặc tiếp tục theo hướng dẫn chữ.':'Could not play speech. Use Replay or continue with the subtitles.',
 };
 Object.assign(en, {
+  'Thang máy đang hoạt động. Vui lòng chờ.':'The lift is operating. Please wait.','Gọi thang và chờ cửa mở trước.':'Call the lift and wait for the doors to open.','Đưa toàn bộ xe vào cabin, tránh vùng cửa rồi chọn tầng.':'Move fully into the cabin, clear of the doors, before choosing a floor.','Vùng cửa đang bị chắn.':'The doorway is obstructed.','Cửa đang đóng. Cabin sẽ nâng bạn tới tầng đã chọn.':'Doors closing. The cabin will carry you to your selected floor.','Đã gọi thang. Chờ cửa mở, dùng WASD vào cabin rồi nhấn F chọn tầng.':'Lift called. Wait for the doors, use WASD to enter, then press F to choose a floor.','Cửa thang máy':'Lift doors',
   'PHÒNG NHÂN SỰ':'HR ROOM','PHÒNG ĐÀO TẠO':'TRAINING ROOM','PHÒNG NGHỈ NGƠI':'WELLNESS ROOM','KHU LÀM VIỆC TẦNG 2':'FLOOR 2 WORKSPACE','PHÒNG HỌP SKY':'SKY MEETING ROOM','THANG MÁY':'LIFT','THANG BỘ':'STAIRS',
   'Cửa phòng nhân sự':'HR room door','Cửa phòng đào tạo':'Training room door','Cửa phòng nghỉ ngơi':'Wellness room door','Bàn tiếp đón HR':'HR reception desk','Bàn phòng đào tạo':'Training table','Màn hình đào tạo':'Training screen','Ghế phòng nghỉ ngơi':'Wellness sofa','Máy nước phòng nghỉ':'Wellness water dispenser','Cửa khu làm việc tầng 2':'Floor 2 workspace door','Cửa phòng họp Sky':'Sky meeting room door','Bàn làm việc B21':'Desk B21','Bàn làm việc B22':'Desk B22','Máy in tầng 2':'Floor 2 printer','Bàn họp Sky':'Sky meeting table','Màn hình phòng Sky':'Sky meeting screen','Ghế sảnh tầng 2':'Floor 2 lobby sofa','Máy nước tầng 2':'Floor 2 water dispenser',
   'Phòng nhân sự':'HR room','Phòng đào tạo':'Training room','Phòng nghỉ ngơi':'Wellness room','Khu làm việc tầng 2':'Floor 2 workspace','Phòng họp Sky':'Sky meeting room','Sảnh tầng 2':'Floor 2 lobby',
@@ -94,10 +95,13 @@ Object.assign(en, {
   'Sảnh đón':'Lobby','Khu làm việc':'Work area','Phòng họp Lotus':'Lotus meeting room','Nhà vệ sinh':'Restroom','Khu nghỉ':'Quiet area','Lối vào':'Entrance',
 });
 export function translate(source: string, language: Language): string {
+  const liftPhases:Record<string,[string,string]>={'lift-phase-idle':['Đang chờ gọi','Waiting'],'lift-phase-opening':['Đang mở cửa','Opening doors'],'lift-phase-open':['Cửa đang mở','Doors open'],'lift-phase-closing':['Đang đóng cửa','Closing doors'],'lift-phase-moving':['Đang di chuyển','Travelling']};
+  if(liftPhases[source])return liftPhases[source][language==='vi'?0:1];
   if(language==='vi') return source;
   const clean=source.trim();
   if(en[clean]) return source.replace(clean,en[clean]);
   const patterns: [RegExp,(match:RegExpMatchArray)=>string][] = [
+    [/^Đã đến tầng (\d)\. Chờ cửa mở rồi điều khiển xe ra ngoài\.$/,m=>`Arrived on floor ${m[1]}. Wait for the doors, then drive out.`],
     [/^Chào bạn! Mình là (.+)\. Rất vui được làm quen và hỗ trợ bạn trong ngày đầu\.$/,m=>`Hi! I am ${m[1]}. It is great to meet you and help on your first day.`],
     [/^Đã đến (.+)\. Nhấn F để tìm hiểu\.$/, m=>`Arrived at ${translate(m[1],language)}. Press F to explore.`],
     [/^Đang tự đi đến (.+)\. WASD hoặc P để dừng\.$/,m=>`Auto-walking to ${translate(m[1],language)}. WASD or P stops movement.`],

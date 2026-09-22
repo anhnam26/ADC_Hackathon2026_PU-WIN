@@ -24,8 +24,8 @@ export function objectParts(o: WorldObject, open = false, doorAngle?: number): P
   if(o.kind === 'elevator') return [
     b(0,h/2,-d/2+.06,w,h,.12),b(-w/2+.06,h/2,0,.12,h,d),b(w/2-.06,h/2,0,.12,h,d),
     b(0,.03,0,w,.06,d,'#b7c7c8',false),b(0,h-.04,0,w,.08,d,'#728e94',false),
-    b(0,1.12,d/2-.05,o.clearWidth!,2.24,.08,'#aec2c8'),
-    b(0,1.12,d/2-.01,.018,2.24,.014,'#3c5965',false),
+    ...(!open ? [b(0,1.12,d/2-.05,o.clearWidth!,2.24,.08,'#aec2c8')] : []),
+    b(-.925,1.12,d/2-.05,.45,2.24,.1,'#859da3'),b(.925,1.12,d/2-.05,.45,2.24,.1,'#859da3'),
     b(w/2-.22,.95,d/2-.025,.14,.25,.04,'#244e5b',false),b(w/2-.22,.95,d/2-.01,.05,.05,.02,'#daf29b',false),
   ];
   if(o.kind === 'stairs') return [

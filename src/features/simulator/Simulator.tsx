@@ -36,6 +36,7 @@ import Map2D from "./Map2D";
 import ObjectInspector, { measurementSummary } from "./ObjectInspector";
 import FloorConnection from './FloorConnection';
 import { floorLabel } from '../../data/building';
+import { insideCabin, floorY } from '../../lib/elevator';
 import ColleagueInspector from './ColleagueInspector';
 import Dialog from '../../components/Dialog';
 import { useGameDisplay } from './useGameDisplay';
@@ -147,11 +148,11 @@ export default function Simulator({
         Math.hypot(current.x - last.x, current.z - last.z) > 0.02 ||
         Math.abs(current.yaw - last.yaw) > 0.02 || current.floor !== last.floor
       ) {
-        savePose(current);
+        savePose({...current,y:floorY(current.floor ?? 1)});
         last = { ...current };
       }
     }, 900);
-    const persist = () => savePose(sim.pose.current);
+    const persist = () => savePose({...sim.pose.current,y:floorY(sim.pose.current.floor ?? 1)});
     window.addEventListener("pagehide", persist);
     return () => {
       clearInterval(timer);
@@ -359,6 +360,10 @@ export default function Simulator({
             data-yaw={sim.view.pose.yaw.toFixed(3)}
             data-camera={mode === '2d' ? 'map' : cameraMode}
             data-floor={sim.floor}
+            data-height={(sim.view.pose.y ?? floorY(sim.floor)).toFixed(3)}
+            data-lift-phase={sim.view.elevator.phase}
+            data-lift-height={sim.view.elevator.y.toFixed(3)}
+            data-lift-door={sim.view.elevator.door.toFixed(3)}
             data-pointer-locked={display.locked}
             data-autowalk={sim.view.auto}
             onPointerDown={(e) => {
@@ -377,6 +382,7 @@ export default function Simulator({
               >
                 <OfficeScene
                   sceneObjects={sim.view.objects}
+                  elevator={sim.elevator}
                   route={sim.view.route}
                   profile={session.mobility}
                   pose={sim.pose}
@@ -396,7 +402,8 @@ export default function Simulator({
               </Suspense>
             ) : (
               <Map2D
-                sceneObjects={sim.view.objects}
+                sceneObjects={sim.view.objects.filter(o=>(o.floor ?? 1)===sim.floor)}
+                elevator={sim.view.elevator}
                 route={sim.view.route}
                 pose={sim.view.pose}
                 profile={session.mobility}
@@ -533,6 +540,7 @@ export default function Simulator({
               <RotateCcw size={13} />{t("Về lối vào")}</button>
           </footer>
           <section className="navigation-hud" aria-label={t("Hướng dẫn khám phá")}>
+            <p className="lift-hud" data-testid="lift-status">{t('THANG MÁY')} · {t(`lift-phase-${sim.view.elevator.phase}`)} · {sim.view.elevator.y.toFixed(1)} m</p>
             <div className="navigation-actions"><button onClick={() => setNavigationOpen(true)}>{t("N · Chọn điểm đến")}</button><button onClick={() => sim.view.auto ? sim.stopNavigation() : navigateToSelected(true)}>{sim.view.auto ? t("P · Dừng tự đi") : t("P · Tự đi")}</button><button onClick={voice.toggle} aria-pressed={voice.enabled}>{voice.enabled ? t("H · Tắt giọng") : t("H · Bật giọng")}</button><button onClick={voice.replay}>{t("Nghe lại")}</button></div>
             {sim.view.route.length > 0 && <small>{t("Vạch vàng trên sàn · Còn khoảng")} {routeLength([sim.view.pose, ...sim.view.route]).toFixed(1)} m</small>}
             {voice.voiceNote && <details><summary>{t("Giọng đọc")}</summary><small>{voice.voiceNote}</small></details>}
@@ -564,7 +572,7 @@ export default function Simulator({
               className="button primary"
               disabled={
                 seen !== objective.ids.length ||
-                (session.currentStep === 6 && sim.view.pose.z < 7.6)
+                (session.currentStep === 6 && (sim.floor !== 1 || sim.view.pose.z < 7.6))
               }
               onClick={() => {
                 setStepStatus("completed");
@@ -630,11 +638,11 @@ export default function Simulator({
       </div>
       {navigationOpen && <Dialog title={t("Bạn muốn đến đâu?")} subtitle={t("Đi theo vạch vàng hoặc để nhân vật tự đi. WASD/P dừng tự đi bất cứ lúc nào.")} onClose={() => setNavigationOpen(false)}>
         <label className="destination-field">{t("Điểm đến")}<select aria-label={t("Điểm đến")} value={destination} onChange={e => setDestination(e.target.value)}>{objects.map(o => <option key={o.id} value={o.id}>{floorLabel(o.floor ?? 1,language)} · {t(o.name)}</option>)}</select></label>
-        <p>{language==='vi'?'Điểm đến khác tầng: theo đường đến thang máy, nhấn F để chọn tầng, rồi tiếp tục hành trình.':'For another floor, follow the route to the lift, press F to choose the floor, then continue your journey.'}</p>
+        <p>{language==='vi'?'Điểm đến khác tầng: tới thang máy, F gọi thang, tự lái vào cabin rồi F chọn tầng. Sau khi cửa mở ở tầng đến, lái ra sảnh để tiếp tục đường đi.':'For another floor: reach the lift, press F to call it, drive into the cabin and press F to choose the floor. Exit into the lobby after arrival to continue your route.'}</p>
         <div className="dialog-actions"><button className="button secondary" onClick={() => navigateToSelected(false)}>{t("Hiện đường đi")}</button><button className="button primary" onClick={() => navigateToSelected(true)}>{t("Tự đi đến đây")}</button></div>
         <p className="profile-disclaimer">{t("Đường tính theo kích thước xe, giữ xe thẳng khi qua cửa. Tự đi mở cửa khi đủ khoảng trống và chờ nếu gặp vật cản. Không phải chứng nhận lối đi thực tế.")}</p>
       </Dialog>}
-      {activeObject?.connection ? <FloorConnection key={activeObject.id} object={activeObject} profile={session.mobility} onClose={closeInspector} onReport={report} onLift={()=>{setInspected(null);setDestination(`lift-${sim.floor}`);sim.navigate(`lift-${sim.floor}`,true);focusGame();}} onTravel={()=>{const error=sim.changeFloor(activeObject.id);if(!error){savePose(sim.pose.current);setInspected(null);setChosen(null);focusGame();}return error;}} /> : activeObject?.kind === 'colleague' ? <ColleagueInspector key={activeObject.id} person={activeObject} onClose={closeInspector} /> : activeObject && (
+      {activeObject?.connection ? <FloorConnection key={activeObject.id} object={activeObject} profile={session.mobility} lift={sim.view.elevator} inCabin={insideCabin(sim.view.pose,session.mobility)} onCall={sim.callElevator} onClose={closeInspector} onReport={report} onLift={()=>{setInspected(null);setDestination(`lift-${sim.floor}`);sim.navigate(`lift-${sim.floor}`,true);focusGame();}} onTravel={()=>{const error=sim.changeFloor(activeObject.id);if(!error){savePose({...sim.pose.current,y:floorY(sim.floor)});setInspected(null);setChosen(null);requestAnimationFrame(()=>{focusGame();display.lock();});}return error;}} /> : activeObject?.kind === 'colleague' ? <ColleagueInspector key={activeObject.id} person={activeObject} onClose={closeInspector} /> : activeObject && (
         <ObjectInspector
           key={activeObject.id}
           object={activeObject}

@@ -94,6 +94,7 @@ export interface Obstacle {
   yaw: number;
 }
 export interface Pose {
+  y?: number;
   floor?: 1 | 2;
   x: number;
   z: number;

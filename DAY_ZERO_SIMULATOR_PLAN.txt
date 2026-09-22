@@ -659,3 +659,53 @@ Phần này thay thế mô tả giữ hướng theo trục map trong mục 23.
 - Kiểm tra bổ sung: hướng xe trùng hướng vận tốc, đường chéo, đổi V trong
   tự đi, xoay/qua cửa có va chạm, phụ đề dưới màn hình, đổi ngôn ngữ/giọng,
   danh mục tách biệt, lời nhắn được lưu nguyên văn và phục hồi sau tải lại.
+
+25. MỞ RỘNG TÒA NHÀ HAI TẦNG VÀ SÂN NGOÀI
+
+- Spawn phiên mới ở sân phía trước (x=0, z=10,5 m, tầng 1), hướng vào cửa.
+  Cửa chính ở z=7 m; phải tiến đến gần mới tương tác. Phiên cũ giữ vị trí;
+  nút Về lối vào đưa về spawn mới. Sân có lối lát, đường và mặt tiền hai tầng.
+- Tầng 1 mở về phía sau đến z=-20 m; trong nhà 24 × 27 m, sân ngoài sâu 7 m.
+  Thêm phòng HR, đào tạo và nghỉ ngơi, mỗi phòng 8 × 6 m; cửa 140 cm.
+  Bàn ghế giữ số đo thật của mô hình gốc, không phóng to khi mở rộng nhà.
+- Tầng 2 có khu B21/B22, máy in, phòng họp Sky, màn hình, sofa và máy nước.
+  Mỗi tầng là một lớp cảnh riêng dùng tọa độ mét; vật khác tầng không va chạm
+  hoặc tương tác với người chơi. HUD và danh mục ghi rõ tầng.
+- Lối nối ở hành lang phía sau: thang máy bên trái, thang bộ bên phải.
+  Thang máy: cửa 140 cm, cabin hữu dụng 190 × 220 cm, nút gọi cao 95 cm.
+  Thang bộ: rộng 150 cm, 18 bậc, chênh cao 320 cm, có tay vịn.
+  Đây là mô hình minh họa, không phải bản thiết kế xây dựng hoặc chứng nhận.
+- F mở bảng lối nối; chọn tầng để chuyển sang sảnh tương ứng sau thời gian chờ.
+  Không giả lập bước chân trên từng bậc hoặc thao tác bên trong cabin.
+  Xe lăn không dùng thang bộ; có nút dẫn đường sang thang máy. Đi bộ dùng cả hai.
+- N chọn đối tượng khác tầng: đường dẫn tới thang máy tầng hiện tại, người dùng
+  nhấn F để chuyển tầng rồi tiếp tục đường tới đích. Đường không xuyên sàn/tường.
+- Tầng và vị trí lưu cùng phiên. Schema nhận phiên cũ chưa có floor là tầng 1.
+- Kiểm tra: spawn ngoài, kích thước mô hình, tới các phòng mới, va chạm tách tầng,
+  sảnh đến đủ chỗ cho xe lớn nhất, dùng thang máy khứ hồi, cầu thang ở hai chế độ,
+  tự đi xuyên tầng, lưu/tải lại tầng 2, bản đồ 2D/3D và giao diện Việt/Anh.
+
+26. THANG MÁY CHUYỂN ĐỘNG LIÊN TỤC, MÁI VÀ CHIẾU SÁNG
+
+Phần này thay thế cách chuyển tầng của thang máy trong mục 25.
+- Hai tầng dựng đồng thời trong cùng cảnh 3D ở y=0 và y=3,2 m.
+  Giữ nguyên canvas, đồ vật và camera khi cabin đi lên/xuống; không tải map mới.
+- F tại sảnh để gọi/mở thang. WASD đưa toàn bộ xe vào cabin; F chọn tầng.
+  Cửa trượt đóng trong 1,2 giây, cabin tăng/giảm tốc theo hành trình 5,5 giây,
+  nâng/hạ người chơi cùng sàn cabin. Đến nơi cửa mở rồi tự lái ra ngoài.
+  Thời gian mô phỏng có thể chậm hơn trên máy yếu; không nhảy cóc vị trí.
+- Chỉ nhận chọn tầng khi xe nằm hoàn toàn trong cabin hữu dụng 190 × 220 cm.
+  Cửa thông thủy 140 cm; kiểm tra vùng cửa và giữ cửa tầng không có cabin đóng.
+  Khóa dịch chuyển ngang khi đang chạy; vẫn được nhìn quanh và đổi V.
+- N chọn đích khác tầng: tới sảnh trước, người dùng tự vào thang/chọn tầng/ra
+  khỏi cabin; sau khi buông phím, đường tới đích đã chọn được tiếp tục.
+- Có mái kín, trần giữa hai tầng, sàn chừa lỗ thang và đèn trong nhà/cabin.
+  Đèn LED hiển thị tại phòng/hành lang; nguồn sáng tập trung ở tầng hiện tại
+  để giảm chi phí render. Toàn cảnh ẩn mái và tầng khác để đọc mặt bằng.
+- Bản đồ 2D dùng chung trạng thái cabin/cửa và điều khiển đi thang.
+  Phiên lưu cao độ tầng; tải lại giữa chuyến đưa cabin về tầng đã lưu và mở
+  cửa để không giữ người giữa giếng thang.
+- Thang bộ giữ cơ chế tương tác chuyển tầng; chưa mô phỏng đi trên từng bậc.
+- Kiểm tra: lên/xuống liên tục, cửa đóng khi chạy, không vào cửa tầng vắng
+  cabin, xe phải vào đủ trước khi đi, gọi cabin trống, lái ra và tiếp tục dẫn
+  đường, cùng canvas qua hai tầng, hiển thị mái/đèn, lưu phiên và hồi quy.

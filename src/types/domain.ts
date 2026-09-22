@@ -130,6 +130,6 @@ export const sessionSchema = z.object({
   mobility: mobilitySchema.default(defaultMobility),
   inspectedIds: z.array(z.string()).default([]),
   openDoors: z.array(z.string()).default([]),
-  playerPose: z.object({ x: z.number().min(-12).max(12), z: z.number().min(-20).max(14), yaw: z.number().finite(), floor: z.union([z.literal(1), z.literal(2)]).optional() }).default({ x: 0, z: 10.5, yaw: 0, floor: 1 }),
+  playerPose: z.object({ x: z.number().min(-12).max(12), y:z.number().min(0).max(3.2).optional(), z: z.number().min(-20).max(14), yaw: z.number().finite(), floor: z.union([z.literal(1), z.literal(2)]).optional() }).default({ x: 0, z: 10.5, yaw: 0, floor: 1 }),
 });
 export type Session = z.infer<typeof sessionSchema>;

@@ -2,6 +2,7 @@ import { useLocale } from '../../lib/i18n';
 import { useEffect, type MutableRefObject } from "react";
 import { wallsOnFloor } from "../../data/space";
 import { roomZones } from '../../data/building';
+import {liftDoorObstacles,type LiftState} from '../../lib/elevator';
 import { objectObstacles } from "../../lib/objectGeometry";
 import { footprint } from "../../lib/physics";
 import type { MobilityProfile, Pose, WorldObject } from "../../types/simulator";
@@ -15,6 +16,7 @@ export default function Map2D({
   cameraYaw,
   sceneObjects,
   route,
+  elevator,
 }: {
   pose: Pose;
   profile: MobilityProfile;
@@ -24,6 +26,7 @@ export default function Map2D({
   cameraYaw: MutableRefObject<number>;
   sceneObjects: WorldObject[];
   route: Pose[];
+  elevator: LiftState;
 }) {
   const { t, language } = useLocale();
   useEffect(() => {
@@ -57,7 +60,7 @@ export default function Map2D({
       {route.length > 0 && <polyline data-testid="floor-route" points={[pose,...route].map(p => `${p.x},${p.z}`).join(' ')} fill="none" stroke="#c99a16" strokeWidth=".12" />}
       {sceneObjects.map((o) => (
         <g key={o.id} data-object-id={o.id} data-x={o.position[0].toFixed(3)} data-z={o.position[2].toFixed(3)} onClick={() => onSelect(o.id)} cursor="pointer">
-          {objectObstacles(o, openDoors.includes(o.id)).map((b, i) => (
+          {(o.kind==='elevator' ? [...objectObstacles(o,true),...liftDoorObstacles(elevator,floor)] : objectObstacles(o, openDoors.includes(o.id))).map((b, i) => (
             <rect
               key={i}
               x={b.x - b.width / 2}

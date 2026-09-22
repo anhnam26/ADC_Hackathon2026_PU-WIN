@@ -38,6 +38,7 @@ test('setup precedes map; V toggles first and third person without teleporting o
 test('native fullscreen fills viewport, locks pointer, releases it for interaction and exits cleanly', async ({ page }) => {
   await page.goto('/'); await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
   const stage = page.getByTestId('game-stage');
+  await stage.focus();await page.keyboard.down('w');await expect.poll(async()=>Number(await stage.getAttribute('data-z'))).toBeLessThan(8.3);await page.keyboard.up('w');
   await expect(page.locator('canvas')).toBeVisible();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
   await page.evaluate(() => document.exitPointerLock());

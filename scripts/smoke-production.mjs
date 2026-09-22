@@ -27,6 +27,9 @@ try {
   await expect(page.getByTestId('game-stage')).toHaveAttribute('data-camera', 'first-person');
   await expect(page.locator('.player-tag')).toHaveCount(0);
   await page.getByTestId('game-stage').focus();
+  await page.keyboard.down('w');
+  await expect.poll(async()=>Number(await page.getByTestId('game-stage').getAttribute('data-z')), {timeout:15000,intervals:[100]}).toBeLessThan(8.3);
+  await page.keyboard.up('w');
   await expect(page.locator('.interact-button')).toBeVisible();
   await page.keyboard.press('f');
   await expect(page.locator('.object-illustration')).toBeVisible();

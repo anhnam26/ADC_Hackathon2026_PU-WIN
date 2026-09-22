@@ -1,6 +1,6 @@
 import type { WorldObject, WorldWall } from '../types/simulator';
 
-// Every floor uses local metre coordinates. Travelling between floors changes the active scene.
+// Local metre coordinates are placed at y=0 and y=3.2 in one persistent 3D scene.
 export const floorLabel = (floor: number, language: 'vi' | 'en') => language === 'vi' ? `Tầng ${floor}` : `Floor ${floor}`;
 export const roomZones: {floor:1|2;x:number;z:number;width:number;depth:number;label:string;color:string}[] = [
   {floor:1,x:-8,z:-17,width:8,depth:6,label:'PHÒNG NHÂN SỰ',color:'#d9e7dc'},
@@ -43,7 +43,7 @@ export function createBuildingObjects(base:WorldObject[]):WorldObject[]{
   ];
   for(const floor of [1,2] as const){
     const targetFloor=floor===1?2:1;
-    added.push({id:`lift-${floor}`,name:`Thang máy · Tầng ${floor}`,kind:'elevator',floor,locationId:'elevator',category:'entrance',position:[-10,0,-11.9],yaw:Math.PI/2,size:[2.3,2.6,2.6],color:'#859da3',clearWidth:1.4,controlHeight:.95,roomLabel:'THANG MÁY',description:'Thang máy nối tầng 1 và tầng 2. Nhấn F tại sảnh để chọn tầng.',usage:['Đến trước cửa và nhấn F.','Chọn tầng đến. Mô phỏng chuyển bạn tới sảnh thang máy của tầng đó.'],notes:['Ô cửa 140 cm; cabin hữu dụng rộng 190 × sâu 220 cm.','Nút gọi cao 95 cm. Đây là số đo giả lập, cần xác minh ở tòa nhà thật.'],connection:{targetFloor,arrival:{floor:targetFloor,x:-7.45,z:-11.9,yaw:-Math.PI/2},cabinWidth:1.9,cabinDepth:2.2}});
+    added.push({id:`lift-${floor}`,name:`Thang máy · Tầng ${floor}`,kind:'elevator',floor,locationId:'elevator',category:'entrance',position:[-10,0,-11.9],yaw:Math.PI/2,size:[2.3,2.6,2.6],color:'#859da3',clearWidth:1.4,controlHeight:.95,roomLabel:'THANG MÁY',description:'Cabin thang máy di chuyển liên tục giữa tầng 1 và tầng 2, chênh cao 320 cm.',usage:['Đến trước cửa, nhấn F để gọi thang và chờ cửa mở.','Dùng WASD đưa toàn bộ xe vào cabin rồi nhấn F chọn tầng.','Chờ cabin đến nơi, cửa mở hoàn toàn rồi điều khiển xe ra ngoài.'],notes:['Ô cửa 140 cm; cabin hữu dụng rộng 190 × sâu 220 cm.','Nút gọi cao 95 cm. Đây là số đo giả lập, cần xác minh ở tòa nhà thật.'],connection:{targetFloor,arrival:{floor:targetFloor,x:-7.45,z:-11.9,yaw:-Math.PI/2},cabinWidth:1.9,cabinDepth:2.2}});
     added.push({id:`stairs-${floor}`,name:`Thang bộ · Tầng ${floor}`,kind:'stairs',floor,locationId:'elevator',category:'entrance',position:[10,0,-11.9],yaw:-Math.PI/2,size:[1.5,3.2,3.6],color:'#b6b6a3',roomLabel:'THANG BỘ',description:'Lối thang bộ nối hai tầng, có bậc và tay vịn.',usage:['Nhấn F để xem lối nối tầng.','Chế độ đi bộ có thể chọn tầng đến; xe lăn sử dụng thang máy bên đối diện.'],notes:['Chiều rộng cầu thang 150 cm; mô hình 18 bậc, cao tổng 320 cm.','Bản demo chuyển tầng qua bảng tương tác, chưa mô phỏng dáng đi trên từng bậc.'],connection:{targetFloor,arrival:{floor:targetFloor,x:7.2,z:-11.9,yaw:Math.PI/2}}});
   }
   for(const object of added){

@@ -11,7 +11,7 @@ test('game and object information are accessible by keyboard; storage failures d
   await page.getByRole('button', { name: '2D', exact: true }).click();
   const report = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
   expect(report.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => ({ target: n.target, summary: n.failureSummary })) }))).toEqual([]);
-  await page.getByTestId('game-stage').focus(); await expect(page.locator('.interact-button')).toBeVisible(); await page.keyboard.press('f');
+  await page.getByTestId('game-stage').focus();await page.keyboard.down('w');await expect.poll(async()=>Number(await page.getByTestId('game-stage').getAttribute('data-z'))).toBeLessThan(8.3);await page.keyboard.up('w'); await expect(page.locator('.interact-button')).toBeVisible(); await page.keyboard.press('f');
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Đóng', exact: true }).focus(); await page.keyboard.press('Shift+Tab');
   await expect(page.getByRole('button', { name: 'Tiếp tục di chuyển' })).toBeFocused();

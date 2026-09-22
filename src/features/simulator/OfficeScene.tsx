@@ -2,7 +2,6 @@ import {
   Component,
   useEffect,
   useRef,
-  useMemo,
   type ComponentRef,
   type MutableRefObject,
   type ReactNode,
@@ -10,9 +9,12 @@ import {
 import { useLocale } from '../../lib/i18n';
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, OrbitControls, Line } from "@react-three/drei";
-import { Group, Vector3, Mesh, Raycaster, CanvasTexture } from "three";
+import { Group, Vector3, Mesh, Raycaster } from "three";
+import DoorSign from './DoorSign';
 import { wallsOnFloor } from "../../data/space";
 import { roomZones } from '../../data/building';
+import { floorY, type LiftState } from '../../lib/elevator';
+import { FloorSlab, CeilingLights, Roof, ElevatorModel } from './BuildingShell';
 import { objectParts } from "../../lib/objectGeometry";
 import type {
   MobilityProfile,
@@ -64,18 +66,6 @@ export function ObjectModel({
     </group>
   );
 }
-function DoorSign({ label, width }: { label: string; width: number }) {
-  const texture = useMemo(() => {
-    const canvas = document.createElement('canvas'); canvas.width = 768; canvas.height = 128;
-    const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#24443b'; ctx.fillRect(0, 0, 768, 128);
-    ctx.strokeStyle = '#d9dfb5'; ctx.lineWidth = 6; ctx.strokeRect(7, 7, 754, 114);
-    ctx.fillStyle = '#fff5d7'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, 384, 66, 720);
-    return new CanvasTexture(canvas);
-  }, [label]);
-  useEffect(() => () => texture.dispose(), [texture]);
-  return <group>{[1, -1].map(side => <mesh key={side} position={[0, 2.4, side * .13]} rotation={[0, side === 1 ? 0 : Math.PI, 0]}><planeGeometry args={[Math.max(1.45, width), .26]} /><meshBasicMaterial map={texture} /></mesh>)}</group>;
-}
 function Wheelchair({
   profile,
   pose,
@@ -96,7 +86,7 @@ function Wheelchair({
     rearZ = l / 2 - radius - 0.02;
   useFrame(() => {
     if (!group.current) return;
-    group.current.position.set(pose.current.x, 0, pose.current.z);
+    group.current.position.set(pose.current.x, pose.current.y ?? floorY(pose.current.floor ?? 1), pose.current.z);
     group.current.rotation.y = pose.current.yaw;
     const distance = Math.hypot(
       pose.current.x - last.current.x,
@@ -266,22 +256,23 @@ function CameraRig({
 }) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const { camera, size, gl } = useThree();
+  const floor=pose.current.floor ?? 1;
   useEffect(() => {
     const center = follow
       ? new Vector3(pose.current.x, 0, pose.current.z)
-      : new Vector3(0, 0, 1);
+      : new Vector3(0, floorY(floor), floor===1 ? -3 : -6.5);
     camera.position.copy(center).add(new Vector3(17, 23, 17));
     camera.zoom = Math.max(
-      12,
+      6,
       Math.min(
-        size.width / (follow ? 11 : 34),
-        size.height / (follow ? 9 : 27),
+        size.width / (follow ? 11 : 44),
+        size.height / (follow ? 9 : 40),
       ),
     );
     camera.updateProjectionMatrix();
     controls.current?.target.copy(center);
     controls.current?.update();
-  }, [camera, size, follow, reset, pose]);
+  }, [camera, size, follow, reset, pose, floor]);
   useEffect(() => {
     const canvas = gl.domElement;
     const lost = (e: Event) => {
@@ -337,7 +328,7 @@ function FirstPersonCamera({ pose, pitch, profile, reset, thirdPerson }: {
   useFrame(() => {
     // Eye height is an illustrative seated offset, not a personal reach measurement.
     const eyeHeight = profile.mode === 'wheelchair' ? profile.seatHeightCm / 100 + .65 : 1.6;
-    target.current.set(pose.current.x, eyeHeight, pose.current.z);
+    target.current.set(pose.current.x, (pose.current.y ?? floorY(pose.current.floor ?? 1))+eyeHeight, pose.current.z);
     if (!thirdPerson) {
       camera.position.copy(target.current);
       camera.rotation.set(pitch.current, pose.current.yaw, 0, 'YXZ');
@@ -380,6 +371,7 @@ class SceneBoundary extends Component<
   }
 }
 export interface SceneProps {
+  elevator: MutableRefObject<LiftState>;
   sceneObjects: WorldObject[];
   route: Pose[];
   profile: MobilityProfile;
@@ -399,22 +391,23 @@ export interface SceneProps {
 }
 export default function OfficeScene(p: SceneProps) {
   const {t}=useLocale();
-  const floor=p.pose.current.floor ?? 1;
+  const activeFloor=p.pose.current.floor ?? 1;
+  const immersive=p.firstPerson||p.thirdPerson;
   return (
     <SceneBoundary onError={p.onUnavailable}>
       <Canvas
         key={p.firstPerson || p.thirdPerson ? 'player-camera' : 'overview'}
         orthographic={!p.firstPerson && !p.thirdPerson}
         shadows
-        dpr={[1, 1.5]}
+        dpr={[1, 1.25]}
         camera={p.firstPerson || p.thirdPerson
           ? { position: [p.pose.current.x, 1.13, p.pose.current.z], fov: 70, near: 0.04, far: 120 }
           : { position: [17, 23, 17], zoom: 25, near: 0.1, far: 120 }}
         gl={{ antialias: true, powerPreference: "low-power" }}
         onCreated={({ gl }) => gl.setClearColor("#edf1e7")}
       >
-        <ambientLight intensity={1.25} />
-        <hemisphereLight args={["#fff8e8", "#a6baa1", 1.2]} />
+        <ambientLight intensity={.42} />
+        <hemisphereLight args={["#fff8e8", "#a6baa1", .45]} />
         <directionalLight
           position={[-6, 15, 10]}
           intensity={2}
@@ -426,20 +419,9 @@ export default function OfficeScene(p: SceneProps) {
           shadow-camera-bottom={-13}
           shadow-normalBias={0.04}
         />
-        <PartMesh
-          part={{
-            position: [0, -0.18, floor===1 ? -3 : -6.5],
-            size: [24.25, 0.35, floor===1 ? 34.2 : 27.2],
-            color: "#d4ddcc",
-          }}
-        />
-        <PartMesh
-          part={{
-            position: [0, -0.005, -6.5],
-            size: [24, 0.02, 27],
-            color: "#f1ede0",
-          }}
-        />
+        {([1,2] as const).map(floor=><group key={floor} name={`building-floor-${floor}`} position={[0,floorY(floor),0]} visible={immersive||activeFloor===floor}>
+        <FloorSlab floor={floor}/>
+        <CeilingLights floor={floor} active={activeFloor===floor}/>
         {floor===1 && <PartMesh
           part={{
             position: [0, 0.008, 10.5],
@@ -450,10 +432,10 @@ export default function OfficeScene(p: SceneProps) {
         {floor===1 && <group>
           <PartMesh part={{position:[0,.022,10.5],size:[3,.02,7],color:'#dedacb',solid:false}}/>
           <PartMesh part={{position:[0,.024,13],size:[24,.02,1.7],color:'#a1adb1',solid:false}}/>
-          <PartMesh part={{position:[0,2.9,7],size:[24,.45,.2],color:'#315a57',solid:false}}/>
+          {(p.firstPerson || p.thirdPerson) && <group><PartMesh part={{position:[0,2.9,7],size:[24,.45,.2],color:'#315a57',solid:false}}/>
           <group position={[0,.72,7]}><DoorSign label="DAY ZERO · OFFICE" width={5}/></group>
           {[-10,-6,-2,2,6,10].map(x=><group key={x}><PartMesh part={{position:[x,4.55,7],size:[3.75,2.7,.12],color:'#99bec6',solid:false}}/><PartMesh part={{position:[x,4.55,7.08],size:[.07,2.7,.1],color:'#416565',solid:false}}/></group>)}
-          <PartMesh part={{position:[0,5.95,7],size:[24,.2,.35],color:'#315a57',solid:false}}/>
+          <PartMesh part={{position:[0,5.95,7],size:[24,.2,.35],color:'#315a57',solid:false}}/></group>}
         </group>}
         {[...(floor===1 ? [
           { x: -7.5, z: -5, w: 8.85, d: 9.85, c: "#dfe6d5" },
@@ -485,8 +467,8 @@ export default function OfficeScene(p: SceneProps) {
                 color: "#c6d3c3",
               }}
             />
-            <mesh position={[w.position[0], 1.78, w.position[2]]} userData={{ cameraObstacle: true }}>
-              <boxGeometry args={[w.size[0], 1.64, w.size[2]]} />
+            <mesh position={[w.position[0], 1.98, w.position[2]]} userData={{ cameraObstacle: true }}>
+              <boxGeometry args={[w.size[0], 2.04, w.size[2]]} />
               <meshStandardMaterial
                 color="#b0c4af"
                 transparent={!p.firstPerson && !p.thirdPerson}
@@ -496,9 +478,9 @@ export default function OfficeScene(p: SceneProps) {
             </mesh>
           </group>
         ))}
-        {p.route.length > 0 && <Line points={[p.pose.current,...p.route].map(point => [point.x, .065, point.z])} color="#e4b840" lineWidth={5} />}
-        {p.route.filter((_, i) => i % 4 === 0).map((point, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[point.x, .07, point.z]}><ringGeometry args={[.06, .1, 12]} /><meshBasicMaterial color="#fff7b1" /></mesh>)}
-        {p.sceneObjects.map((o) => (
+        {floor===activeFloor && p.route.length > 0 && <Line points={[p.pose.current,...p.route].map(point => [point.x, .065, point.z])} color="#e4b840" lineWidth={5} />}
+        {floor===activeFloor && p.route.filter((_, i) => i % 4 === 0).map((point, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[point.x, .07, point.z]}><ringGeometry args={[.06, .1, 12]} /><meshBasicMaterial color="#fff7b1" /></mesh>)}
+        {p.sceneObjects.filter(o=>(o.floor ?? 1)===floor && o.kind!=='elevator' && !(o.kind==='stairs' && floor===2)).map((o) => (
           <group
             key={o.id}
             position={o.position}
@@ -509,7 +491,7 @@ export default function OfficeScene(p: SceneProps) {
             }}
           >
             <ObjectModel object={o} open={p.openDoors.includes(o.id)} />
-            {o.roomLabel && <DoorSign label={t(o.roomLabel)} width={o.size[0]} />}
+            {o.roomLabel && <group position={[0,0,o.connection ? o.size[2]/2 : 0]}><DoorSign label={t(o.roomLabel)} width={o.size[0]} /></group>}
             {o.colleague && Math.hypot(p.pose.current.x - o.position[0], p.pose.current.z - o.position[2]) < 4.5 && <Html position={[0, o.size[1] + .2, 0]} center occlude zIndexRange={[10, 0]}><span className="colleague-tag">{o.name}<small>{t(o.colleague.role)}</small></span></Html>}
             {(p.nearest === o.id || p.destinationIds.includes(o.id)) && (
               <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -546,6 +528,9 @@ export default function OfficeScene(p: SceneProps) {
               <span className="room-label">{t(String(name))}</span>
           </Html>
         ))}
+        </group>)}
+        <ElevatorModel state={p.elevator} overview={!immersive}/>
+        <group visible={immersive}><Roof/></group>
         {!p.firstPerson && <Wheelchair profile={p.profile} pose={p.pose} />}
         {p.firstPerson || p.thirdPerson ? <FirstPersonCamera pose={p.pose} pitch={p.lookPitch} profile={p.profile} reset={p.reset} thirdPerson={p.thirdPerson} /> : <CameraRig
           pose={p.pose}

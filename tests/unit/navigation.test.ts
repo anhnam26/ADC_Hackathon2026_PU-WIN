@@ -7,10 +7,9 @@ import { defaultMobility } from '../../src/types/simulator';
 import { advanceColleagues } from '../../src/lib/npcMotion';
 
 describe('navigation and living office', () => {
-  it('routes to every room without intersecting static geometry and arrives within F range', () => {
+  it.each(['reception-counter', 'desk-a12', 'meeting-table', 'water-dispenser', 'sink', 'quiet-sofa'])('routes to %s without intersecting static geometry and arrives within F range', (id) => {
     const doors = objects.filter(o => o.kind === 'door').map(o => o.id);
     const obstacles = worldObstacles(doors, objects.filter(o => !o.patrol));
-    for (const id of ['reception-counter', 'desk-a12', 'meeting-table', 'water-dispenser', 'sink', 'quiet-sofa']) {
       const target = objectById(id)!;
       const path = planRoute(SPAWN, target, defaultMobility)!;
       expect(path, id).not.toBeNull();
@@ -20,7 +19,6 @@ describe('navigation and living office', () => {
         if(Math.hypot(next.x-previous.x,next.z-previous.z)>.001) expect(Math.abs(angleDifference(next.yaw,Math.atan2(previous.x-next.x,previous.z-next.z)))).toBeLessThan(.001);
       }
       expect(canInteract(path.at(-1)!, target, obstacles, doors)).toBe(true);
-    }
   });
   it('takes a direct diagonal across clear space rather than zigzagging',()=>{
     const target={...objectById('plant')!,position:[2,0,1.5] as [number,number,number]};

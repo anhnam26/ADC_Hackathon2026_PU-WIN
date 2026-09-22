@@ -8,8 +8,9 @@ import {
 } from "react";
 import { objects, objectsOnFloor, SPAWN } from "../../data/space";
 import { objectObstacles, worldObstacles } from "../../lib/objectGeometry";
-import { planRoute, routePassesDoor } from '../../lib/navigation';
+import { planRoute, routePassesDoor, routeTargetReached } from '../../lib/navigation';
 import { advanceColleagues } from '../../lib/npcMotion';
+import { createLift, advanceLift, floorY, insideCabin, liftBusy, liftDoorObstacles, requestLift } from '../../lib/elevator';
 import {
   blockingAt,
   canInteract,
@@ -53,26 +54,29 @@ export function useSimulation(
 ) {
   const [floor,setFloor]=useState<1|2>(initial.floor ?? 1);
   const pendingDestination=useRef<{id:string;automatic:boolean}|null>(null);
-  const pose = useRef<Pose>({ ...initial });
+  const pose = useRef<Pose>({ ...initial,y:floorY(initial.floor ?? 1) });
+  const elevator=useRef(createLift(initial.floor ?? 1));
+  const liftInitialized=useRef(false);
+  if(!liftInitialized.current){liftInitialized.current=true;if(insideCabin(pose.current,profile)){elevator.current.door=1;elevator.current.phase='open';}}
   const cameraYaw = useRef(Math.PI / 4);
   const lookPitch = useRef(0);
   const pendingTurn = useRef(0);
   const pressed = useRef(new Set<string>());
   const virtual = useRef(new Set<Control>());
-  const sceneObjects = useRef(objectsOnFloor(initial.floor ?? 1).map(o => ({ ...o, position: [...o.position] as typeof o.position })));
-  useEffect(()=>{sceneObjects.current=objectsOnFloor(floor).map(o=>({...o,position:[...o.position] as typeof o.position}));npcWaypoints.current.clear();},[floor]);
+  const sceneObjects = useRef(objects.map(o => ({ ...o, position: [...o.position] as typeof o.position })));
   const npcWaypoints = useRef(new Map<string, number>());
   const navigation = useRef({ route: [] as Pose[], index: 0, auto: false, targetId: '', status: 'Chọn một điểm đến để bắt đầu dẫn đường.' });
   const doorCallback = useRef(onOpenDoor); doorCallback.current = onOpenDoor;
   const [view, setView] = useState({
-    pose: { ...initial },
+    pose: { ...pose.current },
     nearby: [] as string[],
     blocked: "",
     moving: false,
     objects: sceneObjects.current.map(o => ({ ...o })),
     route: [] as Pose[], auto: false, navigationStatus: navigation.current.status,
+    elevator:{...elevator.current},
   });
-  const staticObstacles = useMemo(() => worldObstacles(openDoors, objects.filter(o => !o.colleague),floor), [openDoors,floor]);
+  const staticObstacles = useMemo(() => worldObstacles(openDoors, objects.filter(o => !o.colleague && o.kind!=='elevator'),floor), [openDoors,floor]);
   const obstacleRef = useRef(worldObstacles(openDoors, sceneObjects.current,floor));
   const interact = useRef(onInteract);
   interact.current = onInteract;
@@ -82,11 +86,14 @@ export function useSimulation(
   const returnToEntry = useCallback(() => {
     pose.current = { ...SPAWN };
     setFloor(1);pendingDestination.current=null;
+    elevator.current=createLift(1);
+    nearby.current=[];preferred.current=null;
     pressed.current.clear();
     virtual.current.clear();
     pendingTurn.current = 0;
     lookPitch.current = 0;
     navigation.current = { route: [], index: 0, auto: false, targetId: '', status: 'Đã trở về lối vào.' };
+    setView({pose:{...SPAWN},nearby:[],blocked:'',moving:false,objects:sceneObjects.current,route:[],auto:false,navigationStatus:navigation.current.status,elevator:{...elevator.current}});
   }, []);
   useEffect(() => {
     pendingTurn.current = 0;
@@ -107,12 +114,18 @@ export function useSimulation(
       previous = performance.now(),
       lastPublish = 0;
     const tick = (now: number) => {
-      const dt = Math.min((now - previous) / 1000, 0.045);
+      const elapsed = Math.min((now - previous) / 1000, .15);
+      const dt = elapsed; // moveWithCollisions subdivides translation and rotation to prevent tunnelling.
       previous = now;
       const paused =
         pausedByMenu || !!document.querySelector("dialog[open]") || document.hidden || !document.hasFocus();
-      advanceColleagues(sceneObjects.current, npcWaypoints.current, dt, pose.current, profile, staticObstacles, paused);
-      const obstacles = [...staticObstacles, ...sceneObjects.current.filter(o => o.colleague).flatMap(o => objectObstacles(o))];
+      const currentObjects=sceneObjects.current.filter(o=>(o.floor ?? 1)===floor);
+      if(!paused && advanceLift(elevator.current,elapsed,pose.current,profile)){
+        setFloor(elevator.current.floor);navigation.current.status=`Đã đến tầng ${elevator.current.floor}. Chờ cửa mở rồi điều khiển xe ra ngoài.`;
+      }
+      advanceColleagues(currentObjects, npcWaypoints.current, dt, pose.current, profile, staticObstacles, paused);
+      const liftObject=currentObjects.find(o=>o.kind==='elevator')!;
+      const obstacles = [...staticObstacles,...objectObstacles(liftObject,true),...liftDoorObstacles(elevator.current,floor), ...currentObjects.filter(o => o.colleague).flatMap(o => objectObstacles(o))];
       obstacleRef.current = obstacles;
       if (paused) {
         pressed.current.clear();
@@ -124,12 +137,20 @@ export function useSimulation(
           .map((k) => bindings[k])
           .concat([...virtual.current]),
       );
+      const riding=elevator.current.rider && liftBusy(elevator.current);
+      if(riding){controls.clear();pressed.current.clear();virtual.current.clear();navigation.current.auto=false;}
+      // Resume a cross-floor route only after the user has driven out through the open door.
+      const pending=pendingDestination.current;
+      if(pending && !paused && !controls.size && !liftBusy(elevator.current) && pose.current.x>-8.1){
+        const target=sceneObjects.current.find(o=>o.id===pending.id);
+        if(target && (target.floor ?? 1)===floor){const route=planRoute(pose.current,target,profile,sceneObjects.current);navigation.current={route:route ?? [],index:1,auto:!!route&&pending.automatic,targetId:target.id,status:`Đang tự đi đến ${target.name}.`};pendingDestination.current=null;}
+      }
       let blocked = "",
         moving = false;
       if (firstPerson) cameraYaw.current = pose.current.yaw;
       if (navigation.current.auto && !controls.size) pendingTurn.current = 0;
       if (!paused && (controls.size || pendingTurn.current)) {
-        if (controls.size && navigation.current.auto) { navigation.current.auto = false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; }
+        if (controls.size && navigation.current.auto) { navigation.current.auto = false; if(pendingDestination.current)pendingDestination.current.automatic=false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; }
         let x = Number(controls.has("right")) - Number(controls.has("left"));
         let z =
           Number(controls.has("backward")) - Number(controls.has("forward"));
@@ -189,16 +210,16 @@ export function useSimulation(
       const nav = navigation.current;
       if (!paused && nav.auto && nav.route.length) {
         const target = sceneObjects.current.find(o => o.id === nav.targetId)!;
-        if (canInteract(pose.current, target, obstacles, openDoors)) {
+        if (routeTargetReached(pose.current, target, obstacles, openDoors)) {
           nav.auto = false; nav.route = []; nav.status = `Đã đến ${target.name}. Nhấn F để tìm hiểu.`;
         } else {
           const next = nav.route[nav.index];
           if (!next) { nav.auto = false; nav.status = 'Điểm đến đã di chuyển. Chọn dẫn đường lại.'; }
           else {
             const remaining = nav.route.slice(nav.index);
-            const door = sceneObjects.current.find(o => o.kind === 'door' && !openDoors.includes(o.id) &&
+            const door = currentObjects.find(o => o.kind === 'door' && !openDoors.includes(o.id) &&
               canInteract(pose.current, o, obstacles, openDoors) && routePassesDoor(pose.current, remaining, o));
-            if (door && doorCanToggle(door, openDoors, pose.current, profile) && sceneObjects.current.filter(o => o.colleague).every(o => doorCanToggle(door, openDoors, {x:o.position[0],z:o.position[2],yaw:o.yaw}, {...profile,widthCm:58,lengthCm:58}))) doorCallback.current?.(door.id);
+            if (door && doorCanToggle(door, openDoors, pose.current, profile) && currentObjects.filter(o => o.colleague).every(o => doorCanToggle(door, openDoors, {x:o.position[0],z:o.position[2],yaw:o.yaw}, {...profile,widthCm:58,lengthCm:58}))) doorCallback.current?.(door.id);
             const dx = next.x - pose.current.x, dz = next.z - pose.current.z, distance = Math.hypot(dx, dz);
             const difference = Math.atan2(Math.sin(next.yaw - pose.current.yaw), Math.cos(next.yaw - pose.current.yaw));
             const turn = Math.max(-dt * 1.5, Math.min(dt * 1.5, difference));
@@ -216,7 +237,8 @@ export function useSimulation(
       }
       if (now - lastPublish > 90) {
         lastPublish = now;
-        const candidates = sceneObjects.current
+        const candidates = currentObjects
+          .filter(()=>!riding)
           .filter((o) => canInteract(pose.current, o, obstacles, openDoors))
           .sort(
             (a, b) =>
@@ -234,6 +256,7 @@ export function useSimulation(
                 moving,
                 objects: sceneObjects.current.map(o => ({ ...o })),
                 route: nav.route.slice(nav.index), auto: nav.auto, navigationStatus: nav.status,
+                elevator:{...elevator.current},
               });
       }
       frame = requestAnimationFrame(tick);
@@ -302,10 +325,11 @@ export function useSimulation(
       if ((e.target as HTMLElement)?.closest("input,select,textarea")) return;
       if (bindings[e.code]) {
         e.preventDefault();
-        if (navigation.current.auto) { navigation.current.auto = false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; }
+        if (navigation.current.auto) { navigation.current.auto = false; if(pendingDestination.current)pendingDestination.current.automatic=false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; }
         pressed.current.add(e.code);
       }
       if (e.code === "KeyF" && !e.repeat) {
+        if(elevator.current.rider)return;
         navigation.current.auto = false;
         e.preventDefault();
         const id = preferred.current;
@@ -334,19 +358,21 @@ export function useSimulation(
     };
   }, [stage]);
   const setControl = (control: Control, active: boolean) => {
-    if (active) { if (navigation.current.auto) { navigation.current.auto = false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; } virtual.current.add(control); }
+    if (active) { if (navigation.current.auto) { navigation.current.auto = false; if(pendingDestination.current)pendingDestination.current.automatic=false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; } virtual.current.add(control); }
     else virtual.current.delete(control);
   };
   const chooseNearby = (id: string) => {
     if (nearby.current.includes(id)) preferred.current = id;
   };
   const triggerInteraction = (id?: string) => {
+    if(elevator.current.rider)return;
     navigation.current.auto = false;
     const candidate = id ?? preferred.current;
     if (candidate && nearby.current.includes(candidate))
       interact.current(candidate);
   };
   const navigate = (id: string, automatic: boolean) => {
+    if(elevator.current.rider || insideCabin(pose.current,profile))return false;
     let target = sceneObjects.current.find(o => o.id === id);
     pendingDestination.current=null;
     const destination=objects.find(o=>o.id===id);
@@ -360,19 +386,24 @@ export function useSimulation(
   const changeFloor = (id:string):string|null => {
     const connector=sceneObjects.current.find(o=>o.id===id);
     if(!connector?.connection || !canInteract(pose.current,connector,obstacleRef.current,openDoors))return 'Đến gần lối nối tầng để sử dụng.';
+    if(connector.kind==='elevator'){
+      const error=requestLift(elevator.current,connector.connection.targetFloor,true,pose.current,profile);
+      if(!error){navigation.current.auto=false;navigation.current.route=[];navigation.current.status='Cửa đang đóng. Cabin sẽ nâng bạn tới tầng đã chọn.';pressed.current.clear();virtual.current.clear();}
+      return error;
+    }
     if(connector.kind==='stairs' && profile.mode==='wheelchair')return 'Xe lăn sử dụng thang máy. Chọn dẫn đường đến thang máy.';
-    if(connector.kind==='elevator' && profile.mode==='wheelchair' && (profile.widthCm/100 > connector.clearWidth!-.02 || profile.widthCm/100 > connector.connection.cabinWidth! || profile.lengthCm/100 > connector.connection.cabinDepth!))return 'Kích thước xe vượt khoảng trống thang máy.';
-    const next={...connector.connection.arrival};
+    const next={...connector.connection.arrival,y:floorY(connector.connection.targetFloor)};
     if(blockingAt(next,profile,worldObstacles(openDoors,objects,next.floor)))return 'Sảnh tầng đến đang bị chắn. Hãy thử lại.';
     pose.current=next;setFloor(next.floor!);pressed.current.clear();virtual.current.clear();pendingTurn.current=0;lookPitch.current=0;nearby.current=[];preferred.current=null;
     const pending=pendingDestination.current;
     const target=pending && objects.find(o=>o.id===pending.id);
     const route=target?planRoute(next,target,profile):null;
     navigation.current={route:route ?? [],index:1,auto:!!route && !!pending?.automatic,targetId:target?.id ?? '',status:`Đã đến tầng ${next.floor}.`};
+    setView({pose:next,nearby:[],blocked:'',moving:false,objects:sceneObjects.current,route:route ?? [],auto:navigation.current.auto,navigationStatus:navigation.current.status,elevator:{...elevator.current}});
     pendingDestination.current=null;
     return null;
   };
-  const stopNavigation = () => { navigation.current.auto = false; navigation.current.status = 'Đã dừng tự đi. Bạn có thể tiếp tục theo vạch trên sàn.'; };
+  const stopNavigation = () => { navigation.current.auto = false; if(pendingDestination.current)pendingDestination.current.automatic=false; navigation.current.status = 'Đã dừng tự đi. Bạn có thể tiếp tục theo vạch trên sàn.'; };
   return {
     pose,
     cameraYaw,
@@ -384,6 +415,7 @@ export function useSimulation(
     chooseNearby,
     triggerInteraction,
     returnToEntry,
-    floor, changeFloor,
+    floor, changeFloor, elevator,
+    callElevator:()=>{const error=requestLift(elevator.current,floor,false,pose.current,profile);if(!error){navigation.current.auto=false;navigation.current.route=[];navigation.current.status='Đã gọi thang. Chờ cửa mở, dùng WASD vào cabin rồi nhấn F chọn tầng.';}return error;},
   };
 }

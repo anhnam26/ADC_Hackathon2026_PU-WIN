@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { seedSession } from '../../src/lib/persistence';
+import {objects} from '../../src/data/space';
 
 test('language switches setup, captions and journal; messages are local, isolated and persisted', async ({page}) => {
   const session=seedSession(); session.started=true; session.playerPose={x:2.55,z:5.5,yaw:0};session.openDoors=['entry-door'];
@@ -22,7 +23,7 @@ test('language switches setup, captions and journal; messages are local, isolate
   expect(subtitle.y+subtitle.height).toBeLessThan(page.viewportSize()!.height);
   await page.getByRole('button',{name:/Journal/}).click();
   await page.getByRole('button',{name:/^Objects/}).click();
-  await expect(page.locator('.object-catalog button')).toHaveCount(22);
+  await expect(page.locator('.object-catalog button')).toHaveCount(objects.filter(o=>!o.colleague).length);
   await expect(page.locator('.object-catalog')).not.toContainText('Nguyễn Mai Linh');
   await page.getByRole('button',{name:/^Colleagues/}).click();
   await expect(page.locator('.object-catalog button')).toHaveCount(7);

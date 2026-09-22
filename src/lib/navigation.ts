@@ -5,6 +5,11 @@ import type { MobilityProfile, Obstacle, Pose, WorldObject } from '../types/simu
 
 const STEP = .25;
 export const angleDifference = (a: number, b: number) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+// Lift access is at the landing door, not at the nearest side of the shaft.
+export function routeTargetReached(pose:Pose,target:WorldObject,obstacles:Obstacle[],openDoors:string[]){
+  const landing=target.kind==='elevator' ? target.connection?.arrival : undefined;
+  return (!landing || Math.hypot(pose.x-landing.x,pose.z-landing.z)<.25) && canInteract(pose,target,obstacles,openDoors);
+}
 export function traverseSegment(a: Pose, b: Pose, profile: MobilityProfile, obstacles: Obstacle[]): Pose | null {
   const radius = Math.hypot(profile.widthCm, profile.lengthCm) / 200 + .02;
   obstacles = obstacles.filter(o => {
@@ -49,7 +54,8 @@ export function planRoute(start: Pose, target: WorldObject, profile: MobilityPro
   const allDoors=objects.filter(o=>o.kind==='door').map(o=>o.id);
   const obstacles=worldObstacles(allDoors,sceneObjects.filter(o=>!o.patrol),floor);
   const key=(p:Pose)=>`${Math.round(p.x/STEP)},${Math.round(p.z/STEP)},${(Math.round(p.yaw/(Math.PI/4))+8)%8}`;
-  const heuristic=(p:Pose)=>Math.max(0,Math.hypot(p.x-target.position[0],p.z-target.position[2])-Math.max(target.size[0],target.size[2])/2-WORLD.interactionRange);
+  const landing=target.kind==='elevator' ? target.connection?.arrival : undefined;
+  const heuristic=(p:Pose)=>landing ? Math.max(0,Math.hypot(p.x-landing.x,p.z-landing.z)-.2) : Math.max(0,Math.hypot(p.x-target.position[0],p.z-target.position[2])-Math.max(target.size[0],target.size[2])/2-WORLD.interactionRange);
   const frontier=new Frontier(),nodes=new Map<string,Pose>(),scores=new Map<string,number>(),parent=new Map<string,string>(),visited=new Set<string>();
   const prefixes=new Map<string,Pose[]>();
   for(let heading=0;heading<8;heading++) {
@@ -61,7 +67,7 @@ export function planRoute(start: Pose, target: WorldObject, profile: MobilityPro
   for(let iteration=0;frontier.data.length&&iteration<70000;iteration++) {
     const {id}=frontier.pop();if(visited.has(id))continue;visited.add(id);
     const current=nodes.get(id)!;
-    if(heuristic(current)<.5&&canInteract(current,target,obstacles,allDoors)) {
+    if(heuristic(current)<.5&&routeTargetReached(current,target,obstacles,allDoors)) {
       const route=[current];let previous=id;
       while(parent.has(previous)){previous=parent.get(previous)!;route.unshift(nodes.get(previous)!);}
       return smoothRoute([...prefixes.get(previous)!,...route.slice(1)],profile,obstacles);
