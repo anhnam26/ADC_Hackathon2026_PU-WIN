@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./app/App";
+import AuthGate from './features/auth/AuthGate';
+import './styles/notes.css';
 import "./styles/main.css";
 import "./styles/readability.css";
 import './styles/simulator.css';
@@ -9,6 +10,6 @@ import './styles/game.css';
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <AuthGate />
   </React.StrictMode>,
 );
