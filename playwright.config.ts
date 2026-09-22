@@ -7,7 +7,7 @@ export default defineConfig({
   timeout: 60000,
   expect: { timeout: 10000 },
   use: {
-    baseURL: "http://127.0.0.1:5173",
+    baseURL: "http://127.0.0.1:5175",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -24,9 +24,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev -- --port 5173 --strictPort",
-    url: "http://127.0.0.1:5173",
-    reuseExistingServer: !process.env.CI,
+    command: "npm run dev -- --port 5175 --strictPort",
+    url: "http://127.0.0.1:5175",
+    env:{DAYZERO_DATA_FILE:'data/e2e.json'},
+    reuseExistingServer: false,
     timeout: 60000,
   },
 });

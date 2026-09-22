@@ -709,3 +709,36 @@ Phần này thay thế cách chuyển tầng của thang máy trong mục 25.
 - Kiểm tra: lên/xuống liên tục, cửa đóng khi chạy, không vào cửa tầng vắng
   cabin, xe phải vào đủ trước khi đi, gọi cabin trống, lái ra và tiếp tục dẫn
   đường, cùng canvas qua hai tầng, hiển thị mái/đèn, lưu phiên và hồi quy.
+
+27. GHI CHÚ KHÔNG GIAN, ĐĂNG NHẬP VÀ QUẢN TRỊ
+
+Phần này thay thế hướng dẫn âm thanh và giới hạn không backend ở các mục trước.
+- Bỏ phát âm thanh/Web Speech và phím H. Giữ phụ đề Việt/Anh, vạch dẫn đường.
+- Tốc độ xe lăn 1,8 m/s, đi bộ 2,2 m/s, áp dụng cho tự điều khiển và tự đi.
+  Shift vẫn 0,45 m/s để căn cửa; va chạm chia bước nhỏ, không xuyên vật.
+- Đăng nhập tài khoản employee hoặc manager trước khi vào ứng dụng.
+  Hai tài khoản mẫu employee@dayzero.local / manager@dayzero.local,
+  mật khẩu mặc định DayZero2026!; có biến môi trường thay trước lần khởi tạo.
+- B hoặc nút Ghi chú vị trí ở bất kỳ nơi nào: chụp tầng, X/Z/Y ngay lúc mở.
+  Chỉnh điểm trên bản đồ 2D bằng chuột hoặc mũi tên; không cần gần đồ vật.
+  Nhập bất cập và nguyện vọng riêng biệt, mỗi mục tối đa 2.000 ký tự.
+  Server tự gắn người gửi/thời gian; không tin vai trò hay tác giả từ client.
+- Ghi chú của tôi: xem tọa độ, nội dung, trạng thái, phản hồi; tải lại để cập nhật.
+- /admin: bản đồ 2D hai tầng, dấu đánh số theo tọa độ, danh sách tương ứng,
+  lọc tầng/trạng thái, tìm tên/email/nội dung/nguyện vọng. Có thống kê và tự
+  tải lại mỗi 15 giây. Chọn dấu hoặc danh sách để đánh giá và ghi phương án.
+- Trạng thái: Mới gửi → Đang xem xét / Chấp thuận / Chưa chấp thuận / Đã xử lý.
+  Mọi lần đánh giá phải có phản hồi. Gắn tên quản lý, thời gian và số phiên bản;
+  từ chối ghi đè khi quản lý khác đã cập nhật trước.
+- API Node chạy cùng Vite dev/preview; cookie HttpOnly SameSite=Strict, phiên
+  8 giờ và mất hiệu lực khi khởi động lại. Băm mật khẩu bằng scrypt/salt riêng.
+  Nhân viên chỉ đọc ghi chú của mình, quản lý đọc/đánh giá tất cả. Có kiểm tra
+  dữ liệu đầu vào, giới hạn đăng nhập sai và yêu cầu cùng nguồn.
+- File data/dayzero.json lưu tài khoản/ghi chú, không đưa vào Git hoặc phục vụ
+  như tài nguyên web. Ghi file tạm rồi đổi tên. Dành cho một server demo;
+  chưa có SSO, quên mật khẩu, tự đăng ký hoặc cơ sở dữ liệu nhiều tiến trình.
+- Các trình duyệt/máy dùng cùng server đọc cùng ghi chú. Hồ sơ xe, tiến độ,
+  thư đồng nghiệp và nhiệm vụ cũ vẫn cục bộ; đặt lại demo không xóa notes server.
+- Kiểm tra: đăng nhập sai/đúng/đăng xuất, phân quyền API, ghi chú tự do ngoài
+  sân/tầng 2, đánh dấu đúng tọa độ, phản hồi xuyên tài khoản/trình duyệt,
+  xung đột đánh giá, lưu dữ liệu qua khởi động lại, không âm thanh và hồi quy.
