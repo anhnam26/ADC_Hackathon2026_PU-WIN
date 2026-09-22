@@ -44,14 +44,16 @@ class Frontier {
 }
 // Search position AND heading; check every rotation and diagonal sweep with the real footprint.
 export function planRoute(start: Pose, target: WorldObject, profile: MobilityProfile, sceneObjects = objects): Pose[] | null {
+  const floor=start.floor ?? 1;
+  if((target.floor ?? 1)!==floor)return null;
   const allDoors=objects.filter(o=>o.kind==='door').map(o=>o.id);
-  const obstacles=worldObstacles(allDoors,sceneObjects.filter(o=>!o.patrol));
+  const obstacles=worldObstacles(allDoors,sceneObjects.filter(o=>!o.patrol),floor);
   const key=(p:Pose)=>`${Math.round(p.x/STEP)},${Math.round(p.z/STEP)},${(Math.round(p.yaw/(Math.PI/4))+8)%8}`;
   const heuristic=(p:Pose)=>Math.max(0,Math.hypot(p.x-target.position[0],p.z-target.position[2])-Math.max(target.size[0],target.size[2])/2-WORLD.interactionRange);
   const frontier=new Frontier(),nodes=new Map<string,Pose>(),scores=new Map<string,number>(),parent=new Map<string,string>(),visited=new Set<string>();
   const prefixes=new Map<string,Pose[]>();
   for(let heading=0;heading<8;heading++) {
-    const grid={x:Math.round(start.x/STEP)*STEP,z:Math.round(start.z/STEP)*STEP,yaw:heading*Math.PI/4};
+    const grid={x:Math.round(start.x/STEP)*STEP,z:Math.round(start.z/STEP)*STEP,yaw:heading*Math.PI/4,floor};
     const joined=traverseSegment(start,grid,profile,obstacles);
     if(!joined||!traverseSegment(joined,grid,profile,obstacles)) continue;
     const id=key(grid);nodes.set(id,grid);scores.set(id,0);prefixes.set(id,[{...start},joined,grid]);frontier.push({id,score:heuristic(grid)});

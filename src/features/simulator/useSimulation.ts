@@ -6,7 +6,7 @@ import {
   useState,
   type RefObject,
 } from "react";
-import { objects, SPAWN } from "../../data/space";
+import { objects, objectsOnFloor, SPAWN } from "../../data/space";
 import { objectObstacles, worldObstacles } from "../../lib/objectGeometry";
 import { planRoute, routePassesDoor } from '../../lib/navigation';
 import { advanceColleagues } from '../../lib/npcMotion';
@@ -51,13 +51,16 @@ export function useSimulation(
   pausedByMenu = false,
   onOpenDoor?: (id: string) => void,
 ) {
+  const [floor,setFloor]=useState<1|2>(initial.floor ?? 1);
+  const pendingDestination=useRef<{id:string;automatic:boolean}|null>(null);
   const pose = useRef<Pose>({ ...initial });
   const cameraYaw = useRef(Math.PI / 4);
   const lookPitch = useRef(0);
   const pendingTurn = useRef(0);
   const pressed = useRef(new Set<string>());
   const virtual = useRef(new Set<Control>());
-  const sceneObjects = useRef(objects.map(o => ({ ...o, position: [...o.position] as typeof o.position })));
+  const sceneObjects = useRef(objectsOnFloor(initial.floor ?? 1).map(o => ({ ...o, position: [...o.position] as typeof o.position })));
+  useEffect(()=>{sceneObjects.current=objectsOnFloor(floor).map(o=>({...o,position:[...o.position] as typeof o.position}));npcWaypoints.current.clear();},[floor]);
   const npcWaypoints = useRef(new Map<string, number>());
   const navigation = useRef({ route: [] as Pose[], index: 0, auto: false, targetId: '', status: 'Chọn một điểm đến để bắt đầu dẫn đường.' });
   const doorCallback = useRef(onOpenDoor); doorCallback.current = onOpenDoor;
@@ -69,8 +72,8 @@ export function useSimulation(
     objects: sceneObjects.current.map(o => ({ ...o })),
     route: [] as Pose[], auto: false, navigationStatus: navigation.current.status,
   });
-  const staticObstacles = useMemo(() => worldObstacles(openDoors, objects.filter(o => !o.colleague)), [openDoors]);
-  const obstacleRef = useRef(worldObstacles(openDoors, sceneObjects.current));
+  const staticObstacles = useMemo(() => worldObstacles(openDoors, objects.filter(o => !o.colleague),floor), [openDoors,floor]);
+  const obstacleRef = useRef(worldObstacles(openDoors, sceneObjects.current,floor));
   const interact = useRef(onInteract);
   interact.current = onInteract;
   const nearby = useRef<string[]>([]);
@@ -78,6 +81,7 @@ export function useSimulation(
   const savedProfile = useRef(JSON.stringify(profile));
   const returnToEntry = useCallback(() => {
     pose.current = { ...SPAWN };
+    setFloor(1);pendingDestination.current=null;
     pressed.current.clear();
     virtual.current.clear();
     pendingTurn.current = 0;
@@ -94,8 +98,7 @@ export function useSimulation(
     // A wider chair must never spawn intersecting furniture after changing its dimensions.
     if (savedProfile.current !== JSON.stringify(profile)) {
       navigation.current.auto = false; navigation.current.route = [];
-      if (blockingAt(pose.current, profile, obstacleRef.current))
-        pose.current = { ...SPAWN };
+      if (blockingAt(pose.current, profile, obstacleRef.current)) returnToEntry();
       savedProfile.current = JSON.stringify(profile);
     }
   }, [profile]);
@@ -344,12 +347,30 @@ export function useSimulation(
       interact.current(candidate);
   };
   const navigate = (id: string, automatic: boolean) => {
-    const target = sceneObjects.current.find(o => o.id === id);
+    let target = sceneObjects.current.find(o => o.id === id);
+    pendingDestination.current=null;
+    const destination=objects.find(o=>o.id===id);
+    if(destination && (destination.floor ?? 1)!==floor){pendingDestination.current={id,automatic};target=sceneObjects.current.find(o=>o.id===`lift-${floor}`);}
     if (!target) return;
     const route = planRoute(pose.current, target, profile, sceneObjects.current);
-    navigation.current = { route: route ?? [], index: 1, auto: automatic && !!route, targetId: id,
+    navigation.current = { route: route ?? [], index: 1, auto: automatic && !!route, targetId: target.id,
       status: route ? `${automatic ? 'Đang tự đi đến' : 'Đi theo vạch chỉ đường đến'} ${target.name}.` : 'Chưa tìm được đường phù hợp với xe. Hãy lùi ra chỗ rộng hoặc chọn điểm khác.' };
     return !!route;
+  };
+  const changeFloor = (id:string):string|null => {
+    const connector=sceneObjects.current.find(o=>o.id===id);
+    if(!connector?.connection || !canInteract(pose.current,connector,obstacleRef.current,openDoors))return 'Đến gần lối nối tầng để sử dụng.';
+    if(connector.kind==='stairs' && profile.mode==='wheelchair')return 'Xe lăn sử dụng thang máy. Chọn dẫn đường đến thang máy.';
+    if(connector.kind==='elevator' && profile.mode==='wheelchair' && (profile.widthCm/100 > connector.clearWidth!-.02 || profile.widthCm/100 > connector.connection.cabinWidth! || profile.lengthCm/100 > connector.connection.cabinDepth!))return 'Kích thước xe vượt khoảng trống thang máy.';
+    const next={...connector.connection.arrival};
+    if(blockingAt(next,profile,worldObstacles(openDoors,objects,next.floor)))return 'Sảnh tầng đến đang bị chắn. Hãy thử lại.';
+    pose.current=next;setFloor(next.floor!);pressed.current.clear();virtual.current.clear();pendingTurn.current=0;lookPitch.current=0;nearby.current=[];preferred.current=null;
+    const pending=pendingDestination.current;
+    const target=pending && objects.find(o=>o.id===pending.id);
+    const route=target?planRoute(next,target,profile):null;
+    navigation.current={route:route ?? [],index:1,auto:!!route && !!pending?.automatic,targetId:target?.id ?? '',status:`Đã đến tầng ${next.floor}.`};
+    pendingDestination.current=null;
+    return null;
   };
   const stopNavigation = () => { navigation.current.auto = false; navigation.current.status = 'Đã dừng tự đi. Bạn có thể tiếp tục theo vạch trên sàn.'; };
   return {
@@ -363,5 +384,6 @@ export function useSimulation(
     chooseNearby,
     triggerInteraction,
     returnToEntry,
+    floor, changeFloor,
   };
 }

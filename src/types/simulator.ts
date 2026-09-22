@@ -28,6 +28,8 @@ export const defaultMobility: MobilityProfile = {
   armrestHeightCm: 70,
 };
 export type ObjectKind =
+  | "elevator"
+  | "stairs"
   | "colleague"
   | "door"
   | "desk"
@@ -41,6 +43,9 @@ export type ObjectKind =
   | "plant"
   | "screen";
 export interface WorldObject {
+  sourceId?: string;
+  floor?: 1 | 2;
+  connection?: { targetFloor: 1 | 2; arrival: Pose; cabinWidth?: number; cabinDepth?: number };
   id: string;
   name: string;
   kind: ObjectKind;
@@ -89,11 +94,13 @@ export interface Obstacle {
   yaw: number;
 }
 export interface Pose {
+  floor?: 1 | 2;
   x: number;
   z: number;
   yaw: number;
 }
 export interface WorldWall {
+  floor?: 1 | 2;
   id: string;
   position: Point;
   size: Point;

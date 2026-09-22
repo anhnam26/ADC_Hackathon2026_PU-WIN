@@ -34,6 +34,8 @@ import { doorCanToggle, canInteract, objectDistance } from "../../lib/physics";
 import { useSimulation, type Control } from "./useSimulation";
 import Map2D from "./Map2D";
 import ObjectInspector, { measurementSummary } from "./ObjectInspector";
+import FloorConnection from './FloorConnection';
+import { floorLabel } from '../../data/building';
 import ColleagueInspector from './ColleagueInspector';
 import Dialog from '../../components/Dialog';
 import { useGameDisplay } from './useGameDisplay';
@@ -143,7 +145,7 @@ export default function Simulator({
       const current = sim.pose.current;
       if (
         Math.hypot(current.x - last.x, current.z - last.z) > 0.02 ||
-        Math.abs(current.yaw - last.yaw) > 0.02
+        Math.abs(current.yaw - last.yaw) > 0.02 || current.floor !== last.floor
       ) {
         savePose(current);
         last = { ...current };
@@ -199,7 +201,7 @@ export default function Simulator({
       objectName: o.name,
       category: o.category,
       measurementNote: measurementSummary(o, session.mobility),
-      suggestion: `Cần xác minh điều kiện sử dụng ${o.name.toLocaleLowerCase("vi")} với xe của tôi.`,
+      suggestion: language === 'en' ? `Please verify whether I can use ${t(o.name)} with my wheelchair.` : `Cần xác minh điều kiện sử dụng ${o.name.toLocaleLowerCase("vi")} với xe của tôi.`,
     });
   };
   const choose = (id: string) => {
@@ -210,7 +212,7 @@ export default function Simulator({
       sim.triggerInteraction(id);
     } else
       notify(
-        `Hãy tự di chuyển đến gần ${objectById(id)?.name ?? t("đồ vật")} rồi nhấn F.`,
+        language === 'en' ? `Move closer to ${t(objectById(id)?.name ?? 'đồ vật')} and press F.` : `Hãy tự di chuyển đến gần ${objectById(id)?.name ?? t("đồ vật")} rồi nhấn F.`,
       );
     focusGame();
   };
@@ -297,6 +299,7 @@ export default function Simulator({
               <span>{t("Khám phá tự do")}</span>
             </div>
             <div className="world-tools">
+              <span className="floor-badge" data-testid="floor-label">{floorLabel(sim.floor,language)}{sim.floor===1 && sim.view.pose.z>7 ? (language==='vi'?' · Ngoài tòa nhà':' · Outside') : ''}</span>
               <LanguageSwitch />
               <button className="game-tool" onClick={() => setNavigationOpen(true)} aria-label={t("Chọn điểm đến")}><kbd>N</kbd><span>{t("Điểm đến")}</span></button>
               <button className="game-tool" onClick={() => setJournal(true)}><BookOpen size={16} /><span>{t("Nhật ký")}</span><kbd>J</kbd></button>
@@ -355,6 +358,7 @@ export default function Simulator({
             data-z={sim.view.pose.z.toFixed(3)}
             data-yaw={sim.view.pose.yaw.toFixed(3)}
             data-camera={mode === '2d' ? 'map' : cameraMode}
+            data-floor={sim.floor}
             data-pointer-locked={display.locked}
             data-autowalk={sim.view.auto}
             onPointerDown={(e) => {
@@ -604,13 +608,13 @@ export default function Simulator({
           </section>}
           {catalog !== 'schedule' && (
             <div className="object-catalog" data-category={catalog}>
-              {sim.view.objects.filter(o => catalog === 'colleagues' ? !!o.colleague : !o.colleague).map((o) => (
+              {objects.map(o=>sim.view.objects.find(live=>live.id===o.id) ?? o).filter(o => catalog === 'colleagues' ? !!o.colleague : !o.colleague).map((o) => (
                 <button key={o.id} onClick={() => choose(o.id)}>
-                  <span>{t(o.name)}{o.colleague && <small>{t(o.colleague.role)}</small>}</span>
+                  <span>{t(o.name)}<small>{floorLabel(o.floor ?? 1,language)}{o.colleague && ` · ${t(o.colleague.role)}`}</small></span>
                   <small>
                     {session.inspectedIds.includes(o.id)
                       ? t("Đã tìm hiểu")
-                      : `${objectDistance(sim.view.pose, o, session.openDoors).toFixed(1)} m`}
+                      : (o.floor ?? 1)!==sim.floor ? floorLabel(o.floor ?? 1,language) : `${objectDistance(sim.view.pose, o, session.openDoors).toFixed(1)} m`}
                   </small>
                 </button>
               ))}
@@ -625,11 +629,12 @@ export default function Simulator({
         </aside>
       </div>
       {navigationOpen && <Dialog title={t("Bạn muốn đến đâu?")} subtitle={t("Đi theo vạch vàng hoặc để nhân vật tự đi. WASD/P dừng tự đi bất cứ lúc nào.")} onClose={() => setNavigationOpen(false)}>
-        <label className="destination-field">{t("Điểm đến")}<select aria-label={t("Điểm đến")} value={destination} onChange={e => setDestination(e.target.value)}>{objects.map(o => <option key={o.id} value={o.id}>{t(o.name)}</option>)}</select></label>
+        <label className="destination-field">{t("Điểm đến")}<select aria-label={t("Điểm đến")} value={destination} onChange={e => setDestination(e.target.value)}>{objects.map(o => <option key={o.id} value={o.id}>{floorLabel(o.floor ?? 1,language)} · {t(o.name)}</option>)}</select></label>
+        <p>{language==='vi'?'Điểm đến khác tầng: theo đường đến thang máy, nhấn F để chọn tầng, rồi tiếp tục hành trình.':'For another floor, follow the route to the lift, press F to choose the floor, then continue your journey.'}</p>
         <div className="dialog-actions"><button className="button secondary" onClick={() => navigateToSelected(false)}>{t("Hiện đường đi")}</button><button className="button primary" onClick={() => navigateToSelected(true)}>{t("Tự đi đến đây")}</button></div>
         <p className="profile-disclaimer">{t("Đường tính theo kích thước xe, giữ xe thẳng khi qua cửa. Tự đi mở cửa khi đủ khoảng trống và chờ nếu gặp vật cản. Không phải chứng nhận lối đi thực tế.")}</p>
       </Dialog>}
-      {activeObject?.kind === 'colleague' ? <ColleagueInspector key={activeObject.id} person={activeObject} onClose={closeInspector} /> : activeObject && (
+      {activeObject?.connection ? <FloorConnection key={activeObject.id} object={activeObject} profile={session.mobility} onClose={closeInspector} onReport={report} onLift={()=>{setInspected(null);setDestination(`lift-${sim.floor}`);sim.navigate(`lift-${sim.floor}`,true);focusGame();}} onTravel={()=>{const error=sim.changeFloor(activeObject.id);if(!error){savePose(sim.pose.current);setInspected(null);setChosen(null);focusGame();}return error;}} /> : activeObject?.kind === 'colleague' ? <ColleagueInspector key={activeObject.id} person={activeObject} onClose={closeInspector} /> : activeObject && (
         <ObjectInspector
           key={activeObject.id}
           object={activeObject}

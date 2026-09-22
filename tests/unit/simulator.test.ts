@@ -35,10 +35,11 @@ describe('metre scale and physical access', () => {
   });
   it('requires proximity and line of sight, and protects the door swing', () => {
     const door = objectById('entry-door')!;
-    expect(canInteract(SPAWN, door, worldObstacles([]), [])).toBe(true);
+    expect(canInteract(SPAWN, door, worldObstacles([]), [])).toBe(false);
+    expect(canInteract({...SPAWN,z:8.35}, door, worldObstacles([]), [])).toBe(true);
     expect(canInteract({ ...SPAWN, x: 4 }, door, worldObstacles([]), [])).toBe(false);
     const separator = { id: 'divider', name: 'Wall', x: 0, z: 7.7, width: 4, depth: .14, yaw: 0 };
-    expect(canInteract(SPAWN, door, [separator], [])).toBe(false);
+    expect(canInteract({...SPAWN,z:8.35}, door, [separator], [])).toBe(false);
     expect(doorCanToggle(door, [], SPAWN, defaultMobility)).toBe(true);
     expect(doorCanToggle(door, [], { x: 0, z: 6.5, yaw: 0 }, defaultMobility)).toBe(false);
   });

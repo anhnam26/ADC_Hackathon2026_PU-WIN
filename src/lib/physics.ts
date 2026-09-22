@@ -41,6 +41,7 @@ export function distanceToObstacle(pose: Pose, box: Obstacle): number {
   return Math.hypot(Math.max(0, Math.abs(lx) - box.width / 2), Math.max(0, Math.abs(lz) - box.depth / 2));
 }
 export function objectDistance(pose: Pose, object: WorldObject, openDoors: string[]): number {
+  if ((pose.floor ?? 1) !== (object.floor ?? 1)) return Infinity;
   return Math.min(...objectObstacles(object, openDoors.includes(object.id)).map(b => distanceToObstacle(pose, b)));
 }
 function pointInside(x: number, z: number, b: Obstacle) {

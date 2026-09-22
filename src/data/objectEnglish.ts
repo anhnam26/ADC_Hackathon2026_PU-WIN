@@ -19,6 +19,7 @@ const guide: Record<string,[string,string[],string[]]> = {
  'plant':['A decorative plant that may narrow the corridor.',['Go around the planter, allowing wheel clearance.','Report if it needs to be moved.'],['Base width: 50 cm. Total height: 130 cm.','Decorative items have collision just like furniture.']],
 };
 export function objectEnglish(object:WorldObject):WorldObject {
- const entry=guide[object.id] ?? (object.kind==='chair' ? ['Office chair with a backrest. It occupies space in the aisle.',['Check the space before approaching.','Ask a colleague or Facilities to move a chair blocking the way.'],['Chairs cannot be passed through.','This chair is not assumed suitable for a transfer.']] : null);
+ if(object.sourceId && object.kind==='door')return {...object,description:'Room door with a 140 cm clear opening.',usage:['Approach and press F.','Open the door, align your wheelchair and move slowly through.'],notes:['Clear opening: 140 cm. Handle: 100 cm high.','Verify actual opening force and approach space at your workplace.']};
+ const entry=guide[object.sourceId ?? object.id] ?? (object.kind==='chair' ? ['Office chair with a backrest. It occupies space in the aisle.',['Check the space before approaching.','Ask a colleague or Facilities to move a chair blocking the way.'],['Chairs cannot be passed through.','This chair is not assumed suitable for a transfer.']] : null);
  return entry ? {...object,description:entry[0] as string,usage:entry[1] as string[],notes:entry[2] as string[]} : object;
 }

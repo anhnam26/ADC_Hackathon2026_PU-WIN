@@ -11,7 +11,8 @@ import { useLocale } from '../../lib/i18n';
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, OrbitControls, Line } from "@react-three/drei";
 import { Group, Vector3, Mesh, Raycaster, CanvasTexture } from "three";
-import { walls } from "../../data/space";
+import { wallsOnFloor } from "../../data/space";
+import { roomZones } from '../../data/building';
 import { objectParts } from "../../lib/objectGeometry";
 import type {
   MobilityProfile,
@@ -398,6 +399,7 @@ export interface SceneProps {
 }
 export default function OfficeScene(p: SceneProps) {
   const {t}=useLocale();
+  const floor=p.pose.current.floor ?? 1;
   return (
     <SceneBoundary onError={p.onUnavailable}>
       <Canvas
@@ -426,31 +428,39 @@ export default function OfficeScene(p: SceneProps) {
         />
         <PartMesh
           part={{
-            position: [0, -0.18, .25],
-            size: [24.25, 0.35, 20.7],
+            position: [0, -0.18, floor===1 ? -3 : -6.5],
+            size: [24.25, 0.35, floor===1 ? 34.2 : 27.2],
             color: "#d4ddcc",
           }}
         />
         <PartMesh
           part={{
-            position: [0, -0.005, -1.5],
-            size: [24, 0.02, 17],
+            position: [0, -0.005, -6.5],
+            size: [24, 0.02, 27],
             color: "#f1ede0",
           }}
         />
-        <PartMesh
+        {floor===1 && <PartMesh
           part={{
-            position: [0, 0.008, 8.75],
-            size: [24, 0.025, 3.5],
+            position: [0, 0.008, 10.5],
+            size: [24, 0.025, 7],
             color: "#dce5d3",
           }}
-        />
-        {[
+        />}
+        {floor===1 && <group>
+          <PartMesh part={{position:[0,.022,10.5],size:[3,.02,7],color:'#dedacb',solid:false}}/>
+          <PartMesh part={{position:[0,.024,13],size:[24,.02,1.7],color:'#a1adb1',solid:false}}/>
+          <PartMesh part={{position:[0,2.9,7],size:[24,.45,.2],color:'#315a57',solid:false}}/>
+          <group position={[0,.72,7]}><DoorSign label="DAY ZERO · OFFICE" width={5}/></group>
+          {[-10,-6,-2,2,6,10].map(x=><group key={x}><PartMesh part={{position:[x,4.55,7],size:[3.75,2.7,.12],color:'#99bec6',solid:false}}/><PartMesh part={{position:[x,4.55,7.08],size:[.07,2.7,.1],color:'#416565',solid:false}}/></group>)}
+          <PartMesh part={{position:[0,5.95,7],size:[24,.2,.35],color:'#315a57',solid:false}}/>
+        </group>}
+        {[...(floor===1 ? [
           { x: -7.5, z: -5, w: 8.85, d: 9.85, c: "#dfe6d5" },
           { x: 7.75, z: -5, w: 8.35, d: 9.85, c: "#e4d6bf" },
           { x: -7.5, z: 3.5, w: 8.85, d: 6.85, c: "#ebe0cd" },
           { x: 7.75, z: 5.2, w: 8.35, d: 3.45, c: "#dce8e1" },
-        ].map((r) => (
+        ] : []),...roomZones.filter(r=>r.floor===floor).map(r=>({x:r.x,z:r.z,w:r.width-.15,d:r.depth-.15,c:r.color}))].map((r) => (
           <PartMesh
             key={r.x + ":" + r.z}
             part={{
@@ -461,12 +471,12 @@ export default function OfficeScene(p: SceneProps) {
           />
         ))}
         <gridHelper
-          args={[24, 24, "#b6c3ad", "#d2dbca"]}
-          position={[0, 0.025, .25]}
+          args={[34, 34, "#b6c3ad", "#d2dbca"]}
+          position={[0, 0.025, -3]}
           material-transparent
           material-opacity={0.2}
         />
-        {walls.map((w) => (
+        {wallsOnFloor(floor).map((w) => (
           <group key={w.id}>
             <PartMesh
               part={{
@@ -520,13 +530,13 @@ export default function OfficeScene(p: SceneProps) {
             )}
           </group>
         ))}
-        {!p.firstPerson && !p.thirdPerson && [
+        {!p.firstPerson && !p.thirdPerson && [...(floor===1 ? [
           [-6, -6.45, "KHU LÀM VIỆC"],
           [6.1, -6.45, "PHÒNG LOTUS"],
           [-5.6, 1.25, "PANTRY"],
           [6.2, 6.65, "NHÀ VỆ SINH"],
           [0, 5.8, "LỄ TÂN"],
-        ].map(([x, z, name]) => (
+        ] : []),...roomZones.filter(r=>r.floor===floor).map(r=>[r.x,r.z,r.label])].map(([x, z, name]) => (
           <Html
             key={name}
             position={[x as number, 0.15, z as number]}

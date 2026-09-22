@@ -1,5 +1,5 @@
 import type { Part, WorldObject, Obstacle } from "../types/simulator";
-import { walls, objects } from "../data/space";
+import { wallsOnFloor, objects } from "../data/space";
 
 // The same parts drive 3D, object illustrations, and collision footprints.
 export function objectParts(o: WorldObject, open = false, doorAngle?: number): Part[] {
@@ -21,6 +21,18 @@ export function objectParts(o: WorldObject, open = false, doorAngle?: number): P
     solid,
     yaw,
   });
+  if(o.kind === 'elevator') return [
+    b(0,h/2,-d/2+.06,w,h,.12),b(-w/2+.06,h/2,0,.12,h,d),b(w/2-.06,h/2,0,.12,h,d),
+    b(0,.03,0,w,.06,d,'#b7c7c8',false),b(0,h-.04,0,w,.08,d,'#728e94',false),
+    b(0,1.12,d/2-.05,o.clearWidth!,2.24,.08,'#aec2c8'),
+    b(0,1.12,d/2-.01,.018,2.24,.014,'#3c5965',false),
+    b(w/2-.22,.95,d/2-.025,.14,.25,.04,'#244e5b',false),b(w/2-.22,.95,d/2-.01,.05,.05,.02,'#daf29b',false),
+  ];
+  if(o.kind === 'stairs') return [
+    ...Array.from({length:18},(_,i)=>b(0,(i+1)*3.2/36,d/2-(i+.5)*d/18,w,(i+1)*3.2/18,d/18,i%2?'#b3b6a6':'#ccd0bd')),
+    ...[-1,1].flatMap(side=>Array.from({length:9},(_,i)=>b(side*(w/2-.035),((i*2+1)*3.2/18)+.5,d/2-(i*2+.5)*d/18,.045,1,.045,'#597c74'))),
+    ...[-1,1].flatMap(side=>Array.from({length:18},(_,i)=>b(side*(w/2-.035),((i+1)*3.2/18)+.96,d/2-(i+.5)*d/18,.065,.07,d/18,'#597c74',false))),
+  ];
   if (o.kind === 'colleague') {
     const skin = o.colleague!.skin, hair = o.colleague!.hair;
     return [
@@ -157,9 +169,9 @@ export function objectObstacles(o: WorldObject, open = false, doorAngle?: number
       yaw: o.yaw + (p.yaw ?? 0),
     }));
 }
-export function worldObstacles(openDoors: string[], sceneObjects = objects): Obstacle[] {
+export function worldObstacles(openDoors: string[], sceneObjects = objects, floor: 1 | 2 = 1): Obstacle[] {
   return [
-    ...walls.map((w) => ({
+    ...wallsOnFloor(floor).map((w) => ({
       id: w.id,
       name: "Tường / khung phòng",
       x: w.position[0],
@@ -168,6 +180,6 @@ export function worldObstacles(openDoors: string[], sceneObjects = objects): Obs
       depth: w.size[2],
       yaw: 0,
     })),
-    ...sceneObjects.flatMap((o) => objectObstacles(o, openDoors.includes(o.id))),
+    ...sceneObjects.filter(o => (o.floor ?? 1) === floor).flatMap((o) => objectObstacles(o, openDoors.includes(o.id))),
   ];
 }

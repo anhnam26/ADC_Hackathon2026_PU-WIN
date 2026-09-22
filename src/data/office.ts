@@ -172,6 +172,10 @@ export const locations: Location[] = [
   },
 ];
 
+locations.push(...([
+  ['hr-room','Phòng nhân sự',-8,-17,'ground'],['training-room','Phòng đào tạo',0,-17,'ground'],['wellness-room','Phòng nghỉ ngơi',8,-17,'ground'],
+  ['f2-work','Khu làm việc tầng 2',-6,1,'office'],['f2-meeting','Phòng họp Sky',6,1,'office'],['upper-lobby','Sảnh tầng 2',0,-11.9,'office'],
+] as const).map(([id,name,x,z,floor])=>({...locations.find(l=>l.id==='desk')!,id,name,shortName:name,floor,position:[x,0,z] as Point,description:name,fact:'Không gian mô phỏng; cần xác minh điều kiện thực tế.',contact:'HR & Facilities'})));
 export const locationById = (id: string) =>
   locations.find((l) => l.id === id) ?? locations[0];
 // Routes run along the open central corridor, then through room openings.

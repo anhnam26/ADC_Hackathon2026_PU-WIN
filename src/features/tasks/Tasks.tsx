@@ -140,7 +140,7 @@ export default function Tasks({
             <span className="count">{session.tasks.length}</span>
           </h2>
           <span className="badge subtle">
-            Vai demo: {role === "hr" ? "HR / Facilities" : tr("Nhân viên")}
+            {tr('Vai demo:')} {role === "hr" ? "HR / Facilities" : tr("Nhân viên")}
           </span>
         </div>
         <div className="filters">

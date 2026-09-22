@@ -62,7 +62,7 @@ export default function ObjectInspector({
               </strong>
             </div>
             <div>
-              <span>Cao</span>
+              <span>{t('Cao')}</span>
               <strong>
                 {Math.round(object.size[1] * 100)}
                 <small> cm</small>

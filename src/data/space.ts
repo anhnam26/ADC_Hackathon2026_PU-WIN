@@ -1,17 +1,18 @@
 import type { WorldObject, WorldWall, Pose } from "../types/simulator";
 import { colleagues } from './colleagues';
+import { createBuildingObjects, buildingWalls } from './building';
 
 // All spatial data is in METRES. Width=x, height=y, depth=z. Never scale individual assets to fit.
 export const WORLD = {
   minX: -12,
   maxX: 12,
-  minZ: -10,
-  maxZ: 10.5,
+  minZ: -20,
+  maxZ: 14,
   wallHeight: 2.6,
   wallThickness: 0.14,
   interactionRange: 1.35,
 };
-export const SPAWN: Pose = { x: 0, z: 8.35, yaw: 0 };
+export const SPAWN: Pose = { x: 0, z: 10.5, yaw: 0, floor: 1 };
 const wall = (
   id: string,
   x: number,
@@ -450,6 +451,7 @@ export const objects: WorldObject[] = [
     ],
   }),
 ];
+objects.push(...createBuildingObjects(objects));
 export const objectById = (id: string) => objects.find((o) => o.id === id);
 // Wall openings derive from the door's measured clear width, never a second copy.
 const partition = (id: string, left: number, right: number, doorId: string): WorldWall[] => {
@@ -458,12 +460,15 @@ const partition = (id: string, left: number, right: number, doorId: string): Wor
   return [wall(`${id}-left`, (left + x - half) / 2, z, x - half - left, WORLD.wallThickness), wall(`${id}-right`, (x + half + right) / 2, z, right - x - half, WORLD.wallThickness)];
 };
 export const walls: WorldWall[] = [
-  wall('north', 0, -10, 24, .14), wall('west', -12, -1.5, .14, 17), wall('east', 12, -1.5, .14, 17),
+  wall('north-left', -7.5, -10, 9, .14), wall('north-right', 7.75, -10, 8.5, .14), wall('west', -12, -1.5, .14, 17), wall('east', 12, -1.5, .14, 17),
   ...partition('entry', -12, 12, 'entry-door'),
   wall('desk-side', -3, -5, .14, 10), ...partition('desk-front', -12, -3, 'desk-door'),
   wall('meeting-side', 3.5, -5, .14, 10), ...partition('meeting-front', 3.5, 12, 'meeting-door'),
   ...partition('bath-front', 3.5, 12, 'restroom-door'), wall('bath-side', 3.5, 5.2, .14, 3.6),
+  ...buildingWalls,
 ];
+export const objectsOnFloor = (floor: 1 | 2) => objects.filter(o => (o.floor ?? 1) === floor);
+export const wallsOnFloor = (floor: 1 | 2) => walls.filter(w => (w.floor ?? 1) === floor);
 export const objectives = [
   {
     ids: ["entry-door"],

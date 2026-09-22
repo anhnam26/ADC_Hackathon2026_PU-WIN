@@ -1,4 +1,5 @@
 import { objectParts } from "../../lib/objectGeometry";
+import { useLocale } from '../../lib/i18n';
 import type { MobilityProfile, WorldObject } from "../../types/simulator";
 import type { Point } from "../../types/domain";
 
@@ -9,6 +10,7 @@ export default function ObjectIllustration({
   object: WorldObject;
   open?: boolean;
 }) {
+  const {t,language}=useLocale();
   const parts = objectParts(object, open);
   const scale = Math.min(
     145 / Math.max(object.size[0], object.size[2]),
@@ -58,7 +60,7 @@ export default function ObjectIllustration({
       className="object-illustration"
       viewBox="0 0 400 260"
       role="img"
-      aria-label={`Minh họa ${object.name}: rộng ${Math.round(object.size[0] * 100)} cm, cao ${Math.round(object.size[1] * 100)} cm, sâu ${Math.round(object.size[2] * 100)} cm`}
+      aria-label={language==='en' ? `Illustration of ${t(object.name)}: width ${Math.round(object.size[0]*100)} cm, height ${Math.round(object.size[1]*100)} cm, depth ${Math.round(object.size[2]*100)} cm` : `Minh họa ${object.name}: rộng ${Math.round(object.size[0] * 100)} cm, cao ${Math.round(object.size[1] * 100)} cm, sâu ${Math.round(object.size[2] * 100)} cm`}
     >
       <defs>
         <pattern
@@ -108,19 +110,20 @@ export default function ObjectIllustration({
         fontSize="11"
         fill="#42603b"
       >
-        Cao {Math.round(object.size[1] * 100)} cm
+        {t('Cao')} {Math.round(object.size[1] * 100)} cm
       </text>
       <text x="201" y="251" textAnchor="middle" fontSize="11" fill="#42603b">
-        Rộng {Math.round(object.size[0] * 100)} cm · Sâu{" "}
+        {t('Rộng')} {Math.round(object.size[0] * 100)} cm · {t('Sâu')}{" "}
         {Math.round(object.size[2] * 100)} cm
       </text>
       <text x="382" y="23" textAnchor="end" fontSize="9" fill="#5e7252">
-        GÓC NHÌN CHI TIẾT
+        {language==='vi'?'GÓC NHÌN CHI TIẾT':'DETAIL VIEW'}
       </text>
     </svg>
   );
 }
 export function WheelchairDiagram({ profile }: { profile: MobilityProfile }) {
+  const {language}=useLocale();
   const width = (Number.isFinite(profile.widthCm) ? profile.widthCm : 70) * 1.1,
     length = (Number.isFinite(profile.lengthCm) ? profile.lengthCm : 110) * 0.8;
   return (
@@ -128,7 +131,7 @@ export function WheelchairDiagram({ profile }: { profile: MobilityProfile }) {
       viewBox="0 0 280 190"
       className="chair-diagram"
       role="img"
-      aria-label={`Dấu chiếm chỗ xe lăn: rộng ${profile.widthCm} cm, dài ${profile.lengthCm} cm`}
+      aria-label={language==='en' ? `Wheelchair footprint: width ${profile.widthCm} cm, length ${profile.lengthCm} cm` : `Dấu chiếm chỗ xe lăn: rộng ${profile.widthCm} cm, dài ${profile.lengthCm} cm`}
     >
       <rect width="280" height="190" rx="12" fill="#eef3e7" />
       <rect
@@ -178,7 +181,7 @@ export function WheelchairDiagram({ profile }: { profile: MobilityProfile }) {
       ))}
       <path d={`M${140 - width / 2} 162H${140 + width / 2}`} stroke="#6f8a56" />
       <text x="140" y="179" textAnchor="middle" fontSize="12" fill="#42613a">
-        Rộng {profile.widthCm} cm (cả bánh xe)
+        {language==='vi'?`Rộng ${profile.widthCm} cm (cả bánh xe)`:`Width ${profile.widthCm} cm (with wheels)`}
       </text>
       <text
         x="250"
@@ -188,10 +191,10 @@ export function WheelchairDiagram({ profile }: { profile: MobilityProfile }) {
         fontSize="11"
         fill="#42613a"
       >
-        Dài {profile.lengthCm} cm (cả gác chân)
+        {language==='vi'?`Dài ${profile.lengthCm} cm (cả gác chân)`:`Length ${profile.lengthCm} cm (with footrests)`}
       </text>
       <text x="140" y="18" textAnchor="middle" fontSize="10" fill="#607c4c">
-        ĐẦU XE ↑ · NHÌN TỪ TRÊN
+        {language==='vi'?'ĐẦU XE ↑ · NHÌN TỪ TRÊN':'FRONT ↑ · TOP VIEW'}
       </text>
     </svg>
   );

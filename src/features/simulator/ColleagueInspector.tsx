@@ -15,7 +15,7 @@ export default function ColleagueInspector({ person, onClose }: { person: WorldO
     {tab==='profile' ? <>
     <div className="colleague-profile">
       <div className="colleague-portrait">
-        <svg viewBox="0 0 320 360" role="img" aria-label={`Chân dung minh họa ${person.name}`}>
+        <svg viewBox="0 0 320 360" role="img" aria-label={language==='en' ? `Illustrated portrait of ${person.name}` : `Chân dung minh họa ${person.name}`}>
           <rect width="320" height="360" rx="20" fill="#e1e8da" />
           <circle cx="160" cy="146" r="110" fill="#f3f0df" />
           <path d="M51 360V295Q55 229 160 226Q266 229 270 295V360" fill={person.color} />
