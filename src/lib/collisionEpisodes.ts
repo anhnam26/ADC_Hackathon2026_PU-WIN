@@ -3,6 +3,7 @@ import {WORLD,objectById,walls} from '../data/space';
 import {translate} from './i18n';
 import type {MobilityProfile,Obstacle,Pose} from '../types/simulator';
 import type {CollisionEvent} from '../types/collisions';
+import {isNpcCollision} from '../../shared/collisionPolicy.mjs';
 
 // Approximate contact on the obstacle surface, not the obstacle's centre.
 export function contactPosition(pose:Pose,obstacle:Obstacle){
@@ -22,6 +23,7 @@ export class CollisionEpisodes {
   reset(){this.active.clear();}
   sample(contacts:CollisionContact[],pose:Pose,profile:MobilityProfile,now:number,movement:'manual'|'auto'):CollisionEvent[]{
     if(profile.mode!=='wheelchair'){this.reset();return [];}
+    contacts=contacts.filter(c=>!objectById(c.obstacle.id)?.colleague&&!isNpcCollision({objectId:c.obstacle.id}));
     const floor=pose.floor??1;
     const keys=new Set(contacts.map(c=>`${floor}:${c.obstacle.id}`));
     for(const [key,state] of this.active){
@@ -39,11 +41,11 @@ export class CollisionEpisodes {
       const {obstacle}=contact,key=`${floor}:${obstacle.id}`;
       if(this.active.has(key))continue;
       this.active.set(key,{obstacle:{...obstacle},pose:{...pose},clearSince:null});
-      const object=objectById(obstacle.id),wall=walls.some(w=>w.id===obstacle.id);
+      const wall=walls.some(w=>w.id===obstacle.id);
       const position=contactPosition(contact.pose,obstacle);
       events.push({id:crypto.randomUUID(),occurredAt:new Date().toISOString(),objectId:obstacle.id,
         objectName:wall?`Wall / room frame (${obstacle.id})`:translate(obstacle.name,'en'),
-        kind:obstacle.id==='boundary'?'boundary':wall?'wall':object?.colleague?'colleague':'object',
+        kind:obstacle.id==='boundary'?'boundary':wall?'wall':'object',
         action:contact.action,movement,position:{...position,floor,y:pose.y??(floor===2?3.2:0)},
         playerPose:{...pose,floor,y:pose.y??(floor===2?3.2:0)},profile:{...profile}});
     }

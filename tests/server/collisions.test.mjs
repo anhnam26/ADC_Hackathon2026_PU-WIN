@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
-import {mkdtempSync,unlinkSync,rmdirSync,readFileSync} from 'node:fs';
+import {mkdtempSync,unlinkSync,rmdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createApi} from '../../server/api.mjs';
@@ -34,5 +34,18 @@ test('collision sessions enforce ownership, validate batches, deduplicate retrie
   const saved=JSON.parse(readFileSync(file,'utf8'));assert.equal(saved.notes.length,1);
   handler=createApi({file});const again=await login('manager@dayzero.local');history=await (await request('/api/collision-history','GET',null,again)).json();
   assert.equal(history.collisions.length,2);assert.equal(history.runs.length,2);
+  const legacy=[{...event,id:'legacy-human',kind:'colleague',objectId:'legacy-person'},{...event,id:'legacy-mislabeled',kind:'object',objectId:'colleague-huy'}];
+  const freshEmployee=await login('employee@dayzero.local');
+  const mixed=await request('/api/collision-runs','POST',{...run,id:'mixed-run',events:[...legacy,{...event,id:'door-kept'}]},freshEmployee);
+  assert.equal(mixed.status,200);assert.deepEqual((await mixed.json()).accepted,['legacy-human','legacy-mislabeled','door-kept']);
+  const before=JSON.parse(readFileSync(file,'utf8'));assert.equal(before.collisions.length,3);
+  assert.ok(before.collisions.every(e=>e.kind!=='colleague'&&!e.objectId.startsWith('colleague-')));
+  // A store from an older demo is cleaned at startup, without erasing sessions or notes.
+  writeFileSync(file,JSON.stringify({...before,collisions:[...before.collisions,...legacy]}));
+  handler=createApi({file});
+  assert.deepEqual(JSON.parse(readFileSync(file,'utf8')),before);
+  const managerAfter=await login('manager@dayzero.local');
+  const cleaned=await (await request('/api/collision-history','GET',null,managerAfter)).json();
+  assert.equal(cleaned.collisions.length,3);assert.equal(cleaned.runs.length,3);
  }finally{await new Promise(resolve=>server.close(resolve));unlinkSync(file);rmdirSync(dir);}
 });

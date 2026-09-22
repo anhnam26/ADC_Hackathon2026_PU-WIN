@@ -5,6 +5,7 @@ export interface CollisionEvent {
   occurredAt: string;
   objectId: string;
   objectName: string;
+  // 'colleague' is only retained to decode and discard legacy pending/stored events.
   kind: 'object' | 'wall' | 'boundary' | 'colleague';
   movement: 'manual' | 'auto';
   action: 'translation' | 'rotation';

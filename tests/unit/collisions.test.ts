@@ -2,10 +2,27 @@ import {expect,it} from 'vitest';
 import {CollisionEpisodes,contactPosition} from '../../src/lib/collisionEpisodes';
 import {moveWithCollisions,type CollisionContact} from '../../src/lib/physics';
 import {defaultMobility,type Obstacle,type Pose} from '../../src/types/simulator';
+import {purgeNpcCollisionQueue} from '../../src/lib/collisionQueue';
 
 const obstacle:Obstacle={id:'entry-door',name:'Cửa vào & tay nắm',x:0,z:0,width:2,depth:.2,yaw:0};
 const pose:Pose={x:0,z:.64,yaw:0,floor:1,y:0};
 const contact:CollisionContact={obstacle,pose,action:'translation'};
+it('never records NPC contacts but keeps doors and walls in the same frame',()=>{
+ const tracker=new CollisionEpisodes();
+ const npcContact={...contact,obstacle:{...obstacle,id:'colleague-huy',name:'Huy'}};
+ const frame=[npcContact,contact,{...contact,obstacle:{...obstacle,id:'west',name:'Wall'}}];
+ for(const movement of ['manual','auto'] as const){tracker.reset();const events=tracker.sample(frame,pose,defaultMobility,0,movement);expect(events.map(e=>e.objectId)).toEqual(['entry-door','west']);}
+ tracker.reset();expect(tracker.sample([npcContact],pose,defaultMobility,0,'manual')).toEqual([]);
+});
+it('purges offline NPC events across accounts while preserving other events and draft metadata',()=>{
+ const draft={id:'old-run',tab:'old-tab',finish:false,updatedAt:123,events:[{id:'npc-1',kind:'colleague',objectId:'person-legacy'},{id:'npc-2',kind:'object',objectId:'colleague-linh'},{id:'door-1',kind:'object',objectId:'entry-door'}]};
+ const map=new Map([['dayzero.collisions.alice.old-run',JSON.stringify(draft)],['dayzero.collisions.bob.old-run',JSON.stringify(draft)],['dayzero.collisions.broken','{bad'],['unrelated',JSON.stringify(draft)]]);
+ const storage={get length(){return map.size;},key:(i:number)=>[...map.keys()][i],getItem:(key:string)=>map.get(key)??null,setItem:(key:string,value:string)=>{map.set(key,value);}} as Storage;
+ expect(purgeNpcCollisionQueue(storage)).toBe(4);
+ for(const user of ['alice','bob'])expect(JSON.parse(map.get(`dayzero.collisions.${user}.old-run`)!)).toEqual({...draft,events:[draft.events[2]]});
+ expect(map.get('unrelated')).toBe(JSON.stringify(draft));expect(map.get('dayzero.collisions.broken')).toBe('{bad');
+ expect(purgeNpcCollisionQueue(storage)).toBe(0);
+});
 it('counts a held contact once, requires withdrawal, and rearms after a clear interval',()=>{
  const tracker=new CollisionEpisodes();
  expect(tracker.sample([contact],pose,defaultMobility,0,'manual')).toHaveLength(1);

@@ -2,6 +2,8 @@ import {test,expect} from './fixtures';
 import {seedSession} from '../../src/lib/persistence';
 
 test('a colleague blocking auto-walk steps aside and the chair continues without user input',async({page})=>{
+  const uploaded:{kind:string;objectId:string}[]=[];
+  page.on('request',request=>{if(request.url().endsWith('/api/collision-runs')&&request.method()==='POST')uploaded.push(...request.postDataJSON().events);});
   const session=seedSession();session.started=true;session.playerPose={x:0,z:-11.9,yaw:Math.PI/2,floor:1};
   await page.addInitScript(s=>localStorage.setItem('dayzero.session.v1',JSON.stringify(s)),session);
   await page.goto('/');
@@ -23,5 +25,8 @@ test('a colleague blocking auto-walk steps aside and the chair continues without
   await expect(page.locator('.subtitle-bar')).toContainText('Arrived at Lift',{timeout:25000});
   await expect(stage).toHaveAttribute('data-autowalk','false');
   expect(Number(await stage.getAttribute('data-x'))).toBeLessThan(-7.1);
+  expect(uploaded.filter(e=>e.kind==='colleague'||e.objectId.startsWith('colleague-'))).toEqual([]);
+  const queued=await page.evaluate(()=>Object.keys(localStorage).filter(k=>k.startsWith('dayzero.collisions.')).flatMap(k=>JSON.parse(localStorage.getItem(k)!).events));
+  expect(queued.filter((e:{kind:string;objectId:string})=>e.kind==='colleague'||e.objectId.startsWith('colleague-'))).toEqual([]);
   await page.screenshot({path:'test-results/npc-yield.png'});
 });

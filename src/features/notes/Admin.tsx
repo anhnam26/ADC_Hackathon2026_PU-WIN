@@ -50,6 +50,7 @@ export default function Admin({onExperience}:{onExperience:()=>void}){
       <label>Status<select value={status} onChange={e=>setStatus(e.target.value)}><option value="all">All statuses</option>{(['new','reviewing','approved','declined','resolved'] as const).map(s=><option key={s} value={s}>{noteStatus(s,false)}</option>)}</select></label>
       <label className="admin-search">Find a note or author<input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Content, request, name, email…"/></label>
     </section>
+    <p>Collision history records doors, walls and other non-person objects only. NPC contacts are excluded.</p>
     <section className="collision-filters">
       <label>Collision session<select value={runId} onChange={e=>{setRunId(e.target.value);setSelectedCollision('');setTab('collisions');}}><option value="all">All sessions</option>{history.runs.map(r=><option key={r.id} value={r.id}>{r.authorName} · {r.authorEmail} · {new Date(r.startedAt).toLocaleString('en-US')} · {r.id.slice(0,8)}</option>)}</select></label>
       <label><input type="checkbox" checked={showCollisions} onChange={e=>setShowCollisions(e.target.checked)}/>Show collisions</label>

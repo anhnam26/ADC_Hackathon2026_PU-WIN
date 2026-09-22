@@ -1,3 +1,4 @@
+import {isNpcCollision} from '../shared/collisionPolicy.mjs';
 const id=value=>typeof value==='string'&&/^[a-zA-Z0-9-]{1,80}$/.test(value);
 const text=value=>typeof value==='string'&&value.trim().length>0&&value.length<=180;
 const date=value=>typeof value==='string'&&value.length<=40&&Number.isFinite(Date.parse(value));
@@ -27,7 +28,7 @@ export async function collisionRoute({req,url,user,getDb,commit,body,reply}){
   }
   const receivedAt=new Date().toISOString(),fresh=[];
   for(const e of input.events){
-    if(known.has(e.id))continue;
+    if(isNpcCollision(e)||known.has(e.id))continue;
     const saved={id:e.id,runId:input.id,authorId:user.id,receivedAt,occurredAt:e.occurredAt,objectId:e.objectId,objectName:e.objectName.trim(),kind:e.kind,movement:e.movement,action:e.action,
       position:{floor:e.position.floor,x:e.position.x,y:e.position.y,z:e.position.z},
       playerPose:{floor:e.playerPose.floor,x:e.playerPose.x,y:e.playerPose.y,z:e.playerPose.z,yaw:e.playerPose.yaw},profile:cleanProfile(e.profile)};
@@ -37,5 +38,6 @@ export async function collisionRoute({req,url,user,getDb,commit,body,reply}){
   const run=existing??{id:input.id,authorId:user.id,authorName:user.name,authorEmail:user.email,startedAt:input.startedAt,profile:cleanProfile(input.profile),mapVersion:'office-v1-two-floors',endedAt:null};
   const updated={...run,lastSeenAt:receivedAt,endedAt:run.endedAt??(input.finish?receivedAt:null)};
   commit({...db,collisionRuns:existing?db.collisionRuns.map(r=>r.id===run.id?updated:r):[updated,...db.collisionRuns],collisions:[...db.collisions,...fresh]});
+  // Acknowledge discarded legacy NPC events too, so older clients clear their queue.
   reply(200,{accepted:input.events.map(e=>e.id)});return true;
 }

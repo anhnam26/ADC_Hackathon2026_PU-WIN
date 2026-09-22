@@ -829,3 +829,15 @@ Phần này thay thế hướng dẫn âm thanh và giới hạn không backend 
   giữ bước tránh đang hữu ích để không rung/đổi ý liên tục ở mỗi khung hình.
 - Áp dụng cả tự đi/review và va chạm khi tự lái. Chỉ đến gần để trò chuyện
   vẫn cho NPC dừng; không cần va chạm để tương tác.
+
+33. CHỈ LƯU VA CHẠM VỚI VẬT THỂ KHÔNG PHẢI NGƯỜI
+
+- Không tạo sự kiện lịch sử cho NPC. Cơ chế va chạm vật lý/nhường đường
+  vẫn sử dụng tín hiệu va chạm như trước, tách khỏi phần ghi nhận lịch sử.
+- Server loại bản ghi NPC cũ lúc khởi động, bỏ sự kiện NPC do client cũ
+  gửi lên nhưng xác nhận đã xử lý để tránh gửi lại vô hạn. Giữ va chạm
+  với cửa, tường, đồ vật và ranh giới; giữ nguyên phiên, notes và nhiệm vụ.
+- Trình duyệt xóa sự kiện NPC trong hàng đợi cục bộ khi mở ứng dụng và
+  khi khôi phục hàng đợi. Lọc cả theo loại colleague và ID colleague-*.
+- Script dọn file dữ liệu: scripts/purge-npc-collisions.mjs (chạy khi server
+  đã dừng). Không in dữ liệu cá nhân, chỉ báo số lượng xóa/giữ.

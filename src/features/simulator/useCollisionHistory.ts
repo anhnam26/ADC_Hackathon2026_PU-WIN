@@ -1,6 +1,8 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {CollisionEvent} from '../../types/collisions';
 import type {MobilityProfile} from '../../types/simulator';
+import {isNpcCollision} from '../../../shared/collisionPolicy.mjs';
+import {purgeNpcCollisionQueue} from '../../lib/collisionQueue';
 
 interface Draft {id:string;startedAt:string;profile:MobilityProfile;events:CollisionEvent[];finish:boolean;tab:string;updatedAt:number}
 
@@ -21,6 +23,7 @@ export function useCollisionHistory(active:boolean,userId:string,profile:Mobilit
     const report=(message:string)=>{if(!disposed)setStatus(message);};
     const persist=(d:Draft)=>{d.updatedAt=Date.now();try{localStorage.setItem(prefix+d.id,JSON.stringify(d));}catch{storageAvailable=false;report('Collision history is kept in memory until synced. Keep this page open.');}};
     const discover=()=>{
+      try{purgeNpcCollisionQueue(localStorage);}catch{/* Storage may be unavailable. */}
       try{for(let i=0;i<localStorage.length;i++){
         const key=localStorage.key(i)!;if(!key.startsWith(prefix)||drafts.has(key.slice(prefix.length)))continue;
         try{const d=JSON.parse(localStorage.getItem(key)! ) as Draft;
@@ -34,6 +37,7 @@ export function useCollisionHistory(active:boolean,userId:string,profile:Mobilit
       if(busy)return busy;
       busy=(async()=>{
         for(const d of drafts.values()){
+          d.events=d.events.filter(e=>!isNpcCollision(e));
           if(!d.events.length&&!d.finish&&Date.now()-(lastSynced.get(d.id)??0)<30000)continue;
           do{
             const batch=d.events.slice(0,15),finish=d.finish&&d.events.length<=15;
@@ -58,7 +62,7 @@ export function useCollisionHistory(active:boolean,userId:string,profile:Mobilit
     };
     const finish=async()=>{if(!drafts.has(draft.id))return;draft.finish=true;persist(draft);await flush();};
     current.current={record:event=>{
-      if(draft.finish)return;
+      if(draft.finish||isNpcCollision(event))return;
       if(draft.events.length>=200){report('Collision queue is full. Reconnect to save more collisions.');return;}
       draft.events.push(event);persist(draft);report('Syncing collision history…');void flush();
     },finish};

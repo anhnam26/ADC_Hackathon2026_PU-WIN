@@ -3,6 +3,7 @@ import {resolve,dirname} from 'node:path';
 import {randomBytes,randomUUID,scryptSync,timingSafeEqual,createHash} from 'node:crypto';
 import {collisionRoute} from './collisions.mjs';
 import {missionRoute} from './missions.mjs';
+import {isNpcCollision} from '../shared/collisionPolicy.mjs';
 
 const hash=value=>createHash('sha256').update(value).digest('hex');
 const passwordHash=(password,salt)=>scryptSync(password,salt,64).toString('hex');
@@ -22,6 +23,8 @@ export function createApi({file=process.env.DAYZERO_DATA_FILE||resolve('data/day
   if(!Array.isArray(db.users)||!Array.isArray(db.notes))throw new Error('Invalid Day Zero data file');
   db.collisionRuns??=[];db.collisions??=[];
   if(!Array.isArray(db.collisionRuns)||!Array.isArray(db.collisions))throw new Error('Invalid collision history');
+  const nonPeople=db.collisions.filter(e=>!isNpcCollision(e));
+  if(nonPeople.length!==db.collisions.length){db={...db,collisions:nonPeople};save(db);}
   const sessions=new Map(),attempts=new Map();
   const commit=next=>{save(next);db=next;};
   return async function api(req,res,next){
