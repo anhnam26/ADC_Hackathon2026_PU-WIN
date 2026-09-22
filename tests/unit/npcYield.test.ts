@@ -8,6 +8,25 @@ import {defaultMobility,type Obstacle,type Pose,type WorldObject} from '../../sr
 
 const npc=(patrol=false):WorldObject=>({...colleagues[0],position:[0,0,-1],yaw:0,patrol:patrol?[[0,-1],[0,3]]:undefined});
 describe('NPC yields to automatic wheelchair movement',()=>{
+  it.each([false,true])('yields again at each new position, including a different approach direction (patrol %s)',patrol=>{
+    const person=npc(patrol),states:NpcYields=new Map();
+    for(const yaw of [0,0,Math.PI/2,-Math.PI/2]){
+      const before=[...person.position],dx=-Math.sin(yaw),dz=-Math.cos(yaw);
+      let player:Pose={x:before[0]-dx*1.5,z:before[2]-dz*1.5,yaw,floor:1},hits=0;
+      const next={...player,x:before[0]+dx*1.1,z:before[2]+dz*1.1};
+      for(let frame=0;frame<400&&Math.hypot(next.x-player.x,next.z-player.z)>.01;frame++){
+        advanceNpcYields([person],states,.025,player,defaultMobility,[],false,true);
+        const step=Math.min(.07,Math.hypot(next.x-player.x,next.z-player.z));
+        const moved=moveWithCollisions(player,dx*step,dz*step,0,defaultMobility,objectObstacles(person));player=moved.pose;
+        if(moved.blocked){hits++;requestNpcYield(states,person,player,defaultMobility,next);}
+        expect(objectObstacles(person).some(p=>overlaps(bodyAt(player,defaultMobility),p))).toBe(false);
+      }
+      expect(hits).toBeGreaterThan(0);
+      expect(Math.hypot(next.x-player.x,next.z-player.z)).toBeLessThan(.01);
+      expect(Math.hypot(person.position[0]-before[0],person.position[2]-before[2])).toBeGreaterThan(.6);
+      expect(states.get(person.id)?.home).toEqual({x:0,z:-1,yaw:0});
+    }
+  });
   it.each([false,true])('clears an actual collision and lets auto-walk finish (patrol %s)',patrol=>{
     const person=npc(patrol),scene=[person],states:NpcYields=new Map(),waypoints=new Map<string,number>();
     let player:Pose={x:0,z:1,yaw:0,floor:1},hits=0,sidestepped=false;

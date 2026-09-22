@@ -29,13 +29,25 @@ function sweep(person:WorldObject,start:Pose,end:Pose,obstacles:Obstacle[]){
 
 export function requestNpcYield(states:NpcYields,person:WorldObject,player:Pose,profile:MobilityProfile,next?:Pose){
   if(!person.colleague)return;
-  const old=states.get(person.id);if(old&&!old.returning)return;
+  const old=states.get(person.id);
   const dx=next?next.x-player.x:-Math.sin(player.yaw),dz=next?next.z-player.z:-Math.cos(player.yaw);
-  const distance=Math.hypot(dx,dz),yaw=distance>.02?Math.atan2(-dx,-dz):player.yaw,length=Math.min(3,Math.max(1,distance));
+  const distance=Math.hypot(dx,dz),yaw=distance>1e-6?Math.atan2(-dx,-dz):player.yaw,length=Math.min(3,Math.max(1,distance));
   const body=bodyAt(player,profile),angle=player.yaw-yaw;
   const width=Math.abs(Math.cos(angle))*body.width+Math.abs(Math.sin(angle))*body.depth;
-  states.set(person.id,{home:old?.home??{x:person.position[0],z:person.position[2],yaw:person.yaw},
-    lane:{id:'reserved-route',name:'Wheelchair route',x:player.x-Math.sin(yaw)*length/2,z:player.z-Math.cos(yaw)*length/2,yaw,width:width+.5,depth:length+body.depth+.4},retry:0,returning:false});
+  const lane:Obstacle={id:'reserved-route',name:'Wheelchair route',x:player.x-Math.sin(yaw)*length/2,z:player.z-Math.cos(yaw)*length/2,yaw,width:width+.5,depth:length+body.depth+.4};
+  if(old&&!old.returning){
+    // Contact can recur while waiting at a previous refuge or while stepping aside.
+    // Keep a still-useful move stable; otherwise find a fresh refuge for the current route.
+    const changed=Math.hypot(lane.x-old.lane.x,lane.z-old.lane.z)>.2||Math.abs(Math.atan2(Math.sin(yaw-old.lane.yaw),Math.cos(yaw-old.lane.yaw)))>.1||Math.abs(lane.width-old.lane.width)>.1;
+    old.lane=lane;
+    if(old.target){
+      const arrived=Math.hypot(old.target.x-person.position[0],old.target.z-person.position[2])<.02;
+      if(!arrived&&clear(person,old.target,[lane,body]))return;
+      old.target=undefined;old.retry=0;
+    }else if(changed)old.retry=0;
+    return;
+  }
+  states.set(person.id,{home:old?.home??{x:person.position[0],z:person.position[2],yaw:person.yaw},lane,retry:0,returning:false});
 }
 
 // Returns IDs handled this frame so normal patrol cannot immediately step back into the route.

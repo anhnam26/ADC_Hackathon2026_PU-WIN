@@ -280,12 +280,13 @@ export function useSimulation(
         // Hide completed sections when the user follows the floor route manually.
         while (nav.index < nav.route.length - 1 && Math.hypot(nav.route[nav.index].x - pose.current.x, nav.route[nav.index].z - pose.current.z) < .4) nav.index++;
       }
-      if(!paused&&movement==='auto'){
+      if(!paused){
         for(const contact of contacts){
           const person=currentObjects.find(o=>o.id===contact.obstacle.id&&o.colleague);
-          if(person&&person.id!==nav.targetId){
-            requestNpcYield(npcYields.current,person,pose.current,profile,nav.route[nav.index]);
-            nav.status=`${person.name} is making room. Auto-walk will continue when the route is clear.`;
+          if(person){
+            const next=movement==='auto'?nav.route[nav.index]:contact.action==='translation'?contact.pose:undefined;
+            requestNpcYield(npcYields.current,person,pose.current,profile,next);
+            if(movement==='auto')nav.status=`${person.name} is making room. Auto-walk will continue when the route is clear.`;
           }
         }
       }

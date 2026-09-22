@@ -824,5 +824,8 @@ Phần này thay thế hướng dẫn âm thanh và giới hạn không backend 
   chỗ tránh hợp lệ, chờ và thử lại; không cho đi xuyên vật cản.
 - Xe đi qua và cách hơn 3,2 m: NPC tuần tra tiếp tục hành trình; NPC đứng
   cố định trở lại vị trí cũ khi đường về trống. Mở dialog/rời tab tạm dừng.
-- Tự lái tới gần NPC vẫn cho dừng để trò chuyện; không đẩy NPC ra xa khi
-  chính NPC đó là đích tương tác của tuyến đường.
+- Mỗi lần chạm NPC đều được xem xét lại, kể cả đang tránh, đã đứng ở chỗ
+  vừa tránh hoặc đang trở về. Đổi hướng tiếp cận thì tính lại vùng cần chừa;
+  giữ bước tránh đang hữu ích để không rung/đổi ý liên tục ở mỗi khung hình.
+- Áp dụng cả tự đi/review và va chạm khi tự lái. Chỉ đến gần để trò chuyện
+  vẫn cho NPC dừng; không cần va chạm để tương tác.
