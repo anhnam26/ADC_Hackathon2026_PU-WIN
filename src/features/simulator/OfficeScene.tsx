@@ -313,9 +313,10 @@ function CameraRig({
     />
   );
 }
-function FirstPersonCamera({ pose, pitch, profile, reset, thirdPerson }: {
+function FirstPersonCamera({ pose, pitch, lookYaw, profile, reset, thirdPerson }: {
   pose: MutableRefObject<Pose>;
   pitch: MutableRefObject<number>;
+  lookYaw:MutableRefObject<number>;
   profile: MobilityProfile;
   reset: number;
   thirdPerson: boolean;
@@ -324,18 +325,19 @@ function FirstPersonCamera({ pose, pitch, profile, reset, thirdPerson }: {
   const ray = useRef(new Raycaster());
   const target = useRef(new Vector3());
   const offset = useRef(new Vector3());
-  useEffect(() => { pitch.current = 0; }, [reset, pitch]);
+  useEffect(() => { pitch.current = 0;lookYaw.current=0; }, [reset, pitch,lookYaw]);
   useFrame(() => {
     // Eye height is an illustrative seated offset, not a personal reach measurement.
     const eyeHeight = profile.mode === 'wheelchair' ? profile.seatHeightCm / 100 + .65 : 1.6;
     target.current.set(pose.current.x, (pose.current.y ?? floorY(pose.current.floor ?? 1))+eyeHeight, pose.current.z);
+    const yaw=pose.current.yaw+(profile.mode==='wheelchair'?lookYaw.current:0);
     if (!thirdPerson) {
       camera.position.copy(target.current);
-      camera.rotation.set(pitch.current, pose.current.yaw, 0, 'YXZ');
+      camera.rotation.set(pitch.current, yaw, 0, 'YXZ');
       return;
     }
-    offset.current.set(Math.sin(pose.current.yaw) * Math.cos(pitch.current) * 3,
-      .8 - Math.sin(pitch.current) * 3, Math.cos(pose.current.yaw) * Math.cos(pitch.current) * 3);
+    offset.current.set(Math.sin(yaw) * Math.cos(pitch.current) * 3,
+      .8 - Math.sin(pitch.current) * 3, Math.cos(yaw) * Math.cos(pitch.current) * 3);
     const distance = offset.current.length();
     ray.current.set(target.current, offset.current.normalize());
     ray.current.far = distance;
@@ -384,6 +386,7 @@ export interface SceneProps {
   firstPerson: boolean;
   thirdPerson: boolean;
   lookPitch: MutableRefObject<number>;
+  lookYaw:MutableRefObject<number>;
   reset: number;
   reducedMotion: boolean;
   onUnavailable: () => void;
@@ -532,7 +535,7 @@ export default function OfficeScene(p: SceneProps) {
         <ElevatorModel state={p.elevator} overview={!immersive}/>
         <group visible={immersive}><Roof/></group>
         {!p.firstPerson && <Wheelchair profile={p.profile} pose={p.pose} />}
-        {p.firstPerson || p.thirdPerson ? <FirstPersonCamera pose={p.pose} pitch={p.lookPitch} profile={p.profile} reset={p.reset} thirdPerson={p.thirdPerson} /> : <CameraRig
+        {p.firstPerson || p.thirdPerson ? <FirstPersonCamera pose={p.pose} pitch={p.lookPitch} lookYaw={p.lookYaw} profile={p.profile} reset={p.reset} thirdPerson={p.thirdPerson} /> : <CameraRig
           pose={p.pose}
           cameraYaw={p.cameraYaw}
           follow={false}

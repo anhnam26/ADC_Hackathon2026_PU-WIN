@@ -403,6 +403,7 @@ export default function Simulator({
                   firstPerson={firstPerson}
                   thirdPerson={cameraMode === 'third-person'}
                   lookPitch={sim.lookPitch}
+                  lookYaw={sim.lookYaw}
                   reset={reset}
                   reducedMotion={session.reducedMotion}
                   onUnavailable={unavailable}

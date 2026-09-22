@@ -22,6 +22,7 @@ import type { MobilityProfile, Pose } from "../../types/simulator";
 import {CollisionEpisodes} from '../../lib/collisionEpisodes';
 import type {CollisionContact} from '../../lib/physics';
 import type {CollisionEvent} from '../../types/collisions';
+import {wheelchairDrive,WHEELCHAIR_SPEED} from '../../lib/wheelchairDrive';
 
 export type Control =
   | "forward"
@@ -66,6 +67,7 @@ export function useSimulation(
   if(!liftInitialized.current){liftInitialized.current=true;if(insideCabin(pose.current,profile)){elevator.current.door=1;elevator.current.phase='open';}}
   const cameraYaw = useRef(Math.PI / 4);
   const lookPitch = useRef(0);
+  const lookYaw = useRef(0);
   const pendingTurn = useRef(0);
   const pressed = useRef(new Set<string>());
   const virtual = useRef(new Set<Control>());
@@ -99,6 +101,7 @@ export function useSimulation(
     virtual.current.clear();
     pendingTurn.current = 0;
     lookPitch.current = 0;
+    lookYaw.current = 0;
     navigation.current = { route: [], index: 0, auto: false, targetId: '', status: 'Đã trở về lối vào.' };
     setView({pose:{...SPAWN},nearby:[],blocked:'',moving:false,objects:sceneObjects.current,route:[],auto:false,navigationStatus:navigation.current.status,elevator:{...elevator.current}});
   }, []);
@@ -157,7 +160,10 @@ export function useSimulation(
       const contacts:CollisionContact[]=[];
       let movement:'manual'|'auto'='manual';
       if (firstPerson) cameraYaw.current = pose.current.yaw;
-      if (navigation.current.auto && !controls.size) pendingTurn.current = 0;
+      if(firstPerson&&profile.mode==='wheelchair'){
+        lookYaw.current=Math.atan2(Math.sin(lookYaw.current+pendingTurn.current),Math.cos(lookYaw.current+pendingTurn.current));
+        pendingTurn.current=0;
+      }
       if (!paused && (controls.size || pendingTurn.current)) {
         if (controls.size && navigation.current.auto) { navigation.current.auto = false; if(pendingDestination.current)pendingDestination.current.automatic=false; navigation.current.status = 'Đã dừng tự đi. Bạn đang điều khiển xe.'; }
         let x = Number(controls.has("right")) - Number(controls.has("left"));
@@ -182,9 +188,9 @@ export function useSimulation(
             Number(controls.has("turnRight"))) *
           dt *
           1.5;
-        if (firstPerson) turn += pendingTurn.current;
+        if (firstPerson&&profile.mode!=='wheelchair') turn += pendingTurn.current;
         pendingTurn.current = 0;
-        if (!firstPerson && length && !turn) {
+        if (!firstPerson && profile.mode!=='wheelchair' && length && !turn) {
           let wanted = Math.atan2(-worldX, -worldZ);
           let difference = Math.atan2(
             Math.sin(wanted - pose.current.yaw),
@@ -200,11 +206,13 @@ export function useSimulation(
           }
           turn = Math.max(-dt * 3, Math.min(dt * 3, difference));
         }
+        const drive=profile.mode==='wheelchair'?wheelchairDrive(pose.current.yaw,-z,
+          Number(controls.has('left')||controls.has('turnLeft'))-Number(controls.has('right')||controls.has('turnRight')),controls.has('slow'),dt):null;
         const result = moveWithCollisions(
           pose.current,
-          worldX * speed * dt,
-          worldZ * speed * dt,
-          turn,
+          drive?.dx ?? worldX * speed * dt,
+          drive?.dz ?? worldZ * speed * dt,
+          drive?.turn ?? turn,
           profile,
           obstacles,
         );
@@ -233,7 +241,7 @@ export function useSimulation(
             const dx = next.x - pose.current.x, dz = next.z - pose.current.z, distance = Math.hypot(dx, dz);
             const difference = Math.atan2(Math.sin(next.yaw - pose.current.yaw), Math.cos(next.yaw - pose.current.yaw));
             const turn = Math.max(-dt * 1.5, Math.min(dt * 1.5, difference));
-            const step = Math.abs(difference) < .025 ? Math.min(distance, dt * (profile.mode==='walking'?2.2:1.8)) : 0;
+            const step = Math.abs(difference) < .025 ? Math.min(distance, dt * (profile.mode==='walking'?2.2:WHEELCHAIR_SPEED)) : 0;
             const result = moveWithCollisions(pose.current, distance ? dx / distance * step : 0, distance ? dz / distance * step : 0, turn, profile, obstacles);
             pose.current = result.pose;
             contacts.push(...result.contacts);movement='auto';
@@ -422,6 +430,7 @@ export function useSimulation(
     pose,
     cameraYaw,
     lookPitch,
+    lookYaw,
     view,
     obstacles: obstacleRef.current,
     navigate, stopNavigation,
