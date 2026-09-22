@@ -5,6 +5,7 @@ import LanguageSwitch from '../../components/LanguageSwitch';
 import SpatialMap,{noteStatus} from './SpatialMap';
 import {NoteDetails} from './NotesDialog';
 import type {CollisionHistory,SavedCollision} from '../../types/collisions';
+import MissionManager from '../tasks/MissionManager';
 
 export default function Admin({onExperience}:{onExperience:()=>void}){
   const {user,logout}=useAccount();
@@ -75,6 +76,7 @@ export default function Admin({onExperience}:{onExperience:()=>void}){
         </>}
       </aside>
     </div>
+    <MissionManager/>
   </main>;
 }
 

@@ -1,4 +1,4 @@
-import {useRef,type KeyboardEvent} from 'react';
+import {useRef,type KeyboardEvent,type ReactNode} from 'react';
 import {wallsOnFloor,objectsOnFloor} from '../../data/space';
 import {roomZones} from '../../data/building';
 import {objectObstacles} from '../../lib/objectGeometry';
@@ -11,7 +11,7 @@ export function noteStatus(status:NoteStatus,vi:boolean){return ({new:['Mới g�
 export function NotePins({notes,selected,onSelect}:{notes:SpatialNote[];selected?:string;onSelect:(note:SpatialNote)=>void}){
  return <g>{notes.map((note,i)=><g key={note.id} role="button" tabIndex={0} aria-label={`Note ${i+1}: ${note.concern}`} data-note-id={note.id} onClick={e=>{e.stopPropagation();onSelect(note);}} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(note);}}} transform={`translate(${note.position.x} ${note.position.z})`} className="map-note-pin"><circle r={selected===note.id?'.48':'.36'} fill={noteColors[note.status]} stroke="white" strokeWidth=".09"/><text textAnchor="middle" dominantBaseline="central" fontSize=".28" fill="white" fontWeight="bold">{i+1}</text><title>{note.concern}</title></g>)}</g>;
 }
-export default function SpatialMap({floor,notes=[],selected,onSelect=()=>{},point,onPoint,collisions=[],selectedCollision,onCollision=()=>{}}:{floor:1|2;notes?:SpatialNote[];selected?:string;onSelect?:(note:SpatialNote)=>void;point?:{x:number;z:number};onPoint?:(point:{x:number;z:number})=>void;collisions?:SavedCollision[];selectedCollision?:string;onCollision?:(event:SavedCollision)=>void}){
+export default function SpatialMap({floor,notes=[],selected,onSelect=()=>{},point,onPoint,collisions=[],selectedCollision,onCollision=()=>{},overlay}:{floor:1|2;notes?:SpatialNote[];selected?:string;onSelect?:(note:SpatialNote)=>void;point?:{x:number;z:number};onPoint?:(point:{x:number;z:number})=>void;collisions?:SavedCollision[];selectedCollision?:string;onCollision?:(event:SavedCollision)=>void;overlay?:ReactNode}){
  const {t,language}=useLocale(),vi=language==='vi',ref=useRef<SVGSVGElement>(null);
  const pick=(x:number,z:number)=>onPoint?.({x:Math.round(Math.max(-12,Math.min(12,x))*100)/100,z:Math.round(Math.max(-20,Math.min(floor===1?14:7,z))*100)/100});
  const key=(e:KeyboardEvent<SVGSVGElement>)=>{if(!point||e.target!==e.currentTarget)return;const d={ArrowUp:[0,-.25],ArrowDown:[0,.25],ArrowLeft:[-.25,0],ArrowRight:[.25,0]}[e.key];if(d){e.preventDefault();pick(point.x+d[0],point.z+d[1]);}};
@@ -28,5 +28,5 @@ export default function SpatialMap({floor,notes=[],selected,onSelect=()=>{},poin
      <path d="M-.12 -.12L.12 .12M-.12 .12L.12 -.12" stroke="white" strokeWidth=".07" pointerEvents="none"/><title>{event.objectName} · {event.action} · {event.movement}</title>
    </g>)}</g>
    {point&&<g transform={`translate(${point.x} ${point.z})`} pointerEvents="none"><circle r=".48" fill="#206bb4" stroke="white" strokeWidth=".1"/><path d="M-.22 0H.22M0-.22V.22" stroke="white" strokeWidth=".08"/></g>}
- </svg>;
+ {overlay}</svg>;
 }

@@ -2,6 +2,7 @@ import {mkdirSync,readFileSync,writeFileSync,renameSync,existsSync} from 'node:f
 import {resolve,dirname} from 'node:path';
 import {randomBytes,randomUUID,scryptSync,timingSafeEqual,createHash} from 'node:crypto';
 import {collisionRoute} from './collisions.mjs';
+import {missionRoute} from './missions.mjs';
 
 const hash=value=>createHash('sha256').update(value).digest('hex');
 const passwordHash=(password,salt)=>scryptSync(password,salt,64).toString('hex');
@@ -48,6 +49,7 @@ export function createApi({file=process.env.DAYZERO_DATA_FILE||resolve('data/day
       }
       if(url.pathname==='/api/auth/logout'&&req.method==='POST'){if(cookie)sessions.delete(hash(cookie));setCookie('',0);return reply(200,{ok:true});}
       if(!user)return reply(401,{error:"Your session has expired. Please sign in again."});
+      if(await missionRoute({req,url,user:{...user,name:displayName(user.name)},getDb:()=>db,commit,body,reply}))return;
       if(await collisionRoute({req,url,user:{...user,name:displayName(user.name)},getDb:()=>db,commit,body,reply}))return;
       if(url.pathname==='/api/notes'&&req.method==='GET')return reply(200,{notes:db.notes.filter(n=>user.role==='manager'||n.authorId===user.id).map(publicNote)});
       if(url.pathname==='/api/notes'&&req.method==='POST'){
