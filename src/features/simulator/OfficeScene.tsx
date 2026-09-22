@@ -425,8 +425,8 @@ export default function OfficeScene(p: SceneProps) {
         />
         {([1,2] as const).map(floor=><group key={floor} name={`building-floor-${floor}`} position={[0,floorY(floor),0]} visible={immersive||activeFloor===floor}>
         <FloorSlab floor={floor}/>
-        <CeilingLights floor={floor} active={activeFloor===floor}/>
-        {floor===2&&<UpperDecor/>}
+        <CeilingLights floor={floor} active={activeFloor===floor} fixtures={immersive}/>
+        {floor===2&&<UpperDecor fixtures={immersive}/>}
         {floor===1 && <PartMesh
           part={{
             position: [0, 0.008, 10.5],
@@ -497,7 +497,7 @@ export default function OfficeScene(p: SceneProps) {
           >
             <ObjectModel object={o} open={p.openDoors.includes(o.id)} />
             {o.roomLabel && <group position={[0,0,o.connection ? o.size[2]/2 : 0]}><DoorSign label={t(o.roomLabel)} width={o.size[0]} /></group>}
-            {o.colleague && Math.hypot(p.pose.current.x - o.position[0], p.pose.current.z - o.position[2]) < 4.5 && <Html position={[0, o.size[1] + .2, 0]} center occlude zIndexRange={[10, 0]}><span className="colleague-tag">{o.name}<small>{t(o.colleague.role)}</small></span></Html>}
+            {floor===activeFloor && o.colleague && Math.hypot(p.pose.current.x - o.position[0], p.pose.current.z - o.position[2]) < 4.5 && <Html position={[0, o.size[1] + .2, 0]} center occlude zIndexRange={[10, 0]}><span className="colleague-tag">{o.name}<small>{t(o.colleague.role)}</small></span></Html>}
             {(p.nearest === o.id || p.destinationIds.includes(o.id)) && (
               <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <ringGeometry
@@ -517,7 +517,7 @@ export default function OfficeScene(p: SceneProps) {
             )}
           </group>
         ))}
-        {!p.firstPerson && !p.thirdPerson && [...(floor===1 ? [
+        {floor===activeFloor && !p.firstPerson && !p.thirdPerson && [...(floor===1 ? [
           [-6, -6.45, "KHU LÀM VIỆC"],
           [6.1, -6.45, "PHÒNG LOTUS"],
           [-5.6, 1.25, "PANTRY"],

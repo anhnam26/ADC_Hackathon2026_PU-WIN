@@ -1,4 +1,5 @@
 import {test,expect} from './fixtures';
+import {seedSession} from '../../src/lib/persistence';
 test('mouse only looks, A/D pivot in place, and W/S follow the wheelchair in both views',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:'Start exploring',exact:true}).click();
  const stage=page.getByTestId('game-stage');await expect.poll(()=>page.evaluate(()=>!!document.pointerLockElement)).toBe(true);
@@ -17,4 +18,15 @@ test('mouse only looks, A/D pivot in place, and W/S follow the wheelchair in bot
  const turned=await position();await page.mouse.move(510,380);await page.waitForTimeout(200);expect((await position()).yaw).toBe(turned.yaw);
  await page.keyboard.down('s');await expect.poll(async()=>(await position()).x).toBeGreaterThan(turned.x+.15);await page.keyboard.up('s');
  await page.evaluate(()=>document.exitPointerLock());await page.getByRole('button',{name:'Reset view',exact:true}).click();await expect(stage).toHaveAttribute('data-look-yaw','0.000');
+});
+
+test('upper floor overview shows its own labels and furnished lobby',async({page})=>{
+ const session=seedSession();session.started=true;session.playerPose={x:0,z:-14,y:3.2,floor:2,yaw:0};
+ await page.addInitScript(s=>localStorage.setItem('dayzero.session.v1',JSON.stringify(s)),session);
+ await page.goto('/');await page.getByRole('button',{name:'Enter office',exact:true}).click();await expect(page.locator('canvas')).toBeVisible();
+ await page.screenshot({path:'test-results/upper-floor-interior.png'});
+ await page.evaluate(()=>document.exitPointerLock());await page.getByRole('button',{name:'Office overview',exact:true}).click();
+ await expect(page.locator('.room-label').filter({hasText:'SKY MEETING ROOM'})).toBeVisible();
+ await expect(page.locator('.room-label').filter({hasText:'HR ROOM'})).toHaveCount(0);
+ await page.screenshot({path:'test-results/upper-floor-decor.png'});
 });

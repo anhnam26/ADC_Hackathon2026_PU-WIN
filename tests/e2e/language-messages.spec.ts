@@ -60,14 +60,19 @@ test('automatic diagonal travel faces its movement in both camera modes despite 
   await expect.poll(()=>page.evaluate(()=>!!document.pointerLockElement)).toBe(true);
   await page.keyboard.press('n');
   await page.getByRole('combobox',{name:"Destination",exact:true}).selectOption('colleague-linh');
+  await stage.evaluate(el=>{
+    const samples:{x:number;z:number;yaw:number}[]=[];
+    Object.assign(window,{driveSamples:samples});
+    new MutationObserver(()=>samples.push({x:Number(el.getAttribute('data-x')),z:Number(el.getAttribute('data-z')),yaw:Number(el.getAttribute('data-yaw'))})).observe(el,{attributes:true,attributeFilter:['data-x','data-z','data-yaw']});
+  });
   await page.getByRole('button',{name:"Auto-walk here",exact:true}).click();
-  const samples:{x:number;z:number;yaw:number}[]=[];
-  for(let i=0;i<22;i++){
-    if(i===8){await stage.focus();await page.keyboard.press('v');}
+  for(let i=0;i<12;i++){
+    if(i===2){await stage.focus();await page.keyboard.press('v');}
     await page.mouse.move(500+i*9,400+i*2);
     await page.waitForTimeout(130);
-    samples.push(await stage.evaluate(el=>({x:Number(el.getAttribute('data-x')),z:Number(el.getAttribute('data-z')),yaw:Number(el.getAttribute('data-yaw'))})));
   }
+  await expect(stage).toHaveAttribute('data-autowalk','false',{timeout:20000});
+  const samples=await page.evaluate(()=>(window as unknown as {driveSamples:{x:number;z:number;yaw:number}[]}).driveSamples);
   const moving=samples.slice(1).map((b,i)=>({a:samples[i],b})).filter(({a,b})=>Math.hypot(b.x-a.x,b.z-a.z)>.025);
   expect(moving.length).toBeGreaterThan(3);
   expect(moving.some(({a,b})=>Math.abs(b.x-a.x)>.02&&Math.abs(b.z-a.z)>.02)).toBe(true);
