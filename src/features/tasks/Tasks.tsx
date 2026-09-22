@@ -256,7 +256,7 @@ export default function Tasks({
                     <td>
                       <button
                         className="icon-button"
-                        aria-label={`Chi tiết: ${t.title}`}
+                        aria-label={`Details: ${t.title}`}
                         onClick={() => open(t)}
                       >
                         <ArrowRight size={18} />
@@ -301,8 +301,8 @@ export default function Tasks({
                     <strong>{tr("Hoạt động:")}</strong> {journey[i.stepId].time}{tr("·")}{" "}
                     {tr(journey[i.stepId].title)}
                   </p>
-                  {i.objectName && <p><strong>{tr("Đồ vật:")}</strong> {i.objectName}</p>}
-                  {i.measurementNote && <p><strong>{tr("Số đo khi ghi nhận:")}</strong> {i.measurementNote}</p>}
+                  {i.objectName && <p><strong>{tr("Đồ vật:")}</strong> {tr(i.objectName)}</p>}
+                  {i.measurementNote && <p><strong>{tr("Số đo khi ghi nhận:")}</strong> {tr(i.measurementNote)}</p>}
                   <p>
                     <strong>{tr("Mong muốn:")}</strong>{" "}
                     {i.requestedSupport ||
@@ -349,7 +349,7 @@ export default function Tasks({
             )}
             {task.employeeResponse && (
               <p className="detail-context">
-                <strong>{tr("Phản hồi nhân viên:")}</strong> {task.employeeResponse}
+                <strong>{tr("Phản hồi nhân viên:")}</strong> {tr(task.employeeResponse)}
               </p>
             )}
             {((role === "hr" && task.status === "in_progress") ||
@@ -413,10 +413,10 @@ export default function Tasks({
               {task.history.map((h, i) => (
                 <li key={i}>
                   <span>
-                    <strong>{h.actor}</strong>{tr("·")}{" "}
-                    {new Date(h.at).toLocaleString("vi-VN")}
+                    <strong>{tr(h.actor)}</strong>{tr("·")}{" "}
+                    {new Date(h.at).toLocaleString("en-US")}
                   </span>
-                  <p>{h.message}</p>
+                  <p>{tr(h.message)}</p>
                 </li>
               ))}
             </ol>

@@ -86,8 +86,8 @@ export default function Summary({
                     <MapPin size={20} />
                   </div>
                   <div className="issue-copy">
-                    {issue.objectName && <p><strong>{issue.objectName}</strong></p>}
-                    {issue.measurementNote && <p className="measurement-context">{issue.measurementNote}</p>}
+                    {issue.objectName && <p><strong>{tr(issue.objectName)}</strong></p>}
+                    {issue.measurementNote && <p className="measurement-context">{tr(issue.measurementNote)}</p>}
                     <div className="inline-meta">
                       <span>{tr(locationById(issue.locationId).name)}</span>
                       <span>{tr("·")}{journey[issue.stepId].time}</span>
@@ -96,7 +96,7 @@ export default function Summary({
                     <p>
                       {tr(categoryLabels[issue.category])}
                       {issue.requestedSupport &&
-                        ` · Mong muốn: ${issue.requestedSupport}`}
+                        ` · Requested support: ${issue.requestedSupport}`}
                     </p>
                     <span className={`badge ${task ? task.status : "draft"}`}>
                       {task ? tr(statusLabels[task.status]) : tr("Chưa gửi")}
@@ -109,14 +109,14 @@ export default function Summary({
                     <div className="row-actions">
                       <button
                         className="icon-button"
-                        aria-label={`Sửa: ${issue.description}`}
+                        aria-label={`Edit: ${issue.description}`}
                         onClick={() => onEdit(issue)}
                       >
                         <Pencil size={17} />
                       </button>
                       <button
                         className="icon-button danger"
-                        aria-label={`Xóa: ${issue.description}`}
+                        aria-label={`Delete: ${issue.description}`}
                         onClick={() => {
                           deleteIssue(issue.id);
                           notify(tr("Đã xóa ghi nhận chưa gửi."));
@@ -139,7 +139,7 @@ export default function Summary({
             disabled={!draft.length}
             onClick={() => {
               submitIssues();
-              notify(`Đã tạo ${draft.length} nhiệm vụ chuẩn bị trong demo.`);
+              notify(tr(`Đã tạo ${draft.length} nhiệm vụ chuẩn bị trong demo.`));
             }}
           >
             <Send size={16} />{tr("Tạo")} {draft.length} {tr("nhiệm vụ chuẩn bị")}</button>

@@ -86,13 +86,13 @@ export default function IssueForm({
         <MapPin size={18} />
         <div>
           <strong>{tr(locationById(context.locationId).name)}</strong>
-          {(context.objectName ?? issue?.objectName) && <strong>{context.objectName ?? issue?.objectName}</strong>}
+          {(context.objectName ?? issue?.objectName) && <strong>{tr(context.objectName ?? issue?.objectName ?? '')}</strong>}
           <span>
             {journey[context.stepId].time}{tr("·")}{tr(journey[context.stepId].title)}
           </span>
         </div>
       </div>
-      {(context.measurementNote ?? issue?.measurementNote) && <p className="measurement-context">{context.measurementNote ?? issue?.measurementNote}</p>}
+      {(context.measurementNote ?? issue?.measurementNote) && <p className="measurement-context">{tr(context.measurementNote ?? issue?.measurementNote ?? '')}</p>}
       <form onSubmit={submit} className="form-stack">
         <fieldset className="kind-options">
           <legend>{tr("Loại ghi nhận")}</legend>

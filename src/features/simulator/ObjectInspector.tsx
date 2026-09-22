@@ -1,4 +1,4 @@
-import { useLocale } from '../../lib/i18n';
+import { useLocale,translate } from '../../lib/i18n';
 import { objectEnglish } from '../../data/objectEnglish';
 import { useState } from "react";
 import {
@@ -13,7 +13,7 @@ import ObjectIllustration from "./ObjectIllustration";
 import type { MobilityProfile, WorldObject } from "../../types/simulator";
 
 export function measurementSummary(o: WorldObject, profile: MobilityProfile) {
-  return `${o.name}: rộng ${Math.round(o.size[0] * 100)} × sâu ${Math.round(o.size[2] * 100)} × cao ${Math.round(o.size[1] * 100)} cm${o.clearWidth ? `; thông thủy ${Math.round(o.clearWidth * 100)} cm` : ""}. ${profile.mode === "wheelchair" ? `Xe: ${profile.widthCm} × ${profile.lengthCm} cm; tay vịn ${profile.armrestHeightCm} cm.` : "Chế độ đi bộ."} Số đo mô phỏng.`;
+  return `${translate(o.name,'en')}: width ${Math.round(o.size[0] * 100)} × depth ${Math.round(o.size[2] * 100)} × height ${Math.round(o.size[1] * 100)} cm${o.clearWidth ? `; clear opening ${Math.round(o.clearWidth * 100)} cm` : ""}. ${profile.mode === "wheelchair" ? `Wheelchair: ${profile.widthCm} × ${profile.lengthCm} cm; armrests ${profile.armrestHeightCm} cm.` : "Walking mode."} Simulated measurements.`;
 }
 export default function ObjectInspector({
   object,
@@ -116,7 +116,7 @@ export default function ObjectInspector({
               </p>
               <small>
                 {difference > 0
-                  ? `Khi căn giữa, khoảng dư mỗi bên khoảng ${(difference / 2).toFixed(1)} cm. `
+                  ? `When centered, clearance on each side is approximately ${(difference / 2).toFixed(1)} cm. `
                   : ""}{t("Cần xét cả hướng tiếp cận, tay đẩy và đồ mang theo.")}</small>
             </div>
           )}
@@ -128,7 +128,7 @@ export default function ObjectInspector({
               <p>
                 {profile.armrestHeightCm >= object.underHeight * 100
                   ? t("Tay vịn cao hơn hoặc bằng khoảng trống dưới mặt. Có thể cần điều chỉnh.")
-                  : `Còn khoảng ${(object.underHeight * 100 - profile.armrestHeightCm).toFixed(0)} cm theo chiều cao.`}
+                  : `Approximately ${(object.underHeight * 100 - profile.armrestHeightCm).toFixed(0)} cm of vertical clearance remains.`}
               </p>
               <small>{t("Chưa mô phỏng tư thế đưa chân vào dưới bàn hoặc tầm với cá nhân.")}</small>
             </div>

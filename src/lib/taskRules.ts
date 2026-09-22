@@ -15,7 +15,7 @@ export function addDays(date: string, amount: number) {
   return d.toISOString().slice(0, 10);
 }
 export function formatDate(date: string) {
-  return new Intl.DateTimeFormat("vi-VN", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -74,15 +74,15 @@ export function transitionTask(
         ["done", "in_progress"].includes(status)
       : (task.status === "todo" && status === "in_progress") ||
         (task.status === "in_progress" && status === "ready_for_review");
-  if (!allowed) throw new Error("Chuyển trạng thái không hợp lệ.");
+  if (!allowed) throw new Error("This status transition is not allowed.");
   if (status === "ready_for_review" && note.trim().length < 3)
-    throw new Error("Vui lòng nhập phương án chuẩn bị.");
+    throw new Error("Please enter a preparation plan.");
   if (
     actor === "Nhân viên" &&
     status === "in_progress" &&
     note.trim().length < 3
   )
-    throw new Error("Vui lòng ghi điều cần xem lại.");
+    throw new Error("Please describe what needs to be reviewed.");
   return {
     ...task,
     status,

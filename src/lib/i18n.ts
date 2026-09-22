@@ -1,4 +1,3 @@
-import { useDemoStore } from '../store/useDemoStore';
 export type Language = 'vi' | 'en';
 const en: Record<string, string> = {
   'Nhật ký':'Journal','Lịch trình':'Schedule','Đồ vật':'Objects','Đồng nghiệp':'Colleagues','Ngôn ngữ':'Language',
@@ -47,6 +46,17 @@ const en: Record<string, string> = {
   'Hồ sơ đối tượng · Số đo lấy từ mô hình đang trải nghiệm':'Object details · Measurements from this simulation','Rộng':'Width','Sâu':'Depth','Cao':'Height','Rộng thông thủy':'Clear opening width','Khoảng trống dưới mặt':'Under-surface clearance','Cao tay nắm':'Handle height','Cao vị trí sử dụng':'Control height','Cách sử dụng / tiếp cận':'Use / approach','Lưu ý cho bạn':'Things to consider','Ghi nhận về đồ vật này':'Report this object','Mở cửa':'Open door','Đóng cửa':'Close door',
 };
 Object.assign(en, {
+  'Trình duyệt chưa cho khóa chuột. Nhấn Enter để tiếp tục chơi và ẩn chuột.':'Pointer lock was blocked. Press Enter to resume playing and hide the pointer.',
+  'Trình duyệt chưa hỗ trợ khóa chuột. Bạn có thể kéo để nhìn quanh.':'Pointer lock is unavailable. Drag to look around.',
+  'Chưa thoát được toàn màn hình. Nhấn Esc để thoát.':'Unable to exit fullscreen. Press Esc to exit.',
+  'Trình duyệt không cho bật toàn màn hình. Map vẫn phủ toàn bộ vùng hiển thị của trang.':'Fullscreen was blocked. The map still fills the browser viewport.',
+  'Tường / khung phòng':'Wall / room frame',
+  'Tạo nhiệm vụ từ tổng kết trải nghiệm.':'Task created from the experience summary.',
+  'Bắt đầu chuẩn bị.':'Preparation started.',
+  'Nhân viên xác nhận phương án.':'The employee confirmed the solution.',
+  'Tôi xác nhận phương án này.':'I confirm this solution.',
+  'Không thể khôi phục dữ liệu đã lưu. Phiên tạm vẫn dùng được; dữ liệu cũ được giữ nguyên. Chọn “Đặt lại demo” khi muốn thay thế.':'Saved data could not be restored. You can use a temporary session; the original data is preserved. Choose “Reset demo” to replace it.',
+  'Trình duyệt không cho phép lưu. Phiên hiện tại vẫn dùng được nhưng sẽ mất khi tải lại trang.':'Browser storage is unavailable. You can keep exploring, but local progress will be lost when you reload.',
   'Thang máy đang hoạt động. Vui lòng chờ.':'The lift is operating. Please wait.','Gọi thang và chờ cửa mở trước.':'Call the lift and wait for the doors to open.','Đưa toàn bộ xe vào cabin, tránh vùng cửa rồi chọn tầng.':'Move fully into the cabin, clear of the doors, before choosing a floor.','Vùng cửa đang bị chắn.':'The doorway is obstructed.','Cửa đang đóng. Cabin sẽ nâng bạn tới tầng đã chọn.':'Doors closing. The cabin will carry you to your selected floor.','Đã gọi thang. Chờ cửa mở, dùng WASD vào cabin rồi nhấn F chọn tầng.':'Lift called. Wait for the doors, use WASD to enter, then press F to choose a floor.','Cửa thang máy':'Lift doors',
   'PHÒNG NHÂN SỰ':'HR ROOM','PHÒNG ĐÀO TẠO':'TRAINING ROOM','PHÒNG NGHỈ NGƠI':'WELLNESS ROOM','KHU LÀM VIỆC TẦNG 2':'FLOOR 2 WORKSPACE','PHÒNG HỌP SKY':'SKY MEETING ROOM','THANG MÁY':'LIFT','THANG BỘ':'STAIRS',
   'Cửa phòng nhân sự':'HR room door','Cửa phòng đào tạo':'Training room door','Cửa phòng nghỉ ngơi':'Wellness room door','Bàn tiếp đón HR':'HR reception desk','Bàn phòng đào tạo':'Training table','Màn hình đào tạo':'Training screen','Ghế phòng nghỉ ngơi':'Wellness sofa','Máy nước phòng nghỉ':'Wellness water dispenser','Cửa khu làm việc tầng 2':'Floor 2 workspace door','Cửa phòng họp Sky':'Sky meeting room door','Bàn làm việc B21':'Desk B21','Bàn làm việc B22':'Desk B22','Máy in tầng 2':'Floor 2 printer','Bàn họp Sky':'Sky meeting table','Màn hình phòng Sky':'Sky meeting screen','Ghế sảnh tầng 2':'Floor 2 lobby sofa','Máy nước tầng 2':'Floor 2 water dispenser',
@@ -98,6 +108,11 @@ export function translate(source: string, language: Language): string {
   const clean=source.trim();
   if(en[clean]) return source.replace(clean,en[clean]);
   const patterns: [RegExp,(match:RegExpMatchArray)=>string][] = [
+    [/^(.+): rộng (\d+) × sâu (\d+) × cao (\d+) cm(?:; thông thủy (\d+) cm)?\. (?:Xe: ([\d.]+) × ([\d.]+) cm; tay vịn ([\d.]+) cm\.|(Chế độ đi bộ\.)) Số đo mô phỏng\.$/,m=>`${translate(m[1],language)}: width ${m[2]} × depth ${m[3]} × height ${m[4]} cm${m[5]?`; clear opening ${m[5]} cm`:''}. ${m[9]?'Walking mode.':`Wheelchair: ${m[6]} × ${m[7]} cm; armrests ${m[8]} cm.`} Simulated measurements.`],
+    [/^Phân công: (.+)$/,m=>`Assigned to: ${m[1]}`],
+    [/^Yêu cầu xem lại: (.*)$/,m=>`Review requested: ${m[1]}`],
+    [/^Phương án: (.*)$/,m=>`Solution: ${m[1]}`],
+    [/^Đã tạo (\d+) nhiệm vụ chuẩn bị(?: trong demo)?\.$/,m=>`Created ${m[1]} preparation tasks.`],
     [/^Đã đến tầng (\d)\. Chờ cửa mở rồi điều khiển xe ra ngoài\.$/,m=>`Arrived on floor ${m[1]}. Wait for the doors, then drive out.`],
     [/^Chào bạn! Mình là (.+)\. Rất vui được làm quen và hỗ trợ bạn trong ngày đầu\.$/,m=>`Hi! I am ${m[1]}. It is great to meet you and help on your first day.`],
     [/^Đã đến (.+)\. Nhấn F để tìm hiểu\.$/, m=>`Arrived at ${translate(m[1],language)}. Press F to explore.`],
@@ -111,4 +126,4 @@ export function translate(source: string, language: Language): string {
   for(const [pattern,format] of patterns){const match=clean.match(pattern);if(match)return format(match);}
   return source;
 }
-export function useLocale(){const language=useDemoStore(s=>s.session.language);return {language,t:(source:string)=>translate(source,language)};}
+export function useLocale(){const language:Language='en';return {language:language as Language,t:(source:string)=>translate(source,language)};}

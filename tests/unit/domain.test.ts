@@ -15,10 +15,12 @@ it('migrates old language and letters, preserves messages and rejects unknown re
   const session=seedSession();
   const {language, letters, ...legacy}=session;
   const migrated=parseSession(JSON.stringify(legacy));
-  expect(migrated.language).toBe('vi');expect(migrated.letters).toEqual([]);
+  expect(migrated.language).toBe('en');expect(migrated.letters).toEqual([]);
   session.language='en';session.playerPose={x:10,z:-8,yaw:0};
   session.letters=[{id:'letter-1',recipientId:'colleague-linh',body:'Xin chào!',createdAt:new Date().toISOString()}];
   expect(parseSession(JSON.stringify(session))).toEqual(session);
+  session.language='vi';
+  expect(parseSession(JSON.stringify(session))).toEqual({...session,language:'en'});
   session.letters[0].recipientId='unknown';
   expect(()=>parseSession(JSON.stringify(session))).toThrow();
 });

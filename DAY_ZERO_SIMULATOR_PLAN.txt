@@ -742,3 +742,16 @@ Phần này thay thế hướng dẫn âm thanh và giới hạn không backend 
 - Kiểm tra: đăng nhập sai/đúng/đăng xuất, phân quyền API, ghi chú tự do ngoài
   sân/tầng 2, đánh dấu đúng tọa độ, phản hồi xuyên tài khoản/trình duyệt,
   xung đột đánh giá, lưu dữ liệu qua khởi động lại, không âm thanh và hồi quy.
+
+28. CẬP NHẬT NGÔN NGỮ VÀ KẾ HOẠCH AI — 22/09/2026
+
+- Web demo chuyển sang tiếng Anh cố định, gồm login, thiết lập xe, gameplay,
+  hướng dẫn, phụ đề, hồ sơ đối tượng/đồng nghiệp, notes và trang quản trị.
+  Nội dung cập nhật này thay thế yêu cầu chọn hai ngôn ngữ ở mục trước.
+- Phiên cũ tiếng Việt được mở bằng tiếng Anh; không dịch lại nội dung người
+  dùng tự nhập, không đổi tên riêng, không xóa kích thước xe hoặc tiến độ.
+- Trao đổi và tài liệu vẫn dùng tiếng Việt.
+- Kế hoạch AI chi tiết: DAY_ZERO_AI_ACCESSIBILITY_PLAN.txt. Nội dung gồm đếm
+  đợt va chạm độc lập, gom vị trí quanh đối tượng, giữ 5 giây hình ảnh trước
+  va chạm, kết hợp luật/AI, báo cáo trên bản đồ 2D và quản lý đánh giá.
+- Đây là kế hoạch cho bước tiếp theo; chưa triển khai thu hình hoặc gọi AI.

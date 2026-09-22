@@ -6,52 +6,52 @@ test('data files are private and employee accounts cannot open the admin page',a
  expect((await page.request.get('/data/e2e.json')).status()).toBe(403);
  expect((await page.request.get('/data/dayzero.json')).status()).toBe(403);
  await page.request.post('/api/auth/login',{data:{email:'employee@dayzero.local',password:'DayZero2026!'}});
- await page.goto('/admin');await expect(page.getByRole('heading',{name:'Trang dành cho quản lý',exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Vào trải nghiệm',exact:true}).click();await expect(page.getByRole('button',{name:'Bắt đầu trải nghiệm',exact:true})).toBeVisible();
+ await page.goto('/admin');await expect(page.getByRole('heading',{name:"Manager access required",exact:true})).toBeVisible();
+ await page.getByRole('button',{name:"Enter simulator",exact:true}).click();await expect(page.getByRole('button',{name:"Start exploring",exact:true})).toBeVisible();
 });
 
 test('mobile notes retain the draft after a failed save and support silent faster movement',async({page})=>{
- await page.setViewportSize({width:390,height:844});await page.request.post('/api/auth/login',{data:{email:'employee@dayzero.local',password:'DayZero2026!'}});await page.goto('/');await page.getByRole('button',{name:'Bắt đầu trải nghiệm',exact:true}).click();
+ await page.setViewportSize({width:390,height:844});await page.request.post('/api/auth/login',{data:{email:'employee@dayzero.local',password:'DayZero2026!'}});await page.goto('/');await page.getByRole('button',{name:"Start exploring",exact:true}).click();
  const stage=page.getByTestId('game-stage');await stage.focus();await page.keyboard.down('w');await page.waitForTimeout(600);await page.keyboard.up('w');await page.waitForTimeout(150);
  const z=Number(await stage.getAttribute('data-z'));expect(z).toBeLessThan(9.65);expect(z).toBeGreaterThan(8.5);
- await page.getByRole('button',{name:'B · Ghi chú vị trí',exact:true}).click();await page.getByLabel('Bất cập bạn gặp',{exact:true}).fill('Cần chỗ nghỉ trên lối vào');await page.getByLabel('Nguyện vọng thay đổi',{exact:true}).fill('Bổ sung điểm dừng.');
- await page.route('**/api/notes',route=>route.request().method()==='POST'?route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Tạm mất kết nối. Vui lòng thử lại.'})}):route.continue());
-  await page.getByRole('button',{name:'Gửi ghi chú cho quản lý',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Tạm mất kết nối');await expect(page.getByRole('textbox',{name:'Bất cập bạn gặp',exact:true})).toHaveValue('Cần chỗ nghỉ trên lối vào');
+ await page.getByRole('button',{name:"B · Add location note",exact:true}).click();await page.getByLabel("Barrier or difficulty",{exact:true}).fill('Cần chỗ nghỉ trên lối vào');await page.getByLabel("Requested change",{exact:true}).fill('Bổ sung điểm dừng.');
+ await page.route('**/api/notes',route=>route.request().method()==='POST'?route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Connection interrupted. Please try again.'})}):route.continue());
+  await page.getByRole('button',{name:"Send note to managers",exact:true}).click();await expect(page.getByRole('alert')).toContainText('Connection interrupted');await expect(page.getByRole('textbox',{name:"Barrier or difficulty",exact:true})).toHaveValue('Cần chỗ nghỉ trên lối vào');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/notes-mobile.png',fullPage:true});
- await page.unroute('**/api/notes');await page.getByRole('button',{name:'Gửi ghi chú cho quản lý',exact:true}).click();await expect(page.locator('.note-details')).toContainText('Cần chỗ nghỉ trên lối vào');
+ await page.unroute('**/api/notes');await page.getByRole('button',{name:"Send note to managers",exact:true}).click();await expect(page.locator('.note-details')).toContainText('Cần chỗ nghỉ trên lối vào');
 });
 
 test('login, notes at any location, manager map review and employee response across sessions',async({page,browser})=>{
  test.setTimeout(90000);
- await page.goto('/');await expect(page.getByRole('heading',{name:'Đăng nhập',exact:true})).toBeVisible();
- await page.getByLabel('Email',{exact:true}).fill('employee@dayzero.local');await page.getByLabel('Mật khẩu',{exact:true}).fill('incorrect');await page.getByRole('button',{name:'Đăng nhập',exact:true}).click();await expect(page.getByRole('alert')).toContainText('không đúng');
- await page.getByLabel('Mật khẩu',{exact:true}).fill('DayZero2026!');await page.getByRole('button',{name:'Đăng nhập',exact:true}).click();await page.getByRole('button',{name:'Bắt đầu trải nghiệm',exact:true}).click();
+ await page.goto('/');await expect(page.getByRole('heading',{name:"Sign in",exact:true})).toBeVisible();
+ await page.getByLabel('Email',{exact:true}).fill('employee@dayzero.local');await page.getByLabel("Password",{exact:true}).fill('incorrect');await page.getByRole('button',{name:"Sign in",exact:true}).click();await expect(page.getByRole('alert')).toContainText("Incorrect");
+ await page.getByLabel("Password",{exact:true}).fill('DayZero2026!');await page.getByRole('button',{name:"Sign in",exact:true}).click();await page.getByRole('button',{name:"Start exploring",exact:true}).click();
  const stage=page.getByTestId('game-stage');await stage.focus();await page.keyboard.press('b');
- await expect(page.getByRole('dialog')).toContainText('Ghi chú không gian');
- const map=page.getByRole('group',{name:'Bản đồ ghi chú tầng 1'});await map.focus();await page.keyboard.press('ArrowRight');
+ await expect(page.getByRole('dialog')).toContainText("Space notes");
+ const map=page.getByRole('group',{name:"Floor 1 notes map"});await map.focus();await page.keyboard.press('ArrowRight');
  const concern=`Lối ngoài trời cần điều chỉnh ${Date.now()}`;
- await page.getByLabel('Bất cập bạn gặp',{exact:true}).fill(concern);await page.getByLabel('Nguyện vọng thay đổi',{exact:true}).fill('Tôi mong có mái che và chỗ dừng xe rộng hơn.');
- await page.getByRole('button',{name:'Gửi ghi chú cho quản lý',exact:true}).click();await expect(page.locator('.note-details')).toContainText(concern);await expect(page.locator('.note-details')).toContainText('X 0.25');
+ await page.getByLabel("Barrier or difficulty",{exact:true}).fill(concern);await page.getByLabel("Requested change",{exact:true}).fill('Tôi mong có mái che và chỗ dừng xe rộng hơn.');
+ await page.getByRole('button',{name:"Send note to managers",exact:true}).click();await expect(page.locator('.note-details')).toContainText(concern);await expect(page.locator('.note-details')).toContainText('X 0.25');
  const {notes}=await (await page.request.get('/api/notes')).json();const note=notes.find((n:{concern:string})=>n.concern===concern);expect(note.position).toMatchObject({floor:1,x:.25,z:10.5,y:0});
  expect((await page.request.patch(`/api/notes/${note.id}`,{data:{status:'approved',review:'forged',version:1}})).status()).toBe(403);
  const manager=await browser.newContext({baseURL:test.info().project.use.baseURL});const admin=await manager.newPage();admin.setDefaultTimeout(10000);
  try{
- await admin.goto('/admin');await admin.getByLabel('Email',{exact:true}).fill('manager@dayzero.local');await admin.getByLabel('Mật khẩu',{exact:true}).fill('DayZero2026!');await admin.getByRole('button',{name:'Đăng nhập',exact:true}).click();
- await expect(admin.getByRole('heading',{name:'Lắng nghe từ từng vị trí.'})).toBeVisible();
- await admin.getByLabel('Tìm ghi chú hoặc người gửi',{exact:true}).fill(concern);
+ await admin.goto('/admin');await admin.getByLabel('Email',{exact:true}).fill('manager@dayzero.local');await admin.getByLabel("Password",{exact:true}).fill('DayZero2026!');await admin.getByRole('button',{name:"Sign in",exact:true}).click();
+ await expect(admin.getByRole('heading',{name:"Feedback, mapped to its location."})).toBeVisible();
+ await admin.getByLabel("Find a note or author",{exact:true}).fill(concern);
  const marker=admin.locator(`[data-note-id="${note.id}"]`);await expect(marker).toHaveAttribute('transform','translate(0.25 10.5)');await marker.click();await expect(admin.locator('.note-details')).toContainText('Tôi mong có mái che');
- await admin.getByRole('combobox',{name:'Kết quả xem xét',exact:true}).selectOption('approved');await admin.getByLabel('Đánh giá và phương án',{exact:true}).fill('Sẽ bố trí mái che và mở rộng điểm dừng trước ngày nhận việc.');await admin.getByRole('button',{name:'Lưu đánh giá',exact:true}).click();await expect(admin.getByRole('status')).toContainText('Đã lưu đánh giá');
+ await admin.getByRole('combobox',{name:"Review outcome",exact:true}).selectOption('approved');await admin.getByLabel("Assessment and response",{exact:true}).fill('Sẽ bố trí mái che và mở rộng điểm dừng trước ngày nhận việc.');await admin.getByRole('button',{name:"Save review",exact:true}).click();await expect(admin.getByRole('status')).toContainText("Review saved");
  await admin.screenshot({path:'test-results/notes-admin.png',fullPage:true});
- await admin.reload();await admin.getByLabel('Tìm ghi chú hoặc người gửi',{exact:true}).fill(concern);await admin.locator(`[data-note-id="${note.id}"]`).click();await expect(admin.locator('.note-details')).toContainText('Sẽ bố trí mái che');
- await page.getByRole('button',{name:'Tải lại',exact:true}).click();await expect(page.locator('.note-details')).toContainText('Chấp thuận');await expect(page.locator('.note-details')).toContainText('Sẽ bố trí mái che');await page.screenshot({path:'test-results/notes-employee.png',fullPage:true});
- await admin.getByRole('button',{name:'Đăng xuất',exact:true}).click();await expect(admin.getByRole('heading',{name:'Đăng nhập',exact:true})).toBeVisible();expect((await admin.request.get('/api/notes')).status()).toBe(401);
+ await admin.reload();await admin.getByLabel("Find a note or author",{exact:true}).fill(concern);await admin.locator(`[data-note-id="${note.id}"]`).click();await expect(admin.locator('.note-details')).toContainText('Sẽ bố trí mái che');
+ await page.getByRole('button',{name:"Refresh",exact:true}).click();await expect(page.locator('.note-details')).toContainText("Approved");await expect(page.locator('.note-details')).toContainText('Sẽ bố trí mái che');await page.screenshot({path:'test-results/notes-employee.png',fullPage:true});
+ await admin.getByRole('button',{name:"Sign out",exact:true}).click();await expect(admin.getByRole('heading',{name:"Sign in",exact:true})).toBeVisible();expect((await admin.request.get('/api/notes')).status()).toBe(401);
  }finally{await manager.close();}
 });
 test('upper floor notes preserve floor, position and height, and show under the correct admin floor',async({page,browser})=>{
  const session=seedSession();session.started=true;session.playerPose={x:-7.45,z:-11.9,yaw:0,floor:2,y:3.2};
  await page.addInitScript(s=>localStorage.setItem('dayzero.session.v1',JSON.stringify(s)),session);
  await page.request.post('/api/auth/login',{data:{email:'employee@dayzero.local',password:'DayZero2026!'}});
- await page.goto('/');await page.getByRole('button',{name:'Vào văn phòng',exact:true}).click();await page.getByTestId('game-stage').focus();await page.keyboard.press('b');
- const concern=`Tầng hai cần chỗ chờ ${Date.now()}`;await page.getByLabel('Bất cập bạn gặp',{exact:true}).fill(concern);await page.getByLabel('Nguyện vọng thay đổi',{exact:true}).fill('Bố trí điểm chờ cạnh thang máy.');await page.getByRole('button',{name:'Gửi ghi chú cho quản lý',exact:true}).click();await expect(page.locator('.note-details')).toContainText('Y 3.20');
- const context=await browser.newContext({baseURL:test.info().project.use.baseURL});try{await context.request.post('/api/auth/login',{data:{email:'manager@dayzero.local',password:'DayZero2026!'}});const admin=await context.newPage();await admin.goto('/admin');await admin.getByLabel('Tìm ghi chú hoặc người gửi',{exact:true}).fill(concern);await expect(admin.locator('.map-note-pin')).toHaveCount(0);await admin.getByRole('combobox',{name:'Tầng',exact:true}).selectOption('2');await expect(admin.locator('.map-note-pin')).toHaveCount(1);await admin.locator('.map-note-pin').click();await expect(admin.locator('.note-details')).toContainText('Tầng 2');}finally{await context.close();}
+ await page.goto('/');await page.getByRole('button',{name:"Enter office",exact:true}).click();await page.getByTestId('game-stage').focus();await page.keyboard.press('b');
+ const concern=`Tầng hai cần chỗ chờ ${Date.now()}`;await page.getByLabel("Barrier or difficulty",{exact:true}).fill(concern);await page.getByLabel("Requested change",{exact:true}).fill('Bố trí điểm chờ cạnh thang máy.');await page.getByRole('button',{name:"Send note to managers",exact:true}).click();await expect(page.locator('.note-details')).toContainText('Y 3.20');
+ const context=await browser.newContext({baseURL:test.info().project.use.baseURL});try{await context.request.post('/api/auth/login',{data:{email:'manager@dayzero.local',password:'DayZero2026!'}});const admin=await context.newPage();await admin.goto('/admin');await admin.getByLabel("Find a note or author",{exact:true}).fill(concern);await expect(admin.locator('.map-note-pin')).toHaveCount(0);await admin.getByRole('combobox',{name:"Floor",exact:true}).selectOption('2');await expect(admin.locator('.map-note-pin')).toHaveCount(1);await admin.locator('.map-note-pin').click();await expect(admin.locator('.note-details')).toContainText("Floor 2");}finally{await context.close();}
 });

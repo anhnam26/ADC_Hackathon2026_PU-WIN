@@ -1,4 +1,4 @@
-import { useLocale } from '../lib/i18n';
+import { translate, useLocale } from '../lib/i18n';
 import { useCallback, useEffect, useState } from "react";
 import { flushSync } from 'react-dom';
 import {
@@ -47,7 +47,7 @@ export default function App() {
   const [gameMenu, setGameMenu] = useState(false);
   const [target, setTarget] = useState<string | null>(null);
   const [toast, setToast] = useState("");
-  const notify = useCallback((text: string) => setToast(text), []);
+  const notify = useCallback((text: string) => setToast(translate(text, 'en')), []);
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
@@ -211,7 +211,7 @@ export default function App() {
           </div>
           {notice && (
             <div className="storage-notice" role="alert">
-              {notice}
+              {t(notice)}
             </div>
           )}
           {page === "journey" && !entered && <div className="game-launch">

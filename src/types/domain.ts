@@ -125,7 +125,7 @@ export const sessionSchema = z.object({
   issues: z.array(issueSchema),
   tasks: z.array(taskSchema),
   reducedMotion: z.boolean(),
-  language: z.enum(['vi', 'en']).default('vi'),
+  language: z.enum(['vi', 'en']).default('en'),
   letters: z.array(z.object({ id: z.string(), recipientId: z.string(), body: z.string().trim().min(1).max(1500), createdAt: z.string() })).default([]),
   mobility: mobilitySchema.default(defaultMobility),
   inspectedIds: z.array(z.string()).default([]),

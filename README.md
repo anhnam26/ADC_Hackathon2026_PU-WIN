@@ -2,6 +2,8 @@
 
 Trải nghiệm văn phòng như một trò chơi khám phá. Bản demo ưu tiên người dùng xe lăn: thiết lập kích thước xe trước khi vào map, tự di chuyển, gặp đồng nghiệp và nhấn **F** để tìm hiểu người hoặc đồ vật ở gần. Map phủ toàn bộ trang, có góc nhìn thứ nhất / thứ ba, toàn cảnh và chế độ toàn màn hình thật.
 
+**Giao diện web hiện dùng tiếng Anh**, kể cả đăng nhập và quản trị. Tài liệu hướng dẫn vẫn bằng tiếng Việt; các nhãn tiếng Việt trong hướng dẫn dưới đây diễn giải chức năng tương ứng trên web. Kế hoạch AI chủ động phát hiện bất cập từ va chạm và video 5 giây trước va chạm nằm trong [DAY_ZERO_AI_ACCESSIBILITY_PLAN.txt](DAY_ZERO_AI_ACCESSIBILITY_PLAN.txt). Đây là kế hoạch triển khai; demo hiện chưa thu video hoặc gọi AI.
+
 ## Chạy demo
 
 Cần Node.js 22.12 trở lên (đã kiểm tra với Node 24).
@@ -84,9 +86,9 @@ Nhấn **N**, chọn đồ vật/đồng nghiệp rồi chọn **Hiện đườn
 
 Đường được tìm bằng A* trên lưới 25 cm, có trạng thái hướng xe và 8 hướng di chuyển. Các đoạn được nối thẳng khi đủ chỗ, kể cả đường chéo, thay cho zigzag theo trục. Xe xoay theo hướng đoạn đường rồi tiến; camera thứ nhất/thứ ba cùng bám hướng xe, chuyển động chuột ngang không bẻ hướng trong lúc tự đi. Mọi đoạn đi và xoay đều kiểm tra vùng chiếm chỗ xe; đây vẫn là hỗ trợ khám phá, chưa mô phỏng động học xe lăn thật. Đường dự tính trạng thái cửa mở; tự đi chỉ mở cửa khi đến gần và cung quét không vướng xe/người. Đến trong tầm F thì dừng. Nếu gặp vật cản động, xe chờ; có thể tự điều khiển hoặc chọn đường lại. Xe quá rộng/không đủ chỗ căn hướng sẽ báo chưa tìm được đường, không đi xuyên khung. Đường đến đồng nghiệp đi lại lấy vị trí lúc chọn; nếu họ đã rời vị trí, chọn dẫn đường lại.
 
-Chọn **Tiếng Việt / English** ở màn thiết lập hoặc thanh công cụ trong map (nhấn Esc để hiện chuột). Lựa chọn được lưu khi tải lại trang. Giao diện, hướng dẫn, phụ đề, tên phòng và thông tin đối tượng đổi theo ngôn ngữ; tên riêng và nội dung người dùng nhập được giữ nguyên.
+Giao diện, hướng dẫn, phụ đề, tên phòng, số đo, thông báo lỗi và quản trị dùng **English**. Phiên cũ lưu tiếng Việt tự chuyển sang tiếng Anh khi mở lại, giữ nguyên số đo, tiến độ, tên riêng và nội dung người dùng tự nhập. Nhãn **English** thay cho bộ chọn ngôn ngữ.
 
-Đã bỏ phát âm thanh, giọng hướng dẫn và phím H. **Phụ đề và vạch chỉ đường vẫn hoạt động**, đổi theo Tiếng Việt / English. Tốc độ xe lăn tăng từ 1,15 lên **1,8 m/s**, đi bộ **2,2 m/s**; tự đi dùng cùng tốc độ. Giữ Shift để đi chậm **0,45 m/s**, căn xe qua cửa. Kiểm tra va chạm vẫn chia thành bước nhỏ để tránh xuyên vật cản.
+Đã bỏ phát âm thanh, giọng hướng dẫn và phím H. **Phụ đề tiếng Anh và vạch chỉ đường vẫn hoạt động**. Tốc độ xe lăn tăng từ 1,15 lên **1,8 m/s**, đi bộ **2,2 m/s**; tự đi dùng cùng tốc độ. Giữ Shift để đi chậm **0,45 m/s**, căn xe qua cửa. Kiểm tra va chạm vẫn chia thành bước nhỏ để tránh xuyên vật cản.
 
 ## Ghi chú vị trí và quản trị
 

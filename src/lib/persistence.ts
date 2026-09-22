@@ -11,7 +11,7 @@ export function seedSession(): Session {
     schemaVersion: 1,
     id: crypto.randomUUID(),
     started: false,
-    language: 'vi', letters: [],
+    language: 'en', letters: [],
     startDate: addDays(officeDate(), 7),
     selectedNeeds: [],
     currentStep: 0,
@@ -30,6 +30,7 @@ export function seedSession(): Session {
 }
 export function parseSession(raw: string): Session {
   const data = sessionSchema.parse(JSON.parse(raw));
+  data.language='en'; // Upgrade earlier Vietnamese sessions without replacing user content.
   const locationIds = new Set(locations.map((l) => l.id));
   const checklistIds = new Set(
     journey.flatMap((s) => s.checklist.map((c) => c.id)),

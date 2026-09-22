@@ -54,7 +54,7 @@ interface DemoState {
 }
 const initial = loadSession();
 export const useDemoStore = create<DemoState>((set) => ({
-  setLanguage: language => set(s => ({ session: { ...s.session, language } })),
+  setLanguage: () => set(s => ({ session: { ...s.session, language:'en' } })),
   sendLetter: (recipientId, body) => {
     const text = body.trim();
     if (!text || text.length > 1500 || !colleagues.some(person => person.id === recipientId)) return false;

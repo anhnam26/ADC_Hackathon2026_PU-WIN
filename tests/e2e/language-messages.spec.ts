@@ -2,15 +2,16 @@ import { test, expect } from './fixtures';
 import { seedSession } from '../../src/lib/persistence';
 import {objects} from '../../src/data/space';
 
-test('language switches setup, captions and journal; messages are local, isolated and persisted', async ({page}) => {
+test('legacy Vietnamese sessions display English; user messages retain their original language', async ({page}) => {
   const session=seedSession(); session.started=true; session.playerPose={x:2.55,z:5.5,yaw:0};session.openDoors=['entry-door'];
+  session.language='vi';
   await page.addInitScript(data=>{
     if (!localStorage.getItem('dayzero.session.v1')) localStorage.setItem('dayzero.session.v1',JSON.stringify(data));
     Object.assign(window,{spoken:[]});
     speechSynthesis.speak=utterance=>(window as unknown as {spoken:string[]}).spoken.push(utterance.lang);
   },session);
   await page.goto('/');
-  await page.getByRole('combobox',{name:'Ngôn ngữ / Language'}).selectOption('en');
+  await expect(page.getByLabel('Demo language: English')).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang','en');
   await expect(page.getByRole('spinbutton',{name:'Wheelchair width',exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Enter office',exact:true}).click();
@@ -47,20 +48,19 @@ test('language switches setup, captions and journal; messages are local, isolate
   expect(saved.language).toBe('en');expect(saved.letters[0].recipientId).toBe('colleague-linh');
   await page.getByRole('button',{name:'Continue exploring',exact:true}).click();
   await page.evaluate(()=>document.exitPointerLock());
-  await page.getByRole('combobox',{name:'Ngôn ngữ / Language'}).selectOption('vi');
-  await expect(page.locator('html')).toHaveAttribute('lang','vi');
-  await expect(page.locator('.subtitle-bar')).toContainText('Cửa vào');
+  await expect(page.locator('html')).toHaveAttribute('lang','en');
+  await expect(page.locator('.subtitle-bar')).toContainText('entrance');
 });
 
 test('automatic diagonal travel faces its movement in both camera modes despite mouse look', async ({page}) => {
   const session=seedSession();session.started=true;session.playerPose={x:0,z:1.5,yaw:Math.PI};session.openDoors=['entry-door'];
   await page.addInitScript(data=>localStorage.setItem('dayzero.session.v1',JSON.stringify(data)),session);
-  await page.goto('/');await page.getByRole('button',{name:'Vào văn phòng',exact:true}).click();
+  await page.goto('/');await page.getByRole('button',{name:"Enter office",exact:true}).click();
   const stage=page.getByTestId('game-stage');
   await expect.poll(()=>page.evaluate(()=>!!document.pointerLockElement)).toBe(true);
   await page.keyboard.press('n');
-  await page.getByRole('combobox',{name:'Điểm đến',exact:true}).selectOption('colleague-linh');
-  await page.getByRole('button',{name:'Tự đi đến đây',exact:true}).click();
+  await page.getByRole('combobox',{name:"Destination",exact:true}).selectOption('colleague-linh');
+  await page.getByRole('button',{name:"Auto-walk here",exact:true}).click();
   const samples:{x:number;z:number;yaw:number}[]=[];
   for(let i=0;i<22;i++){
     if(i===8){await stage.focus();await page.keyboard.press('v');}

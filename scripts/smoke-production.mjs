@@ -24,7 +24,7 @@ try {
   page.on('pageerror', error => failures.push(error.message));
   page.on('response', response => { if (response.status() >= 400) failures.push(`${response.status()}: ${response.url()}`); });
   await page.goto(url);
-  await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
+  await page.getByRole('button', { name: "Start exploring", exact: true }).click();
   await expect(page.locator('canvas')).toBeVisible();
   await expect(page.getByTestId('game-stage')).toHaveAttribute('data-camera', 'first-person');
   await expect(page.locator('.player-tag')).toHaveCount(0);
@@ -35,8 +35,8 @@ try {
   await expect(page.locator('.interact-button')).toBeVisible();
   await page.keyboard.press('f');
   await expect(page.locator('.object-illustration')).toBeVisible();
-  await page.getByRole('button', { name: 'Mở cửa', exact: true }).click();
-  await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
+  await page.getByRole('button', { name: "Open door", exact: true }).click();
+  await page.getByRole('button', { name: "Continue exploring" }).click();
   await mkdir('test-results', { recursive: true });
   await page.screenshot({ path: 'test-results/dayzero-production.png', fullPage: true });
   expect(failures).toEqual([]);

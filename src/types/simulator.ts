@@ -15,7 +15,7 @@ export const mobilitySchema = z
       p.seatHeightCm < p.armrestHeightCm && p.armrestHeightCm <= p.heightCm,
     {
       message:
-        "Chiều cao ghế ngồi phải thấp hơn tay vịn; tay vịn không cao hơn tổng chiều cao xe.",
+        "Seat height must be below armrest height; armrests must not exceed the overall wheelchair height.",
     },
   );
 export type MobilityProfile = z.infer<typeof mobilitySchema>;

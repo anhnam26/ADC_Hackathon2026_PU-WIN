@@ -1,0 +1,5 @@
+| Tài khoản | Email |
+|---|---|
+| Nhân viên | `employee@dayzero.local` |
+| Quản lý | `manager@dayzero.local` |
+DayZero2026!

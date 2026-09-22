@@ -1,0 +1,452 @@
+DAY ZERO — KẾ HOẠCH AI CHỦ ĐỘNG PHÁT HIỆN BẤT CẬP TIẾP CẬN
+Ngày: 22/09/2026
+Ngôn ngữ tài liệu: Tiếng Việt. Ngôn ngữ giao diện demo: Tiếng Anh.
+Trạng thái: Đề xuất triển khai; chưa bật ghi hình, gửi video hoặc phân tích AI.
+
+1. MỤC TIÊU VÀ KẾT QUẢ MONG MUỐN
+
+Trong lúc người dùng tự điều khiển xe lăn, hệ thống nhận biết các tình huống
+khó đi qua cửa, mắc ở góc phòng, bị bàn ghế chặn hoặc khó tiếp cận thiết bị.
+Không phụ thuộc hoàn toàn vào việc người dùng nhớ nhấn B để ghi chú.
+
+Mỗi báo cáo chủ động cho quản lý cần có:
+- Vị trí trên bản đồ 2D, tầng, phòng và đối tượng liên quan.
+- Số lần va chạm độc lập; thời gian bị cản; các lần lùi và thử lại.
+- Kích thước xe tại thời điểm xảy ra, kích thước đối tượng từ mô hình.
+- Video khoảng 5 giây trước va chạm, gồm thời điểm va chạm; có thể thêm 1–2
+  giây sau đó để thấy phản ứng. Nêu rõ nếu đoạn trước va chạm ngắn hơn 5 giây.
+- Nhận định AI có dẫn chứng: khó khăn có thể xảy ra, giải thích khác có thể
+  có, mức chắc chắn, điều quản lý nên kiểm tra và đề xuất xử lý.
+- Trạng thái quản lý xem xét và phản hồi. Không tự động kết luận văn phòng
+  không phù hợp chỉ vì một lần va chạm.
+
+Ví dụ: Một xe rộng 105 cm thử qua cửa nhà vệ sinh rộng thông thủy 96 cm ba
+lần. Hệ thống đánh dấu đúng cửa, đính kèm video và ghi “Wheelchair width
+exceeds the modelled clear opening by 9 cm”. AI gợi ý kiểm tra lối thay thế
+và số đo thực tế; quản lý xác nhận trước khi giao công việc cho Facilities.
+
+2. PHẠM VI BẢN ĐẦU VÀ NỀN TẢNG HIỆN CÓ
+
+Dự án hiện có React/TypeScript, Three.js qua React Three Fiber, vật cản hình
+học, xe có kích thước cá nhân, WASD, tự đi, hai tầng và thang máy chuyển động.
+Đã có đăng nhập, ghi chú thủ công theo vị trí, quản lý xem trên bản đồ 2D.
+API Node chạy cùng Vite; dữ liệu demo nằm trong file JSON phía server.
+
+Tận dụng:
+- src/lib/physics.ts: moveWithCollisions trả pose và blocked obstacle.
+- src/features/simulator/useSimulation.ts: vòng lặp điều khiển tay/tự đi.
+- src/data/space.ts, src/lib/objectGeometry.ts: vị trí, kích thước, hình học.
+- src/features/notes/Admin.tsx: trang quản trị và chọn vị trí trên bản đồ.
+- server/api.mjs: phiên đăng nhập, phân quyền, lưu và đọc dữ liệu.
+
+Giới hạn phải phản ánh đúng trong báo cáo:
+- Va chạm hiện tại là kiểm tra hình học dấu chiếm chỗ xe, không đo lực va
+  đập, lực đẩy, sức khỏe hay kỹ năng điều khiển xe lăn của người dùng.
+- Có thể phát hiện xe bị cản theo chiều ngang; chưa thể suy ra khả năng
+  chuyển người, với tới tay nắm hoặc đưa đầu gối xuống dưới bàn.
+- Kích thước trong mô hình chưa mặc nhiên là số đo đã xác minh ở công ty.
+- Bản đầu phân tích vùng có va chạm; không khẳng định phát hiện mọi bất cập.
+  Người dùng vẫn được ghi chú thủ công cả khi không có va chạm.
+- Va chạm trong chế độ đi bộ được tách khỏi dữ liệu xe lăn.
+
+3. LUỒNG HOẠT ĐỘNG ĐỀ XUẤT
+
+Đăng nhập → nhập kích thước xe → chọn cho phép phân tích/đính kèm hình ảnh
+→ vào map → lưu bộ đệm hình ảnh và chuyển động ngắn trong RAM
+→ vật cản chặn chuyển động có chủ đích → tạo một đợt va chạm
+→ giữ lại bằng chứng trước va chạm → gom các đợt quanh cùng đối tượng
+→ đủ điều kiện cảnh báo → gửi bằng chứng theo quyền đã chọn
+→ server kiểm tra và tạo video → luật xác định dữ kiện → AI diễn giải
+→ quản lý nhận điểm mới trên bản đồ → xem video → xác nhận hoặc loại bỏ.
+
+Không chờ gọi AI trong vòng lặp render. AI lỗi vẫn giữ báo cáo dựa trên dữ
+kiện, hiển thị “AI analysis unavailable”; tiếp tục chơi bình thường.
+Khi đang phân tích, quản lý có thể thấy “Pending analysis” và dữ kiện đã có.
+
+4. THIẾT KẾ GHI NHẬN VA CHẠM
+
+4.1. Thu thập ở tầng vật lý
+
+Mở rộng kết quả moveWithCollisions bằng danh sách contact có giới hạn.
+Không chỉ đọc chuỗi tên trên HUD, vì tên có thể trùng hoặc được dịch.
+Ghi cả chuyển động bị chặn khi tiến/lùi/ngang và khi xoay tại chỗ.
+Các substep trong một frame phải được gộp; không tính thành nhiều lần đụng.
+Nếu hiện tại chỉ trả một vật cản, bổ sung contact để không bỏ sót góc kẹt
+giữa hai vật; ưu tiên contact đầu tiên theo thời gian và lưu contact phụ.
+
+Mỗi contact gồm:
+- eventId, sessionId, mapId, mapVersion, profileVersion.
+- Thời gian performance.now() để đồng bộ clip; server nhận thêm receivedAt.
+- floor, worldPosition x/y/z theo mét; pose xe và góc yaw theo radian.
+- colliderId ổn định; objectId ngữ nghĩa; partId cho chân bàn/cánh/khung cửa.
+- Vị trí tiếp xúc ước lượng từ hình học; contactPositionQuality='estimated'.
+  Nếu chưa có thuật toán điểm tiếp xúc, dùng vị trí xe và nói rõ loại tọa độ.
+  Không giả định tâm vật cản chính là nơi xe đã chạm.
+- Displacement/yaw mong muốn và thực tế; manual/auto; phím hoặc lệnh đang
+  có chủ đích, tốc độ đặt, trạng thái pause/dialog/tab visibility.
+- Door open/closed/opening, lift phase, NPC dynamic/static.
+- goalId nếu có dẫn đường. goalId khác objectId đã va chạm: đi đến máy nước
+  nhưng va ghế trên đường thì báo ghế, không gán va chạm cho máy nước.
+- Snapshot số đo xe, kích thước hình học liên quan và đơn vị đo.
+
+Thời gian đếm sự kiện và video dùng cùng đồng hồ đơn điệu. Không cộng dt vật
+lý để suy ra độ dài video: vòng lặp hiện có chặn dt tối đa khi frame chậm.
+Giữ ID gốc qua các ngôn ngữ, camera, lượt chạy và thay đổi tên hiển thị.
+
+4.2. Một lần va chạm là gì?
+
+Máy trạng thái: CLEAR → CONTACT → RECOVERY → CLEAR.
+- CONTACT bắt đầu khi có ý định dịch chuyển/xoay và hình học chặn thao tác.
+- Giữ W vào cửa 5 giây = một đợt kéo dài 5 giây, không phải 300 lần đụng.
+- Nhả phím nhưng vẫn sát cửa không tự tạo thêm lần mới.
+- Đề xuất tái kích hoạt sau khi đã hết tiếp xúc ≥400 ms và có thao tác
+  thoát rõ: lùi/di chuyển ≥20 cm hoặc đổi hướng tiếp cận đáng kể rồi thử lại.
+- Các ngưỡng này cần thử nghiệm; ghi cả releaseDuration và retreatDistance
+  để điều chỉnh mà không phải đoán lại từ số lần tổng.
+- Rung sát mép collider và đổi contact giữa khung/cánh của cùng cửa phải
+  được gộp vào một đợt. Tách xoay thất bại và dịch chuyển thất bại trong dữ
+  kiện, nhưng không nhân đôi incident nếu chúng thuộc cùng lần thử.
+- Không có phím/lệnh di chuyển = không tạo va chạm chỉ vì đứng gần vật.
+- Tạm dừng, mất focus, teleport/reset và cabin khóa di chuyển không được
+  xem là người dùng bị mắc kẹt. Đóng đợt với lý do interruption nếu cần.
+
+4.3. Gom vùng khó khăn quanh mục tiêu
+
+Ưu tiên khóa (mapVersion, floor, semanticObjectId, approachSide).
+Khung, cánh và tay nắm của cùng cửa có collider khác nhau nhưng cùng cửa.
+Vật không có objectId được gom theo cụm không gian trên cùng tầng; dùng
+bán kính ban đầu 0,8–1,2 m và kiểm tra tường/phòng/hướng tiếp cận.
+Không gom hai điểm chỉ vì gần nhau theo đường chim bay nhưng bị tường ngăn.
+Không gom cửa tầng 1 với cửa tầng 2 dù trùng tọa độ x/z.
+Để ngỏ quan hệ nhiều vật góp phần gây kẹt, thay vì ép mọi lỗi về một vật.
+
+Tách ba chỉ số:
+1) contactEpisodes: số đợt va chạm độc lập.
+2) encounterCount: số lượt tới thử khu vực.
+3) affectedSessions/affectedUsers: số phiên/người, chỉ tổng hợp đúng quyền.
+Mười đợt từ một người không được hiển thị thành mười người gặp vấn đề.
+
+4.4. Điều kiện tạo ứng viên báo cáo
+
+Các giá trị sau là cấu hình khởi đầu, chưa được kiểm chứng:
+A. ≥3 đợt độc lập quanh cùng đối tượng trong cửa sổ trượt 30 giây.
+B. ≥3 giây bị cản có chủ đích và ≥2 lần đổi hướng/lùi để thử lại.
+C. Có contact thực tế tại cửa đang mở và số đo mô hình cho thấy xe rộng hơn
+   ô cửa; chỉ một đợt cũng đủ tạo ứng viên cần xác minh.
+D. Người dùng tự đánh dấu bằng B: ưu tiên báo cáo này và cho liên kết với
+   bằng chứng tự động nếu đã cho phép, không buộc phải đụng đủ số lần.
+
+Một lần chạm thoáng qua chưa đạt ngưỡng chỉ ở bộ đệm ngắn hạn, không gửi
+thông báo cho quản lý. Cùng incident được cập nhật bộ đếm trong khoảng
+60–90 giây thay vì phát nhiều thông báo trùng. Nếu rời vùng rồi quay lại,
+lưu thêm encounter; không xóa bằng chứng cũ hoặc đếm lặp eventId.
+
+5. VIDEO 5 GIÂY TRƯỚC VA CHẠM
+
+5.1. Yêu cầu kỹ thuật bắt buộc
+
+Phải lưu bộ đệm trước khi đụng. Bấm ghi khi đã phát hiện va chạm sẽ không
+lấy lại được 5 giây đã qua. Mỗi frame cần timestamp cùng đồng hồ contact.
+Đoạn mong muốn: [contactStart - 5.000 ms, contactStart + 1.000 ms].
+Ngay đợt contact đầu tiên, ghim đoạn trước va chạm trong bộ nhớ tạm có hạn;
+đến đợt thứ ba mới ghim thì bằng chứng của lần đầu có thể đã bị ghi đè.
+Giữ tối đa 3 đoạn ứng viên cho một encounter và hạn tổng RAM/hàng đợi.
+Không đủ tiền cảnh do vừa vào map: preRollAvailableMs ghi số thực có,
+không đệm khung hình giả rồi ghi là đủ 5 giây.
+
+Chỉ thu hình vùng simulator, không webcam, micro, màn hình desktop, form
+đăng nhập, nội dung notes hoặc thư đồng nghiệp. Demo tiếp tục không âm thanh.
+Tạm dừng thu khi mở dialog/menu có nội dung cá nhân; đánh dấu khoảng trống
+thời gian. Không nối hai khoảng rời nhau thành video liên tục giả tạo.
+Góc nhìn thứ nhất có thể không thấy xe: kèm trace vị trí, hướng và dấu chiếm
+chỗ trên bản đồ 2D để quản lý hiểu va chạm ở bên hông hoặc sau lưng.
+
+5.2. Phương án MVP khuyến nghị: bộ đệm frame giới hạn + encoder server
+
+- Chụp vùng canvas xuống 640×360, 8–10 frame/giây, lưu JPEG/WebP + timestamp
+  trong ring buffer 6–7 giây. Không giữ texture GPU hoặc ImageBitmap vô hạn.
+- Ngân sách ban đầu: khoảng 2–5 MB cho bộ đệm tùy nội dung/chất lượng; đo
+  thực tế, đặt hard cap 12 MB tổng ring + bằng chứng đang chờ, giảm fps nếu
+  vượt. Kích thước mỗi frame phải được đo, không suy từ độ phân giải.
+- Khi ứng viên đạt ngưỡng, gửi manifest và frame đã chọn; worker server
+  encode thành MP4/WebM không âm thanh, duration theo timestamp thực.
+- Luồng decode/resize/encode xử lý ở worker khi nền tảng hỗ trợ; tối đa một
+  tác vụ chụp chưa hoàn tất để không tích lũy hàng đợi khi máy yếu.
+- Với WebGL, đọc frame ngay sau render hoặc qua render target riêng. Thử
+  nghiệm tránh ảnh đen khi drawing buffer bị xóa; không bật
+  preserveDrawingBuffer toàn cục trước khi đo ảnh hưởng hiệu năng.
+- Không ghi hoặc upload mỗi frame của cả phiên: chỉ RAM trượt; chỉ bằng
+  chứng đủ điều kiện và đúng lựa chọn người dùng mới được gửi.
+- Hạn chế: video khoảng 10 fps, có chi phí GPU readback và băng thông lớn
+  hơn video đã encode. Đây là lựa chọn dễ kiểm tra tính đầy đủ tiền cảnh.
+
+Chế độ 2D đang dùng SVG không có canvas captureStream trực tiếp. Cần renderer
+thu hình 2D riêng từ cùng dữ liệu hình học hoặc chỉ ghi metadata và thông
+báo rõ “Video unavailable in this mode”. Không làm người dùng mất fallback
+2D chỉ vì không thể quay video. Khi canvas remount/đổi cảnh, rebind bộ thu,
+đánh dấu cameraCut và khởi động lại bộ đệm nếu cần.
+
+5.3. Phương án tối ưu sau MVP
+
+Thử WebCodecs VideoEncoder trong worker, giữ encoded chunks có timestamp
+và keyframe, thêm muxer để tạo file video hoàn chỉnh; feature-detect và có
+fallback. Không mặc định mọi trình duyệt hỗ trợ cùng codec/API.
+Hoặc dùng MediaRecorder với các phiên độc lập chồng thời gian đã được thử
+nghiệm khả năng phát lại; kiểm tra đủ tiền cảnh ở ranh giới mỗi phiên.
+
+Không lấy 5 Blob cuối của MediaRecorder(timeslice=1000) rồi ghép và khẳng
+định đó là video 5 giây phát được. timeslice không bảo đảm mốc thời gian
+chính xác; từng Blob có thể thiếu container header/keyframe để phát riêng.
+Phải kiểm tra seek/decode trên trình duyệt quản lý và dùng timestamps thật.
+Nguồn kỹ thuật: https://www.w3.org/TR/mediastream-recording/
+https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/start
+https://developer.mozilla.org/en-US/docs/Web/API/VideoEncoder
+
+Nếu dùng canvas.captureStream, nguồn hình phải origin-clean; tài nguyên
+ảnh/video ngoài hệ thống cần CORS thích hợp. API này không tự cung cấp bộ
+đệm tiền cảnh hoặc thay thế bước encode/mux.
+Nguồn: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/captureStream
+
+6. AI: KẾT HỢP LUẬT VỚI HÌNH ẢNH VÀ CHUYỂN ĐỘNG
+
+6.1. Dữ kiện do code xác định
+
+Số đợt, thời gian, kích thước, chênh lệch xe/cửa, tọa độ, trạng thái cửa và
+lệnh tự đi được tính từ simulator. AI không tự đếm lại để thay dữ kiện gốc.
+Server kiểm tra ID vật, phiên bản map và kích thước trong catalog; dữ liệu
+client gửi không được mặc nhiên xem là đáng tin cho phân quyền/quyết định.
+
+6.2. Vai trò của mô hình đa phương thức
+
+Input: JSON dữ kiện + 6–10 frame có timestamp từ clip + trace vị trí/hướng
+xe + sơ đồ đối tượng và dấu chiếm chỗ + trạng thái cửa/NPC/thang máy.
+Video đầy đủ luôn giữ để quản lý xem; chỉ gửi trực tiếp video cho model
+nếu nhà cung cấp hỗ trợ định dạng, thời lượng và quyền sử dụng đã xác minh.
+
+AI phân biệt các khả năng:
+- clearance_too_narrow: không đủ ô cửa hoặc lối đi trong mô hình.
+- approach_or_turning_space: góc tiếp cận/vùng xoay khó khăn.
+- furniture_obstruction: bàn, ghế, chậu cây cản đường.
+- closed_door_or_instruction: chưa mở cửa hoặc hướng dẫn chưa rõ.
+- temporary_npc_obstruction: người đi ngang tạm thời.
+- navigation_or_collision_bug: tự đi/collider có thể có lỗi.
+- unknown: thiếu bằng chứng; cần quản lý hoặc người dùng làm rõ.
+
+Cửa đóng có thể là bất cập thao tác, nhưng không tự suy thành cửa quá hẹp.
+Lỗi tự đi cần gắn nhãn mode=auto và chuyển nhóm sản phẩm, không đánh giá
+khả năng điều khiển của người dùng. NPC đi qua rồi xe tiếp tục bình thường
+nên giảm ưu tiên; đông người kéo dài lặp lại vẫn có thể cần xem xét.
+
+6.3. Đầu ra có cấu trúc, kiểm tra bằng schema
+
+{
+  "incidentId": "inc_...",
+  "classification": "approach_or_turning_space",
+  "summary": "Repeated difficulty turning near the restroom entrance.",
+  "confidence": "medium",
+  "evidence": [
+    {"eventId": "evt_1", "clipId": "clip_1", "timeMs": 4800,
+     "observation": "Turning was blocked by the door frame."}
+  ],
+  "alternativeExplanations": ["The approach angle may be contributing."],
+  "recommendedChecks": ["Verify clear turning space beside the frame."],
+  "suggestedOwner": "Facilities",
+  "needsHumanReview": true
+}
+
+Không dùng confidence như xác suất đã hiệu chuẩn nếu chưa đánh giá thực
+nghiệm. Chỉ cho evidence trỏ tới event/clip/thời điểm có thật trong input.
+Không cho model bịa số đo, tên phòng, kết luận tiêu chuẩn tiếp cận hoặc
+nguyện vọng của người dùng. Nguyện vọng chỉ do người dùng nhập/xác nhận.
+Tên đối tượng và ghi chú là dữ liệu, không phải chỉ dẫn cho model thực thi.
+Lưu modelVersion, promptVersion, ruleVersion để truy vết kết quả.
+
+7. DỮ LIỆU, API VÀ XỬ LÝ NỀN
+
+Các thực thể mới:
+- SimulationRun: userId từ session server, mapVersion, consentVersion,
+  profile snapshot, startedAt, endedAt, quyền thu dữ liệu hiện hành.
+- CollisionEpisode: contactStart/end, collider/object, tọa độ, mode,
+  chuyển động muốn/thực tế, recovery, door state, interruption reason.
+- EvidenceClip: start/end, trigger timestamp, preRollAvailableMs, fps,
+  gaps/camera cuts, dung lượng/checksum, object storage key, expiresAt.
+- AccessibilityIncident: vùng/tầng/đối tượng, eventIds, số đợt/lượt,
+  rule reasons, AI result, processingStatus, reviewStatus, version.
+- IncidentReview: managerId, kết luận, phản hồi, người phụ trách, thời gian.
+
+API đề xuất, chưa có trong demo hiện tại:
+POST /api/simulation-runs                    tạo phiên và lựa chọn dữ liệu
+PATCH /api/simulation-runs/:id/consent       đổi/tắt quyền thu và gửi
+POST /api/simulation-runs/:id/events        batch có giới hạn, idempotent
+POST /api/evidence/uploads                  xin quyền upload đúng incident
+POST /api/evidence/:id/complete             xác minh file và xếp hàng encode
+GET /api/incidents?floor=&status=&objectId= quản lý xem theo quyền
+GET /api/incidents/:id                     chi tiết + liên kết xem có hạn
+PATCH /api/incidents/:id/review             đánh giá kèm version chống ghi đè
+DELETE /api/evidence/:id                   xóa bằng chứng theo quyền
+
+Backend tách metadata khỏi file video. Không nhét base64 video vào JSON
+notes hoặc localStorage; API hiện có hạn JSON nhỏ nên cần upload route riêng.
+Demo một máy có thể dùng SQLite + thư mục evidence ngoài public. Khi nhiều
+instance: PostgreSQL + object storage riêng tư + hàng đợi công việc bền vững.
+Có migration rõ cho dữ liệu hiện tại; không ghi đè notes/người dùng sẵn có.
+
+Pipeline: validated → uploaded → encoding → queued_for_ai → analysed.
+Mỗi bước có failed/retry và thông báo trạng thái; không che lỗi bằng báo cáo
+AI giả. Retry có backoff, giới hạn lần, khóa idempotency. Upload trùng không
+làm số va chạm tăng. Video và incident có thể đến khác thứ tự, dùng ID liên
+kết; không cho quản lý thấy file của người khác do ghép theo tên file.
+
+Giới hạn dung lượng/thời lượng/MIME, kiểm tra bằng decoder server, giới hạn
+tài nguyên encoder. Không để client chọn đường dẫn ghi file. API key AI chỉ
+ở server. Worker encode/AI không chạy đồng bộ trong request xử lý gameplay.
+Giới hạn ví dụ 10–20 MB/clip và 3 clip/incident, điều chỉnh sau đo MVP.
+Queue đầy: giữ metadata, hiện lý do clip thiếu, ưu tiên bằng chứng đầu tiên
+và lần thử thất bại rõ nhất; không làm treo thao tác xe.
+
+8. TRANG QUẢN TRỊ VÀ TRẢI NGHIỆM NGƯỜI DÙNG
+
+Trang /admin thêm hai mục riêng: “User notes” và “Automated signals”.
+Không nhập chung cảnh báo suy luận với lời người dùng đã chủ động báo cáo.
+Nếu liên quan cùng vị trí, cho liên kết bằng tay hoặc gợi ý liên kết có lý do.
+
+Trên bản đồ 2D:
+- Chọn tầng; marker đặt ở vị trí va chạm/xe có chỉ rõ loại tọa độ.
+- Biểu tượng riêng cho tự động và thủ công; có số đợt và trạng thái.
+- Click marker mở vùng xe di chuyển, vật cản, hướng tiếp cận, video và AI.
+- Bộ lọc thời gian, phòng/đối tượng, manual/auto, loại vấn đề, trạng thái.
+- Nhóm trùng theo cùng phiên bản map; không chồng lịch sử map cũ lên bản mới
+  nếu chưa có chuyển đổi tọa độ và cảnh báo phiên bản.
+
+Bảng chi tiết có “Observed facts” trước “AI interpretation”; có nút xem
+video từ trước va chạm, timeline đánh dấu contact, số đo với đơn vị rõ ràng.
+Trạng thái xem xét: New → Reviewing → Confirmed / Dismissed → Resolved.
+Lý do Dismissed: va chạm vô ý, chờ NPC, cửa chưa mở, lỗi mô phỏng, thiếu
+bằng chứng, trùng báo cáo. Có người đánh giá, thời gian và lịch sử chỉnh sửa.
+Confirmed có thể tạo nhiệm vụ cho HR/Facilities; quản lý chọn người phụ
+trách và phương án, AI chỉ đề xuất. Không tự gửi email/Slack ở bản đầu.
+Thông báo trong app dùng polling hiện có; đổi SSE khi cần cập nhật nhiều.
+
+Người dùng vẫn chơi bình thường, không hiện popup mỗi lần đụng. Khi gửi một
+ứng viên, có thông báo ngắn “A possible barrier was shared for review” và
+tùy chọn xem/bổ sung nguyện vọng. Trong nhật ký riêng có trạng thái xử lý.
+
+9. QUYỀN CHỌN, PHẠM VI THU HÌNH VÀ LƯU TRỮ
+
+Trước khi vào map, giải thích ngắn và cho lựa chọn riêng:
+1) Phân tích va chạm và chia sẻ metadata với quản lý.
+2) Đính kèm hình ảnh/video của simulator cho sự kiện được phát hiện.
+Không chọn thì vẫn dùng simulator và ghi chú thủ công bình thường.
+Chỉ bắt đầu ring buffer khi bật thu hình; tắt thì ngừng ngay và xóa RAM
+cùng file chờ chưa gửi. Đối với bằng chứng đã gửi, có chức năng yêu cầu/xóa
+theo quyền của tổ chức; không hứa xóa file server chỉ bằng tắt công tắc.
+
+Chỉ thu cảnh simulator. Không thu form, giọng nói, camera thật hoặc ứng dụng
+khác. Không dùng dữ liệu để chấm năng suất, suy đoán bệnh hoặc đánh giá kỹ
+năng cá nhân. Khi chuyển tài khoản phải xóa ring buffer/hàng đợi của tài
+khoản trước; không tự upload lại dữ liệu đó dưới tài khoản mới.
+
+Đề xuất mặc định thử nghiệm: video 7 ngày, metadata 30 ngày; tổ chức chốt
+chính sách trước pilot. Có lịch xóa thực tế cả storage và bản sao dẫn xuất,
+giữ nhật ký xóa; nêu riêng thời hạn backup. Dữ liệu cần giữ lâu hơn cho xử
+lý phải có lý do và quyền phù hợp. Đây là cấu hình sản phẩm, không phải
+kết luận đáp ứng pháp luật.
+
+Kiểm tra role và phạm vi tổ chức/map cho mọi API và URL video; link có hạn,
+không file public. Quản lý chỉ xem nhân viên/phạm vi được giao. Người dùng
+chỉ xem sự kiện của mình. Nhà cung cấp AI chỉ nhận phần bằng chứng cần thiết;
+chọn chính sách lưu/huấn luyện dữ liệu phù hợp trước khi kết nối thực tế.
+
+10. KIỂM THỬ VÀ TIÊU CHÍ NGHIỆM THU
+
+Va chạm và gom nhóm:
+- Giữ W 5 giây vào cửa: 1 episode, duration gần 5 giây.
+- Lùi rồi thử lại 3 lần: đúng 3 episodes và 1 incident có số đợt 3.
+- Xoay tại góc, đi chéo, chạm đồng thời hai chân bàn: ghi đúng loại thao tác.
+- Không nhấn phím, menu mở, tab ẩn, cabin đang nâng: không báo mắc kẹt giả.
+- Cửa đóng/mở, NPC đi qua, tự đi lỗi: phân loại khác nhau, không quy hết thành
+  cửa quá hẹp. Hai tầng và hai bên tường không bị gom nhầm.
+
+Video:
+- Contact sau ≥5 giây thu: có tối thiểu khoảng 5 giây tiền cảnh thực tế
+  theo dung sai fps đã công bố; thấy được mốc va chạm, phát và seek được.
+- Contact ngay khi vào map: hiển thị chính xác thiếu tiền cảnh.
+- Đổi góc nhìn, canvas remount, WebGL mất context, fps thấp, dialog và tab
+  ẩn: có gap/cut rõ; không ảnh đen im lặng hoặc lệch timestamp.
+- Tắt quyền, logout, reload, mạng ngắt: không rò video sang phiên khác;
+  gameplay không bị chặn, hàng đợi có giới hạn và cơ chế hủy.
+
+Phân quyền và dữ liệu:
+- Nhân viên không đọc sự kiện/video của người khác; quản lý ngoài phạm vi
+  bị từ chối. Event trùng, upload lỗi, MIME giả, file quá lớn được xử lý.
+- Quản lý chọn marker đúng tầng/toạ độ, xem đúng clip; review đồng thời
+  không ghi đè im lặng. Xóa và hết hạn thực sự làm file không truy cập được.
+
+Đánh giá AI:
+- Tạo bộ tình huống có nhãn gồm cả “không có bất cập”; có nhiều chiều rộng,
+  chiều dài xe, hướng đi, góc nhìn và tốc độ. Cùng người/map không rò sang
+  cả tập hiệu chỉnh và tập kiểm tra một cách làm kết quả quá lạc quan.
+- Nhờ người dùng xe lăn và người phụ trách cơ sở vật chất đánh giá pilot.
+- Đo precision/recall theo incident, báo sai trên mỗi 10 phút chơi, tỷ lệ
+  cảnh báo trùng, tỷ lệ đủ clip và tỷ lệ manager chấp nhận.
+- Phân tích lỗi theo nguyên nhân; không chỉ báo accuracy chung hoặc lấy
+  nhiều frame của cùng một lần va chạm làm nhiều mẫu độc lập.
+- Mục tiêu pilot đề xuất: precision ≥80%, recall ≥80% trên bộ có nhãn,
+  ≤1 báo sai/10 phút, ≥95% clip đủ tiền cảnh khi bộ đệm đã sẵn sàng.
+  Chốt lại với dữ liệu pilot; đây chưa phải kết quả đã đạt.
+- Đo thêm hiệu năng: fps p95/frame time, RAM ổn định trong 30 phút, thời
+  gian gửi/encode/AI. Mục tiêu ban đầu: suy giảm fps <10% trên máy chuẩn,
+  báo cáo tới quản lý trong 60–120 giây khi mạng ổn định.
+
+11. LỘ TRÌNH TRIỂN KHAI THEO THỨ TỰ
+
+Giai đoạn 0 — Spike hình ảnh và hợp đồng dữ liệu (1–2 ngày phát triển):
+Chứng minh tạo clip có 5 giây tiền cảnh, xem được ở trang manager, không ảnh
+đen, không gây giật; chốt CPU/RAM/băng thông. Chốt IDs, timestamp và schema.
+Điểm dừng: nếu máy thử không đạt, giảm fps/độ phân giải hoặc metadata-only
+có nhãn rõ; không triển khai thu hình đại trà trước khi giải quyết.
+
+Giai đoạn 1 — Telemetry và luật (2–3 ngày):
+Mở rộng physics, contact state machine, nhóm semantic collider, bộ đệm trace,
+ngưỡng/cooldown; unit test đếm đợt và các trường hợp loại trừ. Chưa cần model.
+
+Giai đoạn 2 — Bằng chứng và server (3–4 ngày):
+Quyền thu, rolling frames, ghim tiền cảnh, upload giới hạn, encoder worker,
+lưu metadata/media, phân quyền, retry, retention và kiểm thử video thật.
+
+Giai đoạn 3 — Quản trị và AI (3–4 ngày):
+Automated signals trên 2D, timeline/video, adapter model, schema kết quả,
+luật trước AI, trạng thái pending/failed, nhận xét và workflow xác nhận.
+
+Giai đoạn 4 — Pilot, đo và hiệu chỉnh (2–3 ngày phát triển + thời gian
+lịch thử với người dùng): đánh giá bộ có nhãn, hiệu năng, sai cảnh báo,
+điều chỉnh ngưỡng và tài liệu vận hành.
+
+Ước lượng tổng: 11–16 ngày công cho một người quen dự án, chưa gồm mua/
+cấu hình hạ tầng, lịch người tham gia hoặc nâng cấp cho nhiều doanh nghiệp.
+Có thể demo giai đoạn 1–3 với dữ liệu tình huống tự tạo; phải gắn nhãn rõ
+khi video/sự kiện là mẫu thay vì thu từ một phiên đang diễn ra.
+
+12. DANH SÁCH MODULE ĐỀ XUẤT
+
+src/types/collisionTelemetry.ts             schema contact/episode/incident
+src/lib/collisionEpisodes.ts                state machine chống đếm theo frame
+src/lib/barrierRules.ts                     ngưỡng/gom nhóm/giải thích luật
+src/features/telemetry/useCollisionMonitor.ts nối simulator với bộ thu
+src/features/telemetry/useEvidenceBuffer.ts bộ đệm video/frames và trace
+src/features/telemetry/TelemetryConsent.tsx lựa chọn trước khi vào map
+src/features/telemetry/evidence.worker.ts   resize/encode nếu hỗ trợ
+src/features/admin/AutomatedSignals.tsx     danh sách + bản đồ tái sử dụng
+src/features/admin/IncidentDetail.tsx       video, dữ kiện, AI, đánh giá
+server/telemetry.mjs                        API và kiểm tra quyền
+server/evidence-worker.mjs                  encode, validate, retention
+server/ai/accessibility-analyser.mjs        adapter nhà cung cấp, schema
+server/ai/accessibility-prompt.txt          prompt có version, nội dung tiếng Anh
+tests/unit/collisionEpisodes.test.ts        đếm/gom đúng, không đếm lặp
+tests/server/telemetry.test.mjs             quyền, idempotency, file, version
+tests/e2e/automated-signals.spec.ts          từ đụng đến manager xem đúng clip
+
+Các đường dẫn ở mục này là file dự kiến, chưa phải module đã tồn tại.
+Ưu tiên hoàn thành chứng cứ chính xác và workflow quản lý trước khi tinh
+chỉnh câu văn AI. Thành công là tìm được vấn đề có thể xử lý với bằng chứng
+đúng vị trí, không phải tạo thật nhiều cảnh báo.

@@ -43,7 +43,7 @@ export default function ColleagueInspector({ person, onClose }: { person: WorldO
         <label>{t('Lời nhắn')}<textarea aria-label={t('Lời nhắn')} value={body} onChange={e=>{setBody(e.target.value);setFeedback('');}} maxLength={1500} rows={5} required /></label>
         <small>{body.length}/1500</small><button className="button primary" type="submit" disabled={!body.trim()}>{t('Gửi lời nhắn')}</button>
       </form>
-      <p role="status">{t(feedback)}{notice ? ` ${notice}` : ''}</p>
+      <p role="status">{t(feedback)}{notice ? ` ${t(notice)}` : ''}</p>
       <h3>{t('Thư đã để lại')}</h3>
       {letters.filter(letter=>letter.recipientId===person.id).length===0 && <p>{t('Chưa có lời nhắn.')}</p>}
       <ul className="letter-history">{letters.filter(letter=>letter.recipientId===person.id).slice().reverse().map(letter=><li key={letter.id}><time dateTime={letter.createdAt}>{new Date(letter.createdAt).toLocaleString(language==='vi'?'vi-VN':'en-US')}</time><p>{letter.body}</p></li>)}</ul>

@@ -5,11 +5,11 @@ test('setup precedes map; V toggles first and third person without teleporting o
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto('/');
   await expect(page.getByTestId('game-stage')).toHaveCount(0);
-  await page.getByRole('spinbutton', { name: 'Chiều rộng xe', exact: true }).fill('75');
-  await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
+  await page.getByRole('spinbutton', { name: "Wheelchair width", exact: true }).fill('75');
+  await page.getByRole('button', { name: "Start exploring", exact: true }).click();
   const stage = page.getByTestId('game-stage');
   await expect(page.locator('canvas')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Xe của bạn/ })).toContainText('75 × 110');
+  await expect(page.getByRole('button', { name: /Your wheelchair/ })).toContainText('75 × 110');
   const position = await stage.getAttribute('data-z');
   await stage.focus(); await page.keyboard.press('v');
   await expect(stage).toHaveAttribute('data-camera', 'third-person');
@@ -19,24 +19,24 @@ test('setup precedes map; V toggles first and third person without teleporting o
   await page.keyboard.press('v');
   await expect(stage).toHaveAttribute('data-camera', 'first-person');
   await page.evaluate(() => document.exitPointerLock());
-  await page.getByRole('button', { name: /Xe của bạn/ }).click();
-  await page.getByRole('spinbutton', { name: 'Chiều rộng xe', exact: true }).focus();
+  await page.getByRole('button', { name: /Your wheelchair/ }).click();
+  await page.getByRole('spinbutton', { name: "Wheelchair width", exact: true }).focus();
   await page.keyboard.press('v');
   await expect(stage).toHaveAttribute('data-camera', 'first-person');
-  await page.getByRole('button', { name: 'Lưu nhân vật' }).click();
+  await page.getByRole('button', { name: "Save character" }).click();
   const bounds = await stage.boundingBox();
   const viewport = page.viewportSize()!;
   expect(bounds).toEqual({ x: 0, y: 0, ...viewport });
   await page.reload();
   await expect(stage).toHaveCount(0);
-  await expect(page.getByRole('spinbutton', { name: 'Chiều rộng xe', exact: true })).toHaveValue('75');
-  await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: "Wheelchair width", exact: true })).toHaveValue('75');
+  await page.getByRole('button', { name: "Enter office", exact: true }).click();
   await expect(stage).toBeVisible();
   expect(errors).toEqual([]);
 });
 
 test('native fullscreen fills viewport, locks pointer, releases it for interaction and exits cleanly', async ({ page }) => {
-  await page.goto('/'); await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
+  await page.goto('/'); await page.getByRole('button', { name: "Start exploring", exact: true }).click();
   const stage = page.getByTestId('game-stage');
   await stage.focus();await page.keyboard.down('w');await expect.poll(async()=>Number(await stage.getAttribute('data-z')),{intervals:[50]}).toBeLessThan(8.3);await page.keyboard.up('w');
   // The faster chair may reach the closed door on software-rendered frames.
@@ -45,7 +45,7 @@ test('native fullscreen fills viewport, locks pointer, releases it for interacti
   await expect(page.locator('canvas')).toBeVisible();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
   await page.evaluate(() => document.exitPointerLock());
-  await page.getByRole('button', { name: 'Toàn màn hình', exact: true }).click();
+  await page.getByRole('button', { name: "Fullscreen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
   const full = await page.evaluate(() => {
@@ -60,13 +60,13 @@ test('native fullscreen fills viewport, locks pointer, releases it for interacti
   await page.keyboard.press('v'); await expect(stage).toHaveAttribute('data-camera', 'third-person');
   await page.keyboard.press('f'); await expect(page.getByRole('dialog')).toBeVisible();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(false);
-  await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
+  await page.getByRole('button', { name: "Continue exploring" }).click();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
   await page.screenshot({ path: 'test-results/game-fullscreen.png' });
   await page.keyboard.press('Escape');
   // Chromium automation may not dispatch the browser's default Escape action.
   await page.evaluate(() => document.exitPointerLock());
-  if (await page.evaluate(() => !!document.fullscreenElement)) await page.getByRole('button', { name: 'Thoát toàn màn hình', exact: true }).click();
+  if (await page.evaluate(() => !!document.fullscreenElement)) await page.getByRole('button', { name: "Exit fullscreen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(false);
   await expect(stage).toHaveAttribute('data-pointer-locked', 'false');
 });
@@ -75,18 +75,18 @@ test('nearby colleague shows portrait, role and support information via F; far c
   const session = seedSession(); session.started = true; session.playerPose = { x: 2.55, z: 5.5, yaw: 0 }; session.openDoors = ['entry-door'];
   await page.addInitScript(data => localStorage.setItem('dayzero.session.v1', JSON.stringify(data)), session);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Vào văn phòng', exact: true }).click();
+  await page.getByRole('button', { name: "Enter office", exact: true }).click();
   await expect(page.locator('.interact-button')).toContainText('Nguyễn Mai Linh');
   await page.getByTestId('game-stage').focus(); await page.keyboard.press('f');
-  await expect(page.getByRole('dialog')).toContainText('Chuyên viên nhân sự');
-  await expect(page.getByRole('img', { name: 'Chân dung minh họa Nguyễn Mai Linh' })).toBeVisible();
-  await expect(page.getByRole('dialog')).toContainText('Nhận thẻ ra vào');
+  await expect(page.getByRole('dialog')).toContainText("HR specialist");
+  await expect(page.getByRole('img', { name: 'Illustrated portrait of Nguyễn Mai Linh' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toContainText('Access cards');
   await page.screenshot({ path: 'test-results/game-colleague.png' });
-  await page.getByRole('button', { name: 'Tiếp tục di chuyển' }).click();
+  await page.getByRole('button', { name: "Continue exploring" }).click();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true); await page.evaluate(() => document.exitPointerLock());
-  await page.getByRole('button', { name: /Nhật ký/ }).click();
-  await page.getByRole('button', { name: /^Đồng nghiệp/ }).click();
+  await page.getByRole('button', { name: /Journal/ }).click();
+  await page.getByRole('button', { name: /^Colleagues/ }).click();
   await page.getByRole('button', { name: /Trần Đức Minh/ }).click();
-  await expect(page.getByRole('dialog')).toContainText('Nhật ký ngày đầu');
-  await expect(page.getByRole('img', { name: /Chân dung minh họa/ })).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toContainText("First-day journal");
+  await expect(page.getByRole('img', { name: /Illustrated portrait of/ })).toHaveCount(0);
 });
