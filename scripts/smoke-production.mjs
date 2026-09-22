@@ -1,9 +1,13 @@
 import { spawn } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, mkdtemp, unlink, rmdir } from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import { chromium, expect } from '@playwright/test';
 
 const url = 'http://127.0.0.1:5174';
-const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '5174', '--strictPort'], { windowsHide: true, stdio: 'pipe' });
+const testDirectory=await mkdtemp(join(tmpdir(),'dayzero-production-'));
+const testDataFile=join(testDirectory,'data.json');
+const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '5174', '--strictPort'], { windowsHide: true, stdio: 'pipe',env:{...process.env,DAYZERO_DATA_FILE:testDataFile} });
 let browser;
 let serverError = '';
 server.stderr.on('data', data => { serverError += String(data); });
@@ -43,5 +47,9 @@ try {
   console.log('Production smoke passed: first-person 3D, F interaction, measured object illustration and door action; no runtime or HTTP errors.');
 } finally {
   await browser?.close();
+  const stopped=new Promise(resolve=>server.once('exit',resolve));
   server.kill();
+  if(server.exitCode===null)await stopped;
+  await unlink(testDataFile).catch(e=>{if(e.code!=='ENOENT')throw e;});
+  await rmdir(testDirectory);
 }
