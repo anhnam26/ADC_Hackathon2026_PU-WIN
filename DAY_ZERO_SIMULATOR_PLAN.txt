@@ -791,3 +791,25 @@ Phần này thay thế hướng dẫn âm thanh và giới hạn không backend 
   khớp diện tích thang. Đi bộ vẫn chọn tầng qua bảng tương tác.
 - Tầng 2 thêm cây, sofa, bàn và ghế có hồ sơ/va chạm cùng hình học, tranh
   tường, 15 cụm đèn trần, đèn thả và dải sáng hành lang.
+
+31. NHIỆM VỤ KHÁM PHÁ VÀ REVIEW HÀNH TRÌNH
+
+- Manager đặt tên, giao cho một/tất cả nhân viên, chọn điểm xuất phát và
+  1–12 đích theo thứ tự. Điểm cuối cùng hoàn thành nhiệm vụ. Có bản đồ
+  xem trước từng tầng, đánh số các điểm, thêm/xóa/đổi thứ tự chặng.
+- Nhân viên nhận nhiệm vụ ngay trong HUD; bấm bắt đầu để spawn ở điểm
+  manager đã chọn. Lượt đầu tự lái theo vạch dẫn đường, tương tác F như
+  bình thường. Đạt đích theo tầng, cự ly và đường nhìn; không tính xuyên tường.
+- Hoàn thành thủ công: chúc mừng, chờ 3,5 giây, spawn lại điểm bắt đầu và
+  tự chạy từng đích trong Mission review. Đây là review hành trình qua
+  các đích, không phải quay/phát video. Có dừng, tiếp tục và bỏ nhiệm vụ.
+- Luồng tự đi liên tầng: đến sảnh, gọi thang, đợi mở cửa, lái vào cabin,
+  chọn tầng, cabin nâng/hạ liên tục, đợi mở cửa, lùi ra sảnh, dẫn đến đích.
+  Luồng thủ công có phụ đề cho từng bước và tuyến đường nối tiếp sau thang.
+- Dữ liệu missions/missionAttempts lưu cùng server demo; kiểm tra vai trò,
+  người nhận, sở hữu lượt chơi, phiên bản tiến độ và thứ tự checkpoint.
+  Manager thấy lượt thủ công/review/hoàn thành/hủy theo từng nhân viên.
+- Danh mục điểm: src/data/mission-points.json. Mỗi điểm xuất phát kiểm tra
+  va chạm theo xe trước khi spawn; không có đường thì báo lỗi, không bỏ chặng.
+- Tiến độ đã lưu được nạp lại; review nạp lại chờ người dùng tiếp tục.
+  Mất kết nối hiển thị lỗi đồng bộ, không tự coi chặng chưa lưu là đã xong.

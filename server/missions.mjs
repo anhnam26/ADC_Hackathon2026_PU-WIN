@@ -1,20 +1,21 @@
 import {randomUUID} from 'node:crypto';
 import catalog from '../src/data/mission-points.json' with {type:'json'};
 
-export async function missionRoute({req,url,user,getDb,commit,body,reply}){
+export async function missionRoute({req,url,user,getDb,commit,body,reply,publicUser}){
   if(!url.pathname.startsWith('/api/missions')&&!url.pathname.startsWith('/api/mission-attempts'))return false;
+  // Read the body before taking a snapshot; collision/note writes may complete while it streams.
+  const input=['POST','PATCH'].includes(req.method)?await body():null;
   const db=getDb(),missions=db.missions??[],attempts=db.missionAttempts??[];
   const visible=m=>user.role==='manager'||m.assigneeId==='all'||m.assigneeId===user.id;
   if(url.pathname==='/api/missions/assignees'&&req.method==='GET'){
     if(user.role!=='manager'){reply(403,{error:'Only managers can assign missions.'});return true;}
-    reply(200,{users:db.users.filter(u=>u.role==='employee').map(({id,name,email})=>({id,name,email}))});return true;
+    reply(200,{users:db.users.filter(u=>u.role==='employee').map(publicUser)});return true;
   }
   if(url.pathname==='/api/missions'&&req.method==='GET'){
     reply(200,{missions:missions.filter(visible),attempts:attempts.filter(a=>user.role==='manager'||a.userId===user.id)});return true;
   }
   if(url.pathname==='/api/missions'&&req.method==='POST'){
     if(user.role!=='manager'){reply(403,{error:'Only managers can assign missions.'});return true;}
-    const input=await body();
     if(typeof input.name!=='string'||!input.name.trim()||input.name.trim().length>100||!catalog.starts.some(s=>s.id===input.startId)||!Array.isArray(input.stops)||input.stops.length<1||input.stops.length>12||input.stops.some((s,i)=>!catalog.destinations.includes(s)||(i>0&&s===input.stops[i-1]))||(input.assigneeId!=='all'&&!db.users.some(u=>u.id===input.assigneeId&&u.role==='employee'))){reply(400,{error:'Enter a name, a starting point, 1–12 ordered destinations and an employee. Adjacent stops must differ.'});return true;}
     if(missions.length>=1000){reply(409,{error:'The demo mission store is full.'});return true;}
     const mission={id:randomUUID(),name:input.name.trim(),startId:input.startId,stops:input.stops,assigneeId:input.assigneeId,managerName:user.name,createdAt:new Date().toISOString()};
@@ -34,7 +35,7 @@ export async function missionRoute({req,url,user,getDb,commit,body,reply}){
   if(match&&req.method==='PATCH'){
     const attempt=attempts.find(a=>a.id===match[1]&&a.userId===user.id);
     if(!attempt){reply(404,{error:'Attempt not found.'});return true;}
-    const input=await body(),mission=missions.find(m=>m.id===attempt.missionId);
+    const mission=missions.find(m=>m.id===attempt.missionId);
     if(input.version!==attempt.version){reply(409,{error:'Progress changed. Refresh your mission before continuing.'});return true;}
     let updated={...attempt,version:attempt.version+1};
     if(input.action==='cancel'&&['manual','review'].includes(attempt.phase))updated.phase='cancelled';

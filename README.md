@@ -91,7 +91,7 @@ Toàn màn hình dùng Fullscreen API; map chiếm 100% chiều rộng/cao, khô
 - Hai tầng cùng tồn tại trong một cảnh 3D ở cao độ 0 và 3,2 m; camera theo cabin liên tục, không tải lại map khi đến tầng. Cửa tầng không có cabin luôn đóng. Trong hành trình, tạm khóa di chuyển ngang để giữ người trong cabin; vẫn nhìn quanh và đổi góc nhìn bằng V.
 - Nhà có **mái, trần giữa tầng và đèn trong các phòng, hành lang, cabin**. Sàn tầng 2 chừa lỗ thang máy và thang bộ. Chế độ toàn cảnh ẩn mái/tầng khác để xem mặt bằng.
 - Xe lăn đi bằng thang máy. Thang bộ gồm hai vế rộng 110 cm, 18 bậc và chiếu nghỉ sâu 140 cm, quay đầu để lối ra tầng trên hướng về hành lang thay vì tường ngoài. Sàn tầng 2 chừa ô thang tương ứng. **Thang bộ vẫn chuyển tầng qua bảng tương tác**, chưa mô phỏng bước chân trên từng bậc.
-- Chọn đích khác tầng trong **N** sẽ dẫn tới thang máy trước. Tự vào cabin, chọn tầng và lái ra; khi buông phím, đường đi tiếp tục tới đích ban đầu. Vị trí và tầng được lưu. Nếu tải lại giữa hành trình, phiên trở về tầng đã lưu với cabin mở để có thể tiếp tục, không xuất hiện lơ lửng giữa giếng thang.
+- Chọn đích khác tầng trong **N** sẽ dẫn tới thang máy trước. **Show route** hướng dẫn tự vào cabin, chọn tầng và lái ra; **Auto-walk here** tự thực hiện cả gọi thang, vào cabin, chọn tầng và ra sảnh, rồi tiếp tục tới đích ban đầu. Vị trí và tầng được lưu. Nếu tải lại giữa hành trình, phiên trở về tầng đã lưu với cabin mở để có thể tiếp tục, không xuất hiện lơ lửng giữa giếng thang.
 
 ## Dẫn đường trong map
 
@@ -180,6 +180,19 @@ npm run preview
 ```
 
 Bản preview ở **http://127.0.0.1:4173/**, có API đăng nhập và ghi chú. Chỉ đưa `dist/` lên static hosting sẽ thiếu API; bản này cần chạy Node/Vite hoặc triển khai API tương ứng. Không cần API key.
+
+## Nhiệm vụ khám phá do manager giao
+
+1. Manager mở **Exploration missions** trên trang quản trị, nhập **Mission name**, chọn người nhận ở **Assign to** (một nhân viên hoặc **All employees**).
+2. Chọn **Starting point**: sân trước, sảnh thang máy tầng 1 hoặc tầng 2. Thêm/sắp xếp các điểm ở **Checkpoint**; điểm cuối là **Final destination**. Bản đồ xem trước hiển thị S và thứ tự các điểm trên từng tầng.
+3. Bấm **Assign mission**. Nhân viên đang ở simulator nhận nhiệm vụ trong **Mission inbox** (cập nhật mỗi 5 giây), mở **Open missions → Start mission** để xuất hiện tại điểm bắt đầu.
+4. Lượt đầu tự lái W/S, A/D; đi theo vạch vàng, F tương tác/mở cửa. Từng chặng hoàn thành khi đến đúng tầng và trong tầm tương tác có đường nhìn đến đối tượng. Không cho bật tự đi trong lượt thủ công.
+5. Khi đủ các chặng, hiển thị chúc mừng; sau khoảng 3,5 giây trở lại điểm xuất phát và tự chạy lần lượt các đích trong **Mission review**. Review dựng lại hành trình qua các điểm, không phát lại video hay chính xác từng thao tác đã thực hiện.
+6. **Pause review**, WASD hoặc P để tiếp quản; **Resume review** để tiếp tục. **Abandon mission** kết thúc lượt đang chạy. Tiến độ và kết quả của từng lượt được lưu ở server, manager thấy trên danh sách nhiệm vụ. Khi tải lại trang, review đã lưu chờ bấm tiếp tục.
+
+Đi khác tầng: hướng dẫn thủ công dẫn đến thang máy, F gọi thang, tự lái vào cabin, F chọn tầng, đợi mở cửa rồi lùi ra sảnh để nhận đường đi tiếp. Tự đi/review thực hiện toàn bộ chuỗi này tự động bằng cabin chuyển động liên tục. Xe di chuyển chậm hơn (1,3 m/s) khi vào/ra cabin.
+
+Danh mục điểm nhiệm vụ nằm trong `src/data/mission-points.json`; điểm xuất phát cần là vị trí trống và đích phải khớp ID đồ vật. Có tối đa 12 đích mỗi nhiệm vụ. Nếu không có đường phù hợp kích thước xe, giao diện báo lỗi để điều chỉnh vị trí hoặc nhiệm vụ; không tự xuyên vật cản. Mất kết nối thì dừng ghi nhận chặng tại đó, dùng **Retry sync** sau khi kết nối lại. Các API nhiệm vụ yêu cầu đăng nhập; chỉ manager được giao nhiệm vụ, người dùng chỉ cập nhật lượt của mình.
 
 ## Cấu trúc dữ liệu không gian
 

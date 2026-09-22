@@ -2,6 +2,7 @@ import {insideCabin,LIFT,liftBusy,requestLift,type LiftState} from './elevator';
 import {angleDifference,routeTargetReached} from './navigation';
 import {moveWithCollisions,type CollisionContact} from './physics';
 import type {MobilityProfile,Obstacle,Pose,WorldObject} from '../types/simulator';
+import {translate} from './i18n';
 
 export interface Transfer {id:string;automatic:boolean;phase:'approach'|'board'|'ride'|'exit'}
 // Both guidance and automatic review use the same physical cabin and landing gates.
@@ -21,7 +22,7 @@ export function advanceTransfer(transfer:Transfer,pose:Pose,profile:MobilityProf
     const step=Math.abs(difference)<.025?Math.min(distance,dt*1.3):0;
     const moved=moveWithCollisions(pose,distance?dx/distance*step:0,distance?dz/distance*step:0,turn,profile,obstacles);
     result.pose=moved.pose;result.contacts=moved.contacts;result.moving=step>0&&!moved.blocked;
-    if(moved.blocked)result.status=`Waiting for clearance: ${moved.blocked.name}. Pause review to adjust your position.`;
+    if(moved.blocked)result.status=`Waiting for clearance: ${translate(moved.blocked.name,'en')}. Pause review to adjust your position.`;
   };
   if(floor===targetFloor&&lift.phase==='open')transfer.phase='exit';
   if(transfer.phase==='board'){

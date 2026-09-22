@@ -24,6 +24,7 @@ import type {CollisionContact} from '../../lib/physics';
 import type {CollisionEvent} from '../../types/collisions';
 import {wheelchairDrive,WHEELCHAIR_SPEED} from '../../lib/wheelchairDrive';
 import {advanceTransfer,type Transfer} from '../../lib/crossFloor';
+import {translate} from '../../lib/i18n';
 
 export type Control =
   | "forward"
@@ -234,7 +235,7 @@ export function useSimulation(
         if(transfer.done){
           const route=planRoute(pose.current,target,profile,sceneObjects.current);
           nav.route=route??[];nav.index=1;nav.auto=!!route&&pending.automatic;nav.targetId=target.id;
-          nav.status=route?`Follow the route to ${target.name}.`:'No clear route found. Move to a wider space and retry.';
+          nav.status=route?`Follow the route to ${translate(target.name,'en')}.`:'No clear route found. Move to a wider space and retry.';
           pendingDestination.current=null;
         }
       }

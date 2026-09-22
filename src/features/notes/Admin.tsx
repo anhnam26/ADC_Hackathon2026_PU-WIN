@@ -44,6 +44,7 @@ export default function Admin({onExperience}:{onExperience:()=>void}){
     <section className="admin-title"><div><span>Hello, {user.name}</span><h1>Feedback, mapped to its location.</h1><p>Review user notes and wheelchair collisions on the office floor plan.</p></div><button className="button secondary" onClick={()=>{void refresh();void refreshHistory();}} disabled={loading}>Refresh notes</button></section>
     <div className="admin-stats"><div><strong>{notes.length}</strong><span>Total notes</span></div><div><strong>{notes.filter(n=>n.status==='new').length}</strong><span>Awaiting review</span></div><div><strong>{history.collisions.length}</strong><span>Collision episodes</span></div><div><strong>{history.runs.length}</strong><span>Simulator sessions</span></div></div>
     {error&&<p role="alert" className="notes-error">{error}</p>}{historyError&&<p role="alert" className="notes-error">Collision history could not be refreshed: {historyError}</p>}
+    <p><a className="button secondary" href="#mission-control">Assign exploration missions ↓</a></p>
     <section className="admin-filters">
       <label>Floor<select value={floor} onChange={e=>setFloor(Number(e.target.value) as 1|2)}><option value="1">Floor 1 & courtyard</option><option value="2">Floor 2</option></select></label>
       <label>Status<select value={status} onChange={e=>setStatus(e.target.value)}><option value="all">All statuses</option>{(['new','reviewing','approved','declined','resolved'] as const).map(s=><option key={s} value={s}>{noteStatus(s,false)}</option>)}</select></label>

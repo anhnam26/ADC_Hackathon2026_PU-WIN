@@ -24,7 +24,7 @@ export default function MissionManager(){
     try{await api('/missions',{method:'POST',body:JSON.stringify({name,startId,assigneeId,stops})});setName('');setMessage('Mission assigned. Employees will receive it in their simulator.');await refresh();}
     catch(e){setError((e as Error).message);}finally{setBusy(false);}
   }
-  return <section className="mission-manager" aria-label="Exploration missions">
+  return <section id="mission-control" className="mission-manager" aria-label="Exploration missions">
     <span className="eyebrow">MISSION CONTROL</span><h2>Assign an exploration mission</h2><p>Employees drive through checkpoints in order, then watch an automatic route review.</p>
     <div className="mission-editor"><form onSubmit={submit}>
       <label>Mission name<input required maxLength={100} value={name} onChange={e=>setName(e.target.value)} placeholder="My first morning at the office"/></label>

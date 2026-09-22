@@ -134,14 +134,19 @@ export default function Simulator({
   const nearest = sim.view.objects.find(o => o.id === nearestId);
   const activeObject = sim.view.objects.find(o => o.id === inspected);
   const objective = objectives[session.currentStep];
-  const objectiveIds = target
+  const missionTarget=quest.active&&quest.mission&&quest.attempt?objectById(quest.mission.stops[quest.attempt.next]):undefined;
+  const objectiveIds = missionTarget?[(missionTarget.floor??1)===sim.floor?missionTarget.id:`lift-${sim.floor}`]:target
     ? objects.filter((o) => o.locationId === target).map((o) => o.id)
     : objective.ids;
   const seen = objective.ids.filter((id) =>
     session.inspectedIds.includes(id),
   ).length;
   useEffect(() => { guide.show(`${t(objective.label)}. ${t(objective.hint)} ${t('Nhấn N để chọn điểm đến và dẫn đường.')}`); }, [objective, guide.show, language]);
-  useEffect(() => { if (sim.view.navigationStatus !== 'Chọn một điểm đến để bắt đầu dẫn đường.') guide.show(sim.view.navigationStatus); }, [sim.view.navigationStatus, guide.show]);
+  useEffect(() => {
+    if(quest.complete)guide.show('Congratulations! All checkpoints complete. Returning to your start for an automatic mission review.');
+    else if(quest.attempt?.phase==='completed')guide.show('Mission review complete. Your progress has been saved.');
+    else if (sim.view.navigationStatus !== 'Chọn một điểm đến để bắt đầu dẫn đường.') guide.show(sim.view.navigationStatus);
+  }, [sim.view.navigationStatus, guide.show,quest.complete,quest.attempt?.phase]);
   const openNote=()=>{sim.stopNavigation();setNotePose({...sim.pose.current});};
   const navigateToSelected = (automatic: boolean) => {
     if(quest.manual&&automatic){notify('Drive manually to complete this mission. Automatic review starts after the final checkpoint.');return;}
@@ -287,7 +292,7 @@ export default function Simulator({
     },
   ];
   return (
-    <div className="play-page">
+    <div className={`play-page ${quest.feed.missions.length||quest.error?'mission-enabled':''}`}>
       <div className="play-heading">
         <div>
           <span className="eyebrow">
@@ -429,7 +434,7 @@ export default function Simulator({
                 cameraYaw={sim.cameraYaw}
               />
             )}
-            <MissionHUD quest={quest} auto={sim.view.auto} focus={focusGame}/>
+            {(quest.feed.missions.length>0||quest.error)&&<MissionHUD quest={quest} auto={sim.view.auto} focus={focusGame}/>}
             <div className="world-scale">
               <Ruler size={14} />
               <span>{t("TỶ LỆ THỐNG NHẤT")}<strong>{t("1 ô lưới = 1 m")}</strong>

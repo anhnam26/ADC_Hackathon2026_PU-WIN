@@ -13,6 +13,10 @@ describe('mission travel',()=>{
     for(const id of catalog.destinations)expect(objectById(id)).toBeDefined();
     for(const start of catalog.starts)expect(blockingAt(start as Pose,defaultMobility,worldObstacles([],objects,start.floor as 1|2))).toBeUndefined();
   });
+  it.each(catalog.destinations)('can reach the selectable destination %s with the demo wheelchair',id=>{
+    const target=objectById(id)!,start=catalog.starts.find(s=>s.id===(target.floor===2?'upper-lobby':'courtyard'))!;
+    expect(planRoute(start as Pose,target,defaultMobility)).not.toBeNull();
+  });
   it.each([1,2] as const)('boards, physically rides and exits from floor %s without a teleport or collision',from=>{
     let pose:Pose={x:-7.45,z:-11.9,yaw:Math.PI/2,floor:from,y:floorY(from)};
     const to=from===1?2:1,target=objectById(to===2?'f2-water':'hr-desk')!,lift=createLift(from);

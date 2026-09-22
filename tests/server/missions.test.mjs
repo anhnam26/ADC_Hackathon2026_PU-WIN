@@ -5,6 +5,22 @@ import {mkdtempSync,unlinkSync,rmdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createApi} from '../../server/api.mjs';
+import {missionRoute} from '../../server/missions.mjs';
+
+test('mission saves preserve notes written while the request body is still arriving',async()=>{
+ let db={users:[],notes:[],missions:[],missionAttempts:[]},receive;
+ const input=new Promise(resolve=>{receive=resolve;});let status;
+ const write=missionRoute({req:{method:'POST'},url:{pathname:'/api/missions'},user:{id:'manager',name:'Manager',role:'manager'},getDb:()=>db,commit:next=>{db=next;},body:()=>input,reply:code=>{status=code;}});
+ db={...db,notes:[{id:'concurrent-note'}]};
+ receive({name:'Office tour',startId:'courtyard',stops:['reception-counter'],assigneeId:'all'});await write;
+ assert.equal(status,201);assert.equal(db.notes[0].id,'concurrent-note');assert.equal(db.missions.length,1);
+});
+
+test('employees only receive their assignments and their own attempt history',async()=>{
+ const db={missions:[{id:'mine',assigneeId:'alice'},{id:'shared',assigneeId:'all'},{id:'private',assigneeId:'bob'}],missionAttempts:[{id:'a',userId:'alice'},{id:'b',userId:'bob'}]};let result;
+ await missionRoute({req:{method:'GET'},url:{pathname:'/api/missions'},user:{id:'alice',role:'employee'},getDb:()=>db,reply:(_status,data)=>{result=data;}});
+ assert.deepEqual(result.missions.map(m=>m.id),['mine','shared']);assert.deepEqual(result.attempts.map(a=>a.id),['a']);
+});
 
 test('missions enforce manager assignment, ordered progress, ownership and persisted manual/review phases',async()=>{
  const dir=mkdtempSync(join(tmpdir(),'dayzero-missions-')),file=join(dir,'data.json');let handler=createApi({file});
