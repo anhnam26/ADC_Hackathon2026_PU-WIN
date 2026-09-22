@@ -29,9 +29,16 @@ export function objectParts(o: WorldObject, open = false, doorAngle?: number): P
     b(w/2-.22,.95,d/2-.025,.14,.25,.04,'#244e5b',false),b(w/2-.22,.95,d/2-.01,.05,.05,.02,'#daf29b',false),
   ];
   if(o.kind === 'stairs') return [
-    ...Array.from({length:18},(_,i)=>b(0,(i+1)*3.2/36,d/2-(i+.5)*d/18,w,(i+1)*3.2/18,d/18,i%2?'#b3b6a6':'#ccd0bd')),
-    ...[-1,1].flatMap(side=>Array.from({length:9},(_,i)=>b(side*(w/2-.035),((i*2+1)*3.2/18)+.5,d/2-(i*2+.5)*d/18,.045,1,.045,'#597c74'))),
-    ...[-1,1].flatMap(side=>Array.from({length:18},(_,i)=>b(side*(w/2-.035),((i+1)*3.2/18)+.96,d/2-(i+.5)*d/18,.065,.07,d/18,'#597c74',false))),
+    // Ascend away from the corridor, turn on the half-landing, return to it.
+    ...Array.from({length:9},(_,i)=>b(-.65,(i+1)*1.6/18,1.8-(i+.5)*2.2/9,1.1,(i+1)*1.6/9,2.2/9,i%2?'#b3b6a6':'#ccd0bd')),
+    b(0,.8,-1.1,2.4,1.6,1.4,'#b4c2b4'),
+    ...Array.from({length:9},(_,i)=>b(.65,(1.6+(i+1)*1.6/9)/2,-.4+(i+.5)*2.2/9,1.1,1.6+(i+1)*1.6/9,2.2/9,i%2?'#b3b6a6':'#ccd0bd')),
+    ...[-1.18,0,1.18].flatMap(x=>Array.from({length:9},(_,i)=>{
+      const upper=x>0,z=x>0?-.4+(i+.5)*2.2/9:1.8-(i+.5)*2.2/9;
+      const y=(upper?1.6:0)+(i+1)*1.6/9;
+      return b(x,y+.48,z,.045,.96,.045,'#597c74');
+    })),
+    b(0,2.56,-1.76,2.4,.07,.065,'#597c74',false),
   ];
   if (o.kind === 'colleague') {
     const skin = o.colleague!.skin, hair = o.colleague!.hair;

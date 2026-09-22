@@ -15,21 +15,22 @@ export function FloorSlab({floor}:{floor:1|2}){
   return <group name="upper-floor-slab">
     <Box position={[-.3,y,-6.5]} size={[16.8,.2,27]} color="#e9e7dc"/>
     <Box position={[11.95,y,-6.5]} size={[.1,.2,27]} color="#e9e7dc"/>
-    <Box position={[10,y,-16.35]} size={[3.8,.2,7.3]} color="#e9e7dc"/>
-    <Box position={[10,y,-2.05]} size={[3.8,.2,18.1]} color="#e9e7dc"/>
+    <Box position={[10,y,-16.45]} size={[3.8,.2,7.1]} color="#e9e7dc"/>
+    <Box position={[10,y,-1.65]} size={[3.8,.2,17.3]} color="#e9e7dc"/>
     <Box position={[-11.65,y,-6.5]} size={[.7,.2,27]} color="#e9e7dc"/>
     <Box position={[-10,y,-16.525]} size={[2.6,.2,6.95]} color="#e9e7dc"/>
     <Box position={[-10,y,-1.875]} size={[2.6,.2,17.75]} color="#e9e7dc"/>
   </group>;
 }
 export function CeilingLights({floor,active}:{floor:1|2;active:boolean}){
-  const points=floor===1?[[-8,-17],[0,-17],[8,-17],[-6,-6],[6,-6],[0,-8],[-7,3],[0,2],[7,4],[-5,-12],[5,-12]]:[[-7,1],[6,1],[-6,-8],[6,-8],[-5,-17],[5,-17]];
+  const points=floor===1?[[-8,-17],[0,-17],[8,-17],[-6,-6],[6,-6],[0,-8],[-7,3],[0,2],[7,4],[-5,-12],[5,-12]]:[[-8,1],[-4,1],[4,1],[8,1],[-7,5],[7,5],[-6,-7],[0,-7],[6,-7],[-5,-12],[0,-12],[5,-12],[-5,-17],[0,-17],[5,-17]];
   return <group name={`interior-lights-${floor}`}>
     {points.map(([x,z],i)=><group key={i} position={[x,2.93,z]}>
       <Box position={[0,.01,0]} size={[1.25,.09,.55]} color="#617471"/>
       <mesh position={[0,-.045,0]} rotation={[Math.PI/2,0,0]}><planeGeometry args={[1.15,.45]}/><meshStandardMaterial color="#fff4d8" emissive="#fff1c7" emissiveIntensity={3} toneMapped={false}/></mesh>
     </group>)}
     {active && [[-7,-16],[7,-16],[-7,-2],[7,-2]].map(([x,z],i)=><pointLight key={i} position={[x,2.65,z]} color="#fff1d3" intensity={36} distance={19} decay={1.4}/>)}
+    {floor===2&&[-6,0,6].map(x=><mesh key={x} position={[x,3.02,-11]} rotation={[Math.PI/2,0,0]}><planeGeometry args={[.12,12]}/><meshStandardMaterial color="#fff4d8" emissive="#fff1d3" emissiveIntensity={2} toneMapped={false}/></mesh>)}
   </group>;
 }
 export function Roof(){return <group name="building-roof"><Box position={[0,6.43,-6.5]} size={[24.5,.26,27.5]} color="#c4cbbf"/><Box position={[0,6.62,-6.5]} size={[24.8,.12,27.8]} color="#536b68"/></group>;}

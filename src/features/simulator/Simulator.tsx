@@ -254,20 +254,20 @@ export default function Simulator({
     return null;
   };
   const controls: { key: Control; label: string; icon: React.ReactNode }[] = [
-    { key: "forward", label: immersive ? t("Tiến về phía trước") : t("Tiến lên màn hình"), icon: <ArrowUp size={19} /> },
+    { key: "forward", label: session.mobility.mode==='wheelchair'?'Drive forward':immersive ? t("Tiến về phía trước") : t("Tiến lên màn hình"), icon: <ArrowUp size={19} /> },
     {
       key: "left",
-      label: t("Di chuyển sang trái"),
+      label: session.mobility.mode==='wheelchair'?'Turn wheelchair left':t("Di chuyển sang trái"),
       icon: <ArrowLeft size={19} />,
     },
     {
       key: "backward",
-      label: immersive ? t("Lùi lại") : t("Lùi xuống màn hình"),
+      label: session.mobility.mode==='wheelchair'?'Reverse wheelchair':immersive ? t("Lùi lại") : t("Lùi xuống màn hình"),
       icon: <ArrowDown size={19} />,
     },
     {
       key: "right",
-      label: t("Di chuyển sang phải"),
+      label: session.mobility.mode==='wheelchair'?'Turn wheelchair right':t("Di chuyển sang phải"),
       icon: <ArrowRight size={19} />,
     },
     {
@@ -367,6 +367,7 @@ export default function Simulator({
             data-x={sim.view.pose.x.toFixed(3)}
             data-z={sim.view.pose.z.toFixed(3)}
             data-yaw={sim.view.pose.yaw.toFixed(3)}
+            data-look-yaw={sim.lookYaw.current.toFixed(3)}
             data-camera={mode === '2d' ? 'map' : cameraMode}
             data-floor={sim.floor}
             data-height={(sim.view.pose.y ?? floorY(sim.floor)).toFixed(3)}

@@ -15,6 +15,7 @@ import { wallsOnFloor } from "../../data/space";
 import { roomZones } from '../../data/building';
 import { floorY, type LiftState } from '../../lib/elevator';
 import { FloorSlab, CeilingLights, Roof, ElevatorModel } from './BuildingShell';
+import UpperDecor from './UpperDecor';
 import { objectParts } from "../../lib/objectGeometry";
 import type {
   MobilityProfile,
@@ -425,6 +426,7 @@ export default function OfficeScene(p: SceneProps) {
         {([1,2] as const).map(floor=><group key={floor} name={`building-floor-${floor}`} position={[0,floorY(floor),0]} visible={immersive||activeFloor===floor}>
         <FloorSlab floor={floor}/>
         <CeilingLights floor={floor} active={activeFloor===floor}/>
+        {floor===2&&<UpperDecor/>}
         {floor===1 && <PartMesh
           part={{
             position: [0, 0.008, 10.5],
