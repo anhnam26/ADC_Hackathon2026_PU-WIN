@@ -776,3 +776,18 @@ Phần này thay thế hướng dẫn âm thanh và giới hạn không backend 
 - Dữ liệu chờ gửi được đệm trên thiết bị theo tài khoản/phiên, tự gửi lại
   khi kết nối phục hồi. Giao diện thông báo nếu chưa đồng bộ hoặc đầy bộ đệm.
 - Chưa quay video, chưa gọi AI và chưa tự kết luận bất cập từ mỗi va chạm.
+
+30. ĐIỀU KHIỂN XE LĂN VÀ BỐ TRÍ KHÔNG GIAN
+
+- W/S tiến/lùi theo trục xe. A/D, Q/E và nút cảm ứng quay tại chỗ; xe dừng
+  dịch chuyển khi quay. Chuột chỉ nhìn quanh, không thay hướng hoặc vùng
+  va chạm của xe. Áp dụng ở cả 2D/toàn cảnh và hai góc nhìn người chơi.
+- Tốc độ demo: tiến/tự đi 2,8 m/s, lùi 1,8 m/s; Shift 0,45 m/s và quay chậm.
+  Mô hình điều khiển theo hướng xe, chưa mô phỏng lực đẩy từng bánh.
+- HR và wellness tăng từ 8 × 6 lên 8 × 7 m về phía hành lang. Cửa dời từ
+  x = ±8, z = −14 tới x = ±5,6, z = −13, tránh thang máy/thang bộ.
+- Thang bộ chuyển thành hai vế quay đầu: mỗi vế 110 cm, chiếu nghỉ sâu
+  140 cm, tổng 18 bậc lên 3,2 m. Lối ra hướng về hành lang và ô sàn tầng 2
+  khớp diện tích thang. Đi bộ vẫn chọn tầng qua bảng tương tác.
+- Tầng 2 thêm cây, sofa, bàn và ghế có hồ sơ/va chạm cùng hình học, tranh
+  tường, 15 cụm đèn trần, đèn thả và dải sáng hành lang.
