@@ -38,7 +38,10 @@ test('setup precedes map; V toggles first and third person without teleporting o
 test('native fullscreen fills viewport, locks pointer, releases it for interaction and exits cleanly', async ({ page }) => {
   await page.goto('/'); await page.getByRole('button', { name: 'Bắt đầu trải nghiệm', exact: true }).click();
   const stage = page.getByTestId('game-stage');
-  await stage.focus();await page.keyboard.down('w');await expect.poll(async()=>Number(await stage.getAttribute('data-z'))).toBeLessThan(8.3);await page.keyboard.up('w');
+  await stage.focus();await page.keyboard.down('w');await expect.poll(async()=>Number(await stage.getAttribute('data-z')),{intervals:[50]}).toBeLessThan(8.3);await page.keyboard.up('w');
+  // The faster chair may reach the closed door on software-rendered frames.
+  // Leave turning space before testing mouse look; rotation correctly respects collision.
+  if(Number(await stage.getAttribute('data-z'))<8.1){await page.keyboard.down('Shift');await page.keyboard.down('s');await expect.poll(async()=>Number(await stage.getAttribute('data-z')),{intervals:[50]}).toBeGreaterThan(8.1);await page.keyboard.up('s');await page.keyboard.up('Shift');}
   await expect(page.locator('canvas')).toBeVisible();
   await expect.poll(() => page.evaluate(() => !!document.pointerLockElement)).toBe(true);
   await page.evaluate(() => document.exitPointerLock());

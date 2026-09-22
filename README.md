@@ -26,7 +26,7 @@ API chạy cùng Vite khi dùng `npm run dev` hoặc `npm run preview`, không c
 
 Để thay mật khẩu tài khoản mẫu trước lần chạy đầu, đặt biến môi trường `DAYZERO_EMPLOYEE_PASSWORD` và `DAYZERO_MANAGER_PASSWORD`. Biến này chỉ áp dụng khi chưa tồn tại file dữ liệu. `DAYZERO_DATA_FILE` chọn file dữ liệu khác; `DAYZERO_SECURE_COOKIE=1` dành cho server đặt sau HTTPS. Đây là tài khoản mẫu phục vụ demo; chưa có tự đăng ký, quên mật khẩu hoặc SSO.
 
-Để hai máy cùng xem một dữ liệu trong mạng nội bộ, chạy `npm run dev -- --host 0.0.0.0` rồi truy cập địa chỉ IP máy chạy server với cổng Vite. Cả hai cần dùng cùng server; localhost trên hai máy là hai nơi khác nhau.
+Nhiều trình duyệt truy cập cùng server sẽ đọc cùng dữ liệu ghi chú. Khi triển khai cho nhiều máy, đặt server sau HTTPS để các API trình duyệt dùng trong simulator hoạt động đầy đủ; localhost trên hai máy là hai nơi khác nhau.
 
 Trang trắng hoặc báo thiếu thư viện: dừng server của dự án bằng `Ctrl + C`, chạy `npm ci` rồi `npm run dev -- --force`. Không chạy `npm ci` trong khi Vite còn chạy trên Windows; esbuild có thể khóa file và khiến quá trình cài đặt dừng với `EPERM`.
 

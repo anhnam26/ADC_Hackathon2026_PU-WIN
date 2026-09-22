@@ -16,7 +16,7 @@ test('mobile notes retain the draft after a failed save and support silent faste
  const z=Number(await stage.getAttribute('data-z'));expect(z).toBeLessThan(9.65);expect(z).toBeGreaterThan(8.5);
  await page.getByRole('button',{name:'B · Ghi chú vị trí',exact:true}).click();await page.getByLabel('Bất cập bạn gặp',{exact:true}).fill('Cần chỗ nghỉ trên lối vào');await page.getByLabel('Nguyện vọng thay đổi',{exact:true}).fill('Bổ sung điểm dừng.');
  await page.route('**/api/notes',route=>route.request().method()==='POST'?route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Tạm mất kết nối. Vui lòng thử lại.'})}):route.continue());
- await page.getByRole('button',{name:'Gửi ghi chú cho quản lý',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Tạm mất kết nối');await expect(page.getByLabel('Bất cập bạn gặp',{exact:true})).toHaveValue('Cần chỗ nghỉ trên lối vào');
+  await page.getByRole('button',{name:'Gửi ghi chú cho quản lý',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Tạm mất kết nối');await expect(page.getByRole('textbox',{name:'Bất cập bạn gặp',exact:true})).toHaveValue('Cần chỗ nghỉ trên lối vào');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/notes-mobile.png',fullPage:true});
  await page.unroute('**/api/notes');await page.getByRole('button',{name:'Gửi ghi chú cho quản lý',exact:true}).click();await expect(page.locator('.note-details')).toContainText('Cần chỗ nghỉ trên lối vào');
 });
