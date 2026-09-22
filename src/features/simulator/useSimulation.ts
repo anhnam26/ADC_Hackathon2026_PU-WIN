@@ -229,7 +229,16 @@ export function useSimulation(
       if (!paused && nav.auto && nav.route.length) {
         const target = sceneObjects.current.find(o => o.id === nav.targetId)!;
         if (routeTargetReached(pose.current, target, obstacles, openDoors)) {
-          nav.auto = false; nav.route = []; nav.status = `Đã đến ${target.name}. Nhấn F để tìm hiểu.`;
+          // Arrive facing the lift door so W can board without sideways steering.
+          const heading=target.kind==='elevator'?Math.PI/2:pose.current.yaw;
+          const difference=Math.atan2(Math.sin(heading-pose.current.yaw),Math.cos(heading-pose.current.yaw));
+          if(Math.abs(difference)>.005){
+            const result=moveWithCollisions(pose.current,0,0,Math.max(-dt*1.8,Math.min(dt*1.8,difference)),profile,obstacles);
+            pose.current=result.pose;contacts.push(...result.contacts);movement='auto';blocked=result.blocked?.name??'';
+            nav.status=result.blocked?`Đang chờ: ${result.blocked.name}. Nhấn WASD để tự điều khiển.`:'Aligning the wheelchair with the lift entrance.';
+          }else{
+            nav.auto = false; nav.route = []; nav.status = `Đã đến ${target.name}. Nhấn F để tìm hiểu.`;
+          }
         } else {
           const next = nav.route[nav.index];
           if (!next) { nav.auto = false; nav.status = 'Điểm đến đã di chuyển. Chọn dẫn đường lại.'; }
