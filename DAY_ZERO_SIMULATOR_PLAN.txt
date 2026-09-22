@@ -755,3 +755,24 @@ Phần này thay thế hướng dẫn âm thanh và giới hạn không backend 
   đợt va chạm độc lập, gom vị trí quanh đối tượng, giữ 5 giây hình ảnh trước
   va chạm, kết hợp luật/AI, báo cáo trên bản đồ 2D và quản lý đánh giá.
 - Đây là kế hoạch cho bước tiếp theo; chưa triển khai thu hình hoặc gọi AI.
+
+29. GHI NHẬN VA CHẠM THEO PHIÊN VÀ BẢN ĐỒ QUẢN LÝ
+
+- Mỗi lần xác nhận vào simulator mở phiên mới, gắn tài khoản và thời điểm.
+  Menu, nhật ký, đổi tầng/camera không tạo phiên khác. Tải lại trang rồi vào
+  map mở phiên mới; lịch sử cũ đã đồng bộ vẫn còn trên server.
+- Vật lý trả contact khi dịch chuyển hoặc xoay bị chặn. Xe lăn có chủ đích
+  di chuyển mới ghi sự kiện; tạm dừng, cabin đang di chuyển và đi bộ loại trừ.
+- Giữ phím vào một vật là một đợt. Tái ghi sau khi thoát tiếp xúc 400 ms và
+  lùi ít nhất 15 cm hoặc thay góc ít nhất 0,2 radian. Lưu vật khác riêng.
+- Sự kiện gồm ID/tên vật hoặc tường, thời gian, tầng, tọa độ tiếp xúc ước tính
+  trên bề mặt collider, pose xe, số đo xe, manual/auto, dịch chuyển/xoay.
+- /admin phủ dấu hình thoi hồng lên cùng bản đồ notes, có chú giải và công
+  tắc riêng. Bộ chọn Collision session và Collision history đọc từng phiên;
+  bấm lịch sử chuyển bản đồ đúng tầng. Cập nhật khoảng 2 giây sau khi nhận.
+- POST /api/collision-runs nhận batch tối đa 15 sự kiện và kết thúc phiên;
+  GET /api/collision-history chỉ cho manager. Chống giả tài khoản và đếm
+  trùng ID khi gửi lại. Lưu cùng file dữ liệu server, giữ nguyên notes cũ.
+- Dữ liệu chờ gửi được đệm trên thiết bị theo tài khoản/phiên, tự gửi lại
+  khi kết nối phục hồi. Giao diện thông báo nếu chưa đồng bộ hoặc đầy bộ đệm.
+- Chưa quay video, chưa gọi AI và chưa tự kết luận bất cập từ mỗi va chạm.

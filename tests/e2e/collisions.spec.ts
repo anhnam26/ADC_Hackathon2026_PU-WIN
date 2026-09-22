@@ -34,7 +34,7 @@ test('actual collisions appear live beside notes and remain separated by simulat
   const noteResponse=await page.request.post('/api/notes',{data:{concern:'Collision map comparison',request:'Check door clearance',position:{floor:1,x:1,z:9,y:0}}});
   const {note}=await noteResponse.json();
   const admin=await manager.newPage();await admin.goto('/admin');
-  await admin.getByLabel('Collision session',{exact:true}).selectOption(firstRun);
+  await admin.getByRole('combobox',{name:'Collision session',exact:true}).selectOption(firstRun);
   const marker=admin.locator(`[data-collision-id="${first.id}"]`);
   await expect(marker).toBeVisible();await expect(admin.locator(`[data-note-id="${note.id}"]`)).toBeVisible();
   expect(await marker.locator('path').first().getAttribute('fill')).not.toBe(await admin.locator(`[data-note-id="${note.id}"] circle`).getAttribute('fill'));
@@ -50,7 +50,7 @@ test('actual collisions appear live beside notes and remain separated by simulat
   await admin.bringToFront();await expect(admin.locator('[data-collision-row]')).toHaveCount(2);
   await admin.screenshot({path:'test-results/collision-admin.png',fullPage:true});
 
-  await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('dayzero.session.v1')!);s.playerPose={x:2,z:8,yaw:0,floor:1,y:0};localStorage.setItem('dayzero.session.v1',JSON.stringify(s));});
+  await page.addInitScript(()=>{const raw=localStorage.getItem('dayzero.session.v1');if(raw){const s=JSON.parse(raw);s.playerPose={x:2,z:8,yaw:0,floor:1,y:0};localStorage.setItem('dayzero.session.v1',JSON.stringify(s));}});
   const secondRun=await enter(page);expect(secondRun).not.toBe(firstRun);await hit(page);
   await expect.poll(async()=>(await history()).collisions.filter(e=>e.runId===secondRun).length).toBe(1);
   expect((await history()).collisions.find(e=>e.runId===secondRun)?.kind).toBe('wall');
@@ -75,5 +75,21 @@ test('failed uploads retry without duplicates and upstairs collisions retain the
   const admin=await manager.newPage();await admin.goto('/admin');await admin.getByLabel('Collision session').selectOption(run);
   await expect(admin.locator('[data-collision-id]')).toHaveCount(0);
   await admin.locator('[data-collision-row]').click();await expect(admin.getByRole('combobox',{name:'Floor',exact:true})).toHaveValue('2');await expect(admin.locator('[data-collision-id]')).toHaveCount(1);
+ }finally{await manager.close();}
+});
+
+test('pending collisions survive reload and are uploaded under their original session',async({page,browser})=>{
+ const manager=await browser.newContext({baseURL:test.info().project.use.baseURL});
+ try{
+  await manager.request.post('/api/auth/login',{data:{email:'manager@dayzero.local',password:'DayZero2026!'}});
+  await page.route('**/api/collision-runs',route=>route.request().postDataJSON().events.length?route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Offline test.'})}):route.continue());
+  const originalRun=await enter(page);await hit(page);await expect(page.locator('.collision-sync-status')).toContainText('Saved on this device');
+  await page.goto('/'); // Gameplay is unmounted; the failed batch stays on this device.
+  await page.unroute('**/api/collision-runs');
+  const nextRun=await enter(page);expect(nextRun).not.toBe(originalRun);
+  const getHistory=async()=>await (await manager.request.get('/api/collision-history')).json() as CollisionHistory;
+  await expect.poll(async()=>(await getHistory()).collisions.filter(e=>e.runId===originalRun).length).toBe(1);
+  const history=await getHistory();expect(history.collisions.filter(e=>e.runId===nextRun)).toHaveLength(0);
+  expect(history.runs.find(r=>r.id===originalRun)?.endedAt).toBeTruthy();
  }finally{await manager.close();}
 });
