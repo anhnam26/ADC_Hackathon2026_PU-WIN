@@ -12,7 +12,7 @@ export function useCollisionHistory(active:boolean,userId:string,profile:Mobilit
   useEffect(()=>{
     if(!active)return;
     const prefix=`dayzero.collisions.${userId}.`;
-    let tab=crypto.randomUUID();
+    let tab:string=crypto.randomUUID();
     try{tab=sessionStorage.getItem('dayzero.collision-tab')??tab;sessionStorage.setItem('dayzero.collision-tab',tab);}catch{/* RAM fallback */}
     const draft:Draft={id:crypto.randomUUID(),startedAt:new Date().toISOString(),profile:{...initialProfile.current},events:[],finish:false,tab,updatedAt:Date.now()};
     const drafts=new Map<string,Draft>([[draft.id,draft]]);
@@ -56,8 +56,9 @@ export function useCollisionHistory(active:boolean,userId:string,profile:Mobilit
       })().finally(()=>{busy=null;});
       return busy;
     };
-    const finish=async()=>{draft.finish=true;persist(draft);await flush();};
+    const finish=async()=>{if(!drafts.has(draft.id))return;draft.finish=true;persist(draft);await flush();};
     current.current={record:event=>{
+      if(draft.finish)return;
       if(draft.events.length>=200){report('Collision queue is full. Reconnect to save more collisions.');return;}
       draft.events.push(event);persist(draft);report('Syncing collision history…');void flush();
     },finish};

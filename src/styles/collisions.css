@@ -1,0 +1,18 @@
+.collision-filters{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:0 0 20px;padding:16px;background:#fff;border:1px solid #d9e1d5;border-radius:12px}
+.collision-filters label:first-child{display:grid;gap:6px;flex:1 1 380px;min-width:0}
+.collision-filters select{width:100%;max-width:100%;padding:10px;background:#fafcf7;border:1px solid #aebdac;border-radius:8px;font:inherit}
+.collision-filters label:not(:first-child){display:flex;align-items:center;gap:8px}
+.collision-filters small{flex-basis:100%;color:#52665c}
+.collision-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.collision-tabs button[aria-pressed=true]{background:#203e35;color:#fff}
+.collision-legend{display:inline-block;border-radius:8px;padding:5px 9px;background:#ffe4ef;color:#94004a;font-size:12px;font-weight:700}
+.map-collision-pin{cursor:pointer;outline:none}
+.map-collision-pin:focus path:first-child{stroke:#10291f;stroke-width:.18}
+.collision-details,.collision-run{padding:16px;background:#fff7fb;border:1px solid #dfadc6;border-radius:12px;margin:12px 0;overflow-wrap:anywhere}
+.collision-details p,.collision-run p{font-size:13px;line-height:1.8}
+.collision-history-list{max-height:450px;overflow:auto}
+.collision-history-list time{font-size:12px;color:#52665c}
+.collision-history-list button[aria-pressed=true]{border-color:#d00068;background:#fff0f6}
+.collision-sync-status{font-size:11px;max-width:360px;color:#fff;background:#203e35e8;border-radius:6px;padding:5px 9px;margin:4px auto;pointer-events:none}
+.collision-sync-status:empty{display:none}
+@media(max-width:600px){.collision-filters label:first-child{flex-basis:100%}.collision-filters{padding:10px;gap:10px}}

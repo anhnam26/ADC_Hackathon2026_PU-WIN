@@ -33,7 +33,7 @@ import {useCollisionHistory} from '../features/simulator/useCollisionHistory';
 
 type Page = "journey" | "summary" | "tasks";
 export default function App() {
-  const {user,logout,openAdmin}=useAccount();
+  const {user,logout:accountLogout,openAdmin}=useAccount();
   const { t, language } = useLocale();
   const { session, notice, reset, setReducedMotion, selectStep } =
     useDemoStore();
@@ -42,6 +42,7 @@ export default function App() {
   const [welcome, setWelcome] = useState(true);
   const [entered, setEntered] = useState(false);
   const collisions=useCollisionHistory(entered,user.id,session.mobility);
+  const logout=async()=>{await collisions.finish();await accountLogout();};
   const [issueContext, setIssueContext] = useState<IssueContext | null>(null);
   const [settings, setSettings] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);

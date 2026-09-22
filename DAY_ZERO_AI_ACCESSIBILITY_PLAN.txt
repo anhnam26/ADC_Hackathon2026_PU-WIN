@@ -3,6 +3,16 @@ Ngày: 22/09/2026
 Ngôn ngữ tài liệu: Tiếng Việt. Ngôn ngữ giao diện demo: Tiếng Anh.
 Trạng thái: Đề xuất triển khai; chưa bật ghi hình, gửi video hoặc phân tích AI.
 
+CẬP NHẬT TRIỂN KHAI NỀN TẢNG:
+Đã bổ sung ghi nhận từng đợt va chạm xe lăn, vị trí tiếp xúc ước tính, tên/ID
+đối tượng, tầng và số đo xe; lưu server theo từng phiên simulator. Manager
+thấy dấu hình thoi hồng trên cùng bản đồ với notes, bộ lọc phiên và lịch sử.
+Gửi ngay khi xảy ra, bản đồ cập nhật khoảng 2 giây; có bộ đệm và gửi lại.
+Đây chưa phải toàn bộ pipeline bên dưới: chưa thu video, tính thời gian bị
+cản, gom incident nhiều lần thử, phân loại AI hoặc đưa ra kết luận tự động.
+Các giai đoạn tiếp theo cần nối vào dữ liệu CollisionEvent/CollisionRun hiện
+có, nâng cấp schema có migration và không làm mất lịch sử đã lưu.
+
 1. MỤC TIÊU VÀ KẾT QUẢ MONG MUỐN
 
 Trong lúc người dùng tự điều khiển xe lăn, hệ thống nhận biết các tình huống

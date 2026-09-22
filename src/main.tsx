@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import AuthGate from './features/auth/AuthGate';
 import './styles/notes.css';
+import './styles/collisions.css';
 import "./styles/main.css";
 import "./styles/readability.css";
 import './styles/simulator.css';

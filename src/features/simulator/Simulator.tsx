@@ -514,6 +514,7 @@ export default function Simulator({
                 </div>
               )}
             </div>
+            <p className="collision-sync-status" role="status">{collisionStatus}</p>
             {sim.view.blocked && (
               <div className="collision-hint" role="status">
                 <span>!</span>{t("Đang chạm:")} {t(sim.view.blocked)}{t(". Lùi hoặc đổi hướng để tiếp tục.")}</div>

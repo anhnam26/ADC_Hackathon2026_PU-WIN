@@ -34,6 +34,19 @@ Trang trắng hoặc báo thiếu thư viện: dừng server của dự án bằ
 
 ## Bắt đầu trải nghiệm
 
+### Lịch sử va chạm cho quản lý
+
+Khi bấm **Start exploring / Enter office**, hệ thống mở một phiên simulator mới. Xe lăn va vào tường, đồ vật hoặc người đi lại sẽ tự lưu một bản ghi; gồm thời điểm, tầng, điểm tiếp xúc ước tính trên bề mặt vật cản, tên/ID vật, số đo xe và chế độ điều khiển tay/tự đi. Chế độ đi bộ không ghi lịch sử xe lăn. Giữ phím vào cùng vật cản chỉ tính một đợt; cần rời tiếp xúc ít nhất 400 ms và lùi ít nhất 15 cm hoặc xoay đủ góc rồi thử lại để tính đợt mới.
+
+Quản lý vào **/admin**:
+
+- **Dấu hình thoi màu hồng** là va chạm; dấu tròn có số vẫn là ghi chú người dùng. Có công tắc **Show collisions / Show user notes** để bật/tắt từng lớp.
+- **Collision session** chọn phiên theo tên, email, thời gian và mã phiên. **Collision history** liệt kê các lần va chạm của phiên trên cả hai tầng; bấm một dòng sẽ chuyển bản đồ tới đúng tầng và chọn điểm đó.
+- Điểm mới tự cập nhật khoảng **2 giây** sau khi server nhận dữ liệu. Khi mất mạng, giao diện báo chờ đồng bộ; dữ liệu chờ được lưu theo tài khoản trên trình duyệt và gửi lại, không đếm trùng. Nếu trình duyệt chặn lưu cục bộ, giữ trang mở để gửi lại.
+- Mở lại trang/đăng nhập rồi vào map là phiên mới; mở Menu, nhật ký, đổi góc nhìn hoặc đổi tầng vẫn thuộc phiên đang chơi. Trang quản trị hiển thị lúc bắt đầu, kết thúc nhận được hoặc lần hoạt động cuối; không coi tab bị đóng đột ngột là đã gửi đủ dữ liệu.
+
+Lịch sử đã đồng bộ lưu cùng tài khoản/notes trong `data/dayzero.json`, giữ qua khởi động lại server. Demo giới hạn 2.000 phiên và 20.000 đợt va chạm; đạt giới hạn sẽ báo lỗi, không tự xóa dữ liệu cũ. Bộ đệm chờ có giới hạn 200 sự kiện mỗi phiên. Đây là ghi nhận hình học để quản lý xem xét, **chưa quay video, phân tích AI hay kết luận rào cản tiếp cận**. Vị trí là ước tính trên bề mặt collider, không phải phép đo lực/điểm va chạm vật lý thực tế.
+
 1. Chọn **Sử dụng xe lăn**, nhập chiều rộng, dài, cao của xe, chiều cao mặt ngồi và tay vịn bằng **cm**. Rộng cần tính cả bánh xe; dài cần tính cả gác chân. Các giá trị sẵn có là ví dụ, không phải số đo của bạn.
 2. Bấm **Bắt đầu trải nghiệm** để vào map: chuột tự ẩn, di chuột là xoay góc nhìn, không cần giữ nút. Khi quay lại, số đo cũ được điền sẵn; xác nhận **Vào văn phòng** rồi map mới tải. Đóng bảng thiết lập không bỏ qua bước này.
 3. Di chuyển đến gần một đồ vật. Khi gợi ý xuất hiện, nhấn **F** hoặc bấm nút tương tác để mở thông tin.
